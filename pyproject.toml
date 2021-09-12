@@ -8,7 +8,8 @@ authors = ["Vojtěch Dohnal <dohnal@ics.muni.cz>"]
 python = "^3.9"
 strawberry-graphql = "^0.76.1"
 inflection = "^0.5.1"
-Pattern = "^3.6"
+starlette = "^0.16.0"
+uvicorn = {extras = ["standard"], version = "^0.15.0"}
 
 [tool.poetry.dev-dependencies]
 
