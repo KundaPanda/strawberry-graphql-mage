@@ -53,4 +53,6 @@ class SchemaManager:
         query = strawberry.type(query_object)
         mutation = strawberry.type(mutation_object)
 
+        if len(mutation.__annotations__) > 0:
+            return Schema(query=query, mutation=mutation)
         return Schema(query=query)

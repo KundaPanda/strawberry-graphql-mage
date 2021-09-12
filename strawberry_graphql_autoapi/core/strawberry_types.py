@@ -15,8 +15,11 @@ class EntityType:
 
 @dataclass
 class StrawberryModelInputTypes:
+    primary_key_input: 'PrimaryKeyInput'
     query_one_input: 'QueryOne'
     query_many_input: 'QueryMany'
+    create_one_input: EntityType
+    update_one_input: EntityType
 
 
 @dataclass
@@ -24,7 +27,7 @@ class StrawberryModelType:
     entity: EntityType
     filter: 'ObjectFilter'
     ordering: 'ObjectOrdering'
-    input_types: StrawberryModelInputTypes
+    input_types: Optional[StrawberryModelInputTypes] = None
     query_one: Optional[Callable] = None
     query_many: Optional[Callable] = None
     create_one: Optional[Callable] = None

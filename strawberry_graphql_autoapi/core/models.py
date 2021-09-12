@@ -1,9 +1,10 @@
 from typing import Any, Set, List, Type, Dict, Tuple
 
-from strawberry_graphql_autoapi.core.resolver import resolver_query_one, resolver_query_many
+from strawberry_graphql_autoapi.core.resolver import resolver_query_one, resolver_query_many, resolver_create_one, \
+    resolver_create_many, resolver_update_one, resolver_update_many, resolver_delete_one, resolver_delete_many
 from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType
 from strawberry_graphql_autoapi.core.type_creator import create_entity_type, \
-    create_input_types
+    create_input_types, create_filter_input, create_ordering_input
 from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, IDataBackend
 
 
@@ -46,10 +47,16 @@ class EntityModel(IEntityModel):
         cls._properties = cls.__backend__.get_all_attributes(cls)
         cls._strawberry_type = StrawberryModelType(
             entity=create_entity_type(cls),
-            input_types=create_input_types(cls),
-            filter=None,
-            ordering=None,
+            filter=create_filter_input(cls),
+            ordering=create_ordering_input(cls),
         )
+        cls._strawberry_type.input_types = create_input_types(cls)
         cls._strawberry_type.query_one = resolver_query_one(cls)
         cls._strawberry_type.query_many = resolver_query_many(cls)
+        cls._strawberry_type.create_one = resolver_create_one(cls)
+        cls._strawberry_type.create_many = resolver_create_many(cls)
+        cls._strawberry_type.update_one = resolver_update_one(cls)
+        cls._strawberry_type.update_many = resolver_update_many(cls)
+        cls._strawberry_type.delete_one = resolver_delete_one(cls)
+        cls._strawberry_type.delete_many = resolver_delete_many(cls)
         return cls
