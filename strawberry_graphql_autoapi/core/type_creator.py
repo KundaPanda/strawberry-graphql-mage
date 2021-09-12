@@ -11,26 +11,32 @@ from strawberry.scalars import is_scalar
 from strawberry.utils.typing import is_optional
 
 from strawberry_graphql_autoapi.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
-    StrawberryModelInputTypes, QueryMany, ObjectOrdering, ScalarOrdering, ObjectFilter, SCALAR_FILTERS, \
+    StrawberryModelInputTypes, QueryMany, ObjectOrdering, ObjectFilter, SCALAR_FILTERS, \
     OrderingDirection
 from strawberry_graphql_autoapi.core.types import IEntityModel, ModuleBoundStrawberryAnnotation
 
 
 class GeneratedType(enum.Enum):
-    QUERY_ONE_KEY = 'QueryOneKey'
+    ENTITY = ''
+    PRIMARY_KEY_INPUT = 'PrimaryKey'
     QUERY_ONE = 'QueryOne'
     QUERY_MANY = 'QueryMany'
+    CREATE_ONE = 'CreateOne'
+    CREATE_MANY = 'CreateMany'
+    UPDATE_ONE = 'UpdateOne'
+    UPDATE_MANY = 'UpdateMany'
+    DELETE_ONE = 'DeleteOne'
+    DELETE_MANY = 'DeleteMany'
     INPUTS = 'Inputs'
     FILTER = 'Filter'
     ORDERING = 'Ordering'
-    ENTITY = ''
 
     def get_typename(self: 'GeneratedType', name: str):
         return name + self.value
 
 
 def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = GeneratedType.ENTITY) -> Dict[str, Any]:
-    strawberry_fields = {f: StrawberryField(f, type_annotation=defer_annotation(a), default=None)
+    strawberry_fields = {f: StrawberryField(f, type_annotation=defer_annotation(a, target_type), default=None)
                          for f, a in fields.items()}
     return {
         **strawberry_fields,
@@ -40,6 +46,12 @@ def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = Generate
     }
 
 
+def _apply_type_rename(name: str, target_type: GeneratedType):
+    if not any((t != GeneratedType.ENTITY and name.endswith(t.value) for t in GeneratedType)):
+        return target_type.get_typename(name)
+    return name
+
+
 def defer_annotation(annotation, target_type: GeneratedType = GeneratedType.ENTITY) \
         -> Union[Type, ModuleBoundStrawberryAnnotation]:
     if annotation is type(None):
@@ -47,9 +59,9 @@ def defer_annotation(annotation, target_type: GeneratedType = GeneratedType.ENTI
     if isinstance(annotation, ForwardRef):
         return defer_annotation(annotation.__forward_arg__, target_type)
     if isclass(annotation) and hasattr(annotation, '__annotations__'):
-        return ModuleBoundStrawberryAnnotation(target_type.get_typename(annotation.__name__))
+        return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation.__name__, target_type))
     if isinstance(annotation, str):
-        return ModuleBoundStrawberryAnnotation(target_type.get_typename(annotation))
+        return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation, target_type))
     if isinstance(annotation, ModuleBoundStrawberryAnnotation):
         return defer_annotation(annotation.annotation, target_type)
     if hasattr(annotation, '__args__'):
@@ -106,8 +118,11 @@ def create_entity_type(model: Type[IEntityModel]) -> EntityType:
 def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     input_types = strawberry.input(
         type(GeneratedType.INPUTS.get_typename(model.__name__), (StrawberryModelInputTypes,), _create_fields({
+            'primary_key_input': create_primary_key_input(model),
             'query_one_input': create_query_one_input(model),
             'query_many_input': create_query_many_input(model),
+            'create_one_input': create_create_one_input(model),
+            'update_one_input': create_update_one_input(model),
         }))
     )
     setattr(sys.modules[ROOT_NS], input_types.__name__, input_types)
@@ -116,28 +131,12 @@ def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     return input_types
 
 
-def create_query_one_input(model: Type[IEntityModel]) -> QueryOne:
-    input_type = strawberry.input(type(GeneratedType.QUERY_ONE_KEY.get_typename(model.__name__), (PrimaryKeyInput,),
-                                       _create_fields({
-                                           k: model.get_attribute_type(k) for k in model.get_primary_key()
-                                       })))
-    query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
-                                      _create_fields({'key': input_type})))
-
-    setattr(sys.modules[ROOT_NS], input_type.__name__, input_type)
-    input_type.__module__ = ROOT_NS
-    setattr(sys.modules[ROOT_NS], query_one.__name__, query_one)
-    query_one.__module__ = ROOT_NS
-
-    return query_one
-
-
 def create_ordering_input(model: Type[IEntityModel]) -> ObjectOrdering:
     ordering = strawberry.input(type(GeneratedType.ORDERING.get_typename(model.__name__), (ObjectOrdering,),
                                      _create_fields({
                                          k: get_ordering_type(Optional[model.get_attribute_type(k)])
                                          for k in model.get_all_attributes()
-                                     }, GeneratedType.ORDERING)))
+                                     })))
 
     setattr(sys.modules[ROOT_NS], ordering.__name__, ordering)
     ordering.__module__ = ROOT_NS
@@ -150,7 +149,7 @@ def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
                                     _create_fields({
                                         k: get_filter_type(Optional[model.get_attribute_type(k)]) for k in
                                         model.get_all_attributes()
-                                    }, GeneratedType.FILTER)))
+                                    })))
 
     setattr(sys.modules[ROOT_NS], filter_.__name__, filter_)
     filter_.__module__ = ROOT_NS
@@ -158,17 +157,75 @@ def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
     return filter_
 
 
+def create_primary_key_input(model: Type[IEntityModel]) -> PrimaryKeyInput:
+    input_type = strawberry.input(type(GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__), (PrimaryKeyInput,),
+                                       _create_fields({
+                                           k: model.get_attribute_type(k) for k in model.get_primary_key()
+                                       })))
+    setattr(sys.modules[ROOT_NS], input_type.__name__, input_type)
+    input_type.__module__ = ROOT_NS
+
+    return input_type
+
+
+def create_query_one_input(model: Type[IEntityModel]) -> QueryOne:
+    query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
+                                      _create_fields(
+                                          {
+                                              'key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)
+                                          })))
+
+    setattr(sys.modules[ROOT_NS], query_one.__name__, query_one)
+    query_one.__module__ = ROOT_NS
+
+    return query_one
+
+
 def create_query_many_input(model: Type[IEntityModel]) -> QueryMany:
     query_many = strawberry.input(type(GeneratedType.QUERY_MANY.get_typename(model.__name__), (QueryMany,),
                                        _create_fields({
-                                           'ordering': Optional[List[Optional[create_ordering_input(model)]]],
-                                           'filters': Optional[List[Optional[create_filter_input(model)]]],
+                                           'ordering': Optional[
+                                               List[Optional[GeneratedType.ORDERING.get_typename(model.__name__)]]],
+                                           'filters': Optional[
+                                               List[Optional[GeneratedType.FILTER.get_typename(model.__name__)]]],
                                        })))
 
     setattr(sys.modules[ROOT_NS], query_many.__name__, query_many)
     query_many.__module__ = ROOT_NS
 
     return query_many
+
+
+def create_create_one_input(model: Type[IEntityModel]) -> EntityType:
+    create_one = strawberry.input(type(GeneratedType.CREATE_ONE.get_typename(model.__name__), (EntityType,),
+                                       _create_fields({
+                                           f: (Optional[model.get_attribute_type(f)]
+                                               if f in model.get_primary_key()
+                                               else model.get_attribute_type(f))
+                                           for f in model.get_all_attributes()
+                                       }, GeneratedType.CREATE_ONE)))
+
+    setattr(sys.modules[ROOT_NS], create_one.__name__, create_one)
+    create_one.__module__ = ROOT_NS
+
+    return create_one
+
+
+def create_update_one_input(model: Type[IEntityModel]) -> EntityType:
+    update_one = strawberry.input(type(GeneratedType.UPDATE_ONE.get_typename(model.__name__), (EntityType,),
+                                       _create_fields({
+                                           '__primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                               model.__name__),
+                                           **{f: (Optional[model.get_attribute_type(f)]
+                                                  if f in model.get_primary_key()
+                                                  else model.get_attribute_type(f))
+                                              for f in model.get_all_attributes()}
+                                       }, GeneratedType.UPDATE_ONE)))
+
+    setattr(sys.modules[ROOT_NS], update_one.__name__, update_one)
+    update_one.__module__ = ROOT_NS
+
+    return update_one
 
 
 def get_ordering_type(type_: Any):

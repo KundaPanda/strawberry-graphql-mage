@@ -12,7 +12,7 @@ dummy = DummyDataBackend()
 class Weapon(EntityModel):
     id: int
     damage: int
-    owner: 'Entity'
+    owner: Optional['Entity']
     name: Optional[str]
 
     __primary_key__ = ('id',)

@@ -37,3 +37,63 @@ def resolver_query_many(model: Type[IEntityModel]):
         return model.resolve(GraphQLOperation.QUERY_MANY, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(query_many))
+
+
+def resolver_create_one(model: Type[IEntityModel]):
+    return_type = Optional[model.get_strawberry_type().entity]
+    data_type = GeneratedType.CREATE_ONE.get_typename(model.__name__)
+
+    def create_one(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.CREATE_ONE, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(create_one))
+
+
+def resolver_create_many(model: Type[IEntityModel]):
+    return_type = List[Optional[model.get_strawberry_type().entity]]
+    data_type = List[GeneratedType.CREATE_ONE.get_typename(model.__name__)]
+
+    def create_many(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.CREATE_MANY, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(create_many))
+
+
+def resolver_update_one(model: Type[IEntityModel]):
+    return_type = Optional[model.get_strawberry_type().entity]
+    data_type = GeneratedType.UPDATE_ONE.get_typename(model.__name__)
+
+    def update_one(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.UPDATE_ONE, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(update_one))
+
+
+def resolver_update_many(model: Type[IEntityModel]):
+    return_type = List[Optional[model.get_strawberry_type().entity]]
+    data_type = List[GeneratedType.UPDATE_ONE.get_typename(model.__name__)]
+
+    def update_many(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.UPDATE_MANY, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(update_many))
+
+
+def resolver_delete_one(model: Type[IEntityModel]):
+    return_type = Optional[model.get_strawberry_type().entity]
+    data_type = GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)
+
+    def delete_one(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.DELETE_ONE, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(delete_one))
+
+
+def resolver_delete_many(model: Type[IEntityModel]):
+    return_type = List[Optional[model.get_strawberry_type().entity]]
+    data_type = List[GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)]
+
+    def delete_many(data: data_type) -> return_type:
+        return model.resolve(GraphQLOperation.DELETE_MANY, data)
+
+    return strawberry.field(ModuleBoundStrawberryResolver(delete_many))
