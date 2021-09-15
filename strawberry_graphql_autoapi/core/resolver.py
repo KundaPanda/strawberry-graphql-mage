@@ -5,6 +5,7 @@ import strawberry
 from strawberry.arguments import StrawberryArgument, UNSET
 from strawberry.types.fields.resolver import StrawberryResolver
 
+from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult
 from strawberry_graphql_autoapi.core.type_creator import GeneratedType
 from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, ModuleBoundStrawberryAnnotation
 
@@ -80,20 +81,18 @@ def resolver_update_many(model: Type[IEntityModel]):
 
 
 def resolver_delete_one(model: Type[IEntityModel]):
-    return_type = Optional[model.get_strawberry_type().entity]
-    data_type = GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)
+    data_type = GeneratedType.DELETE_ONE.get_typename(model.__name__)
 
-    def delete_one(data: data_type) -> return_type:
+    def delete_one(data: data_type) -> DeleteResult:
         return model.resolve(GraphQLOperation.DELETE_ONE, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(delete_one))
 
 
 def resolver_delete_many(model: Type[IEntityModel]):
-    return_type = List[Optional[model.get_strawberry_type().entity]]
-    data_type = List[GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)]
+    data_type = List[GeneratedType.DELETE_ONE.get_typename(model.__name__)]
 
-    def delete_many(data: data_type) -> return_type:
+    def delete_many(data: data_type) -> DeleteResult:
         return model.resolve(GraphQLOperation.DELETE_MANY, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(delete_many))

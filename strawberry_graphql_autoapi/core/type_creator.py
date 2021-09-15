@@ -13,7 +13,7 @@ from strawberry.utils.typing import is_optional
 from strawberry_graphql_autoapi.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
     StrawberryModelInputTypes, QueryMany, ObjectOrdering, ObjectFilter, SCALAR_FILTERS, \
     OrderingDirection
-from strawberry_graphql_autoapi.core.types import IEntityModel, ModuleBoundStrawberryAnnotation
+from strawberry_graphql_autoapi.core.types import IEntityModel, ModuleBoundStrawberryAnnotation, GraphQLOperation
 
 
 class GeneratedType(enum.Enum):
@@ -123,6 +123,7 @@ def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
             'query_many_input': create_query_many_input(model),
             'create_one_input': create_create_one_input(model),
             'update_one_input': create_update_one_input(model),
+            'delete_one_input': create_delete_one_input(model),
         }))
     )
     setattr(sys.modules[ROOT_NS], input_types.__name__, input_types)
@@ -135,7 +136,7 @@ def create_ordering_input(model: Type[IEntityModel]) -> ObjectOrdering:
     ordering = strawberry.input(type(GeneratedType.ORDERING.get_typename(model.__name__), (ObjectOrdering,),
                                      _create_fields({
                                          k: get_ordering_type(Optional[model.get_attribute_type(k)])
-                                         for k in model.get_all_attributes()
+                                         for k in model.get_attributes(GraphQLOperation.QUERY_MANY)
                                      })))
 
     setattr(sys.modules[ROOT_NS], ordering.__name__, ordering)
@@ -148,7 +149,7 @@ def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
     filter_ = strawberry.input(type(GeneratedType.FILTER.get_typename(model.__name__), (ObjectFilter,),
                                     _create_fields({
                                         k: get_filter_type(Optional[model.get_attribute_type(k)]) for k in
-                                        model.get_all_attributes()
+                                        model.get_attributes(GraphQLOperation.QUERY_MANY)
                                     })))
 
     setattr(sys.modules[ROOT_NS], filter_.__name__, filter_)
@@ -172,7 +173,8 @@ def create_query_one_input(model: Type[IEntityModel]) -> QueryOne:
     query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
                                       _create_fields(
                                           {
-                                              'key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__)
+                                              '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                                  model.__name__)
                                           })))
 
     setattr(sys.modules[ROOT_NS], query_one.__name__, query_one)
@@ -202,7 +204,7 @@ def create_create_one_input(model: Type[IEntityModel]) -> EntityType:
                                            f: (Optional[model.get_attribute_type(f)]
                                                if f in model.get_primary_key()
                                                else model.get_attribute_type(f))
-                                           for f in model.get_all_attributes()
+                                           for f in model.get_attributes(GraphQLOperation.CREATE_ONE)
                                        }, GeneratedType.CREATE_ONE)))
 
     setattr(sys.modules[ROOT_NS], create_one.__name__, create_one)
@@ -214,18 +216,31 @@ def create_create_one_input(model: Type[IEntityModel]) -> EntityType:
 def create_update_one_input(model: Type[IEntityModel]) -> EntityType:
     update_one = strawberry.input(type(GeneratedType.UPDATE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
-                                           '__primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                           '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
                                                model.__name__),
                                            **{f: (Optional[model.get_attribute_type(f)]
                                                   if f in model.get_primary_key()
                                                   else model.get_attribute_type(f))
-                                              for f in model.get_all_attributes()}
+                                              for f in model.get_attributes(GraphQLOperation.UPDATE_ONE)}
                                        }, GeneratedType.UPDATE_ONE)))
 
     setattr(sys.modules[ROOT_NS], update_one.__name__, update_one)
     update_one.__module__ = ROOT_NS
 
     return update_one
+
+
+def create_delete_one_input(model: Type[IEntityModel]) -> EntityType:
+    delete_one = strawberry.input(type(GeneratedType.DELETE_ONE.get_typename(model.__name__), (EntityType,),
+                                       _create_fields({
+                                           '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                               model.__name__),
+                                       }, GeneratedType.DELETE_ONE)))
+
+    setattr(sys.modules[ROOT_NS], delete_one.__name__, delete_one)
+    delete_one.__module__ = ROOT_NS
+
+    return delete_one
 
 
 def get_ordering_type(type_: Any):
