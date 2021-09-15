@@ -10,6 +10,7 @@ strawberry-graphql = "^0.76.1"
 inflection = "^0.5.1"
 starlette = "^0.16.0"
 uvicorn = {extras = ["standard"], version = "^0.15.0"}
+SQLAlchemy = "^1.4.23"
 
 [tool.poetry.dev-dependencies]
 

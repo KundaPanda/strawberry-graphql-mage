@@ -2,7 +2,7 @@ import abc
 import enum
 import sys
 from functools import lru_cache
-from typing import Any, Type, Tuple, Set, Dict, List, Union
+from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional
 
 from strawberry.annotation import StrawberryAnnotation
 
@@ -44,7 +44,7 @@ class GraphQLOperation(enum.Enum):
 
 class IDataBackend(abc.ABC):
     @abc.abstractmethod
-    def register_model(self, model):
+    def register_model(self, model: Type['IEntityModel']):
         raise NotImplemented
 
     @abc.abstractmethod
@@ -52,19 +52,20 @@ class IDataBackend(abc.ABC):
         raise NotImplemented
 
     @abc.abstractmethod
-    def get_all_attributes(self, model) -> List[str]:
+    def get_attributes(self, model: Type['IEntityModel'], operation: Optional[GraphQLOperation] = None) \
+            -> List[str]:
         raise NotImplemented
 
     @abc.abstractmethod
-    def get_attribute_types(self, model) -> Dict[str, Type]:
+    def get_attribute_types(self, model: Type['IEntityModel']) -> Dict[str, Type]:
         raise NotImplemented
 
     @abc.abstractmethod
-    def get_attribute_type(self, model, attr: str) -> Type:
+    def get_attribute_type(self, model: Type['IEntityModel'], attr: str) -> Type:
         raise NotImplemented
 
     @abc.abstractmethod
-    def get_primary_key(self, model) -> Tuple:
+    def get_primary_key(self, model: Type['IEntityModel']) -> Tuple:
         raise NotImplemented
 
     @abc.abstractmethod
@@ -72,13 +73,13 @@ class IDataBackend(abc.ABC):
         return {GraphQLOperation(i) for i in range(1, 9)}
 
     @abc.abstractmethod
-    def resolve(self, model, operation: GraphQLOperation, data: Any) -> Any:
+    def resolve(self, model: Type['IEntityModel'], operation: GraphQLOperation, data: Any) -> Any:
         raise NotImplemented
 
 
 class IEntityModel(abc.ABC):
     __backend__: IDataBackend = None
-    __primary_key__: Any = None
+    _primary_key__: Any = None
     _strawberry_type: StrawberryModelType
 
     @classmethod
@@ -104,7 +105,7 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def get_all_attributes(cls) -> List[str]:
+    def get_attributes(cls, operation: Optional[GraphQLOperation] = None) -> List[str]:
         raise NotImplemented
 
     @classmethod

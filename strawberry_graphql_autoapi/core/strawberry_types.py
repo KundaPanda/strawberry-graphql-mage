@@ -13,6 +13,11 @@ class EntityType:
     pass
 
 
+@strawberry.type
+class DeleteResult:
+    affected_rows: int
+
+
 @dataclass
 class StrawberryModelInputTypes:
     primary_key_input: 'PrimaryKeyInput'
@@ -20,6 +25,7 @@ class StrawberryModelInputTypes:
     query_many_input: 'QueryMany'
     create_one_input: EntityType
     update_one_input: EntityType
+    delete_one_input: EntityType
 
 
 @dataclass
@@ -97,7 +103,7 @@ class ScalarOrdering:
 
 @dataclass
 class QueryOne:
-    key: PrimaryKeyInput
+    _primary_key: PrimaryKeyInput
 
 
 @strawberry.input

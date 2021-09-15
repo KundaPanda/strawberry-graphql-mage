@@ -1,4 +1,4 @@
-from typing import Any, Set, List, Type, Dict, Tuple
+from typing import Any, Set, List, Type, Dict, Tuple, Optional
 
 from strawberry_graphql_autoapi.core.resolver import resolver_query_one, resolver_query_many, resolver_create_one, \
     resolver_create_many, resolver_update_one, resolver_update_many, resolver_delete_one, resolver_delete_many
@@ -10,7 +10,7 @@ from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel
 
 class EntityModel(IEntityModel):
     __backend__: IDataBackend = None
-    __primary_key__: Any = None
+    _primary_key__: Any = None
     _strawberry_type: StrawberryModelType
     _properties: List[str]
 
@@ -31,8 +31,8 @@ class EntityModel(IEntityModel):
         return cls.__backend__.get_operations(cls)
 
     @classmethod
-    def get_all_attributes(cls) -> List[str]:
-        return cls.__backend__.get_all_attributes(cls)
+    def get_attributes(cls, operation: Optional[GraphQLOperation] = None) -> List[str]:
+        return cls.__backend__.get_attributes(cls, operation)
 
     @classmethod
     def get_attribute_types(cls) -> Dict[str, Type]:
@@ -44,7 +44,7 @@ class EntityModel(IEntityModel):
 
     @classmethod
     def setup(cls):
-        cls._properties = cls.__backend__.get_all_attributes(cls)
+        cls._properties = cls.__backend__.get_attributes(cls)
         cls._strawberry_type = StrawberryModelType(
             entity=create_entity_type(cls),
             filter=create_filter_input(cls),
