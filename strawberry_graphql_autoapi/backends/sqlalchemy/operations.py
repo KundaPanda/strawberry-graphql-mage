@@ -5,8 +5,9 @@ from typing import List, Type, Any, Union, Dict
 from sqlalchemy import select, delete, and_, or_
 from sqlalchemy.orm import DeclarativeMeta, Session
 from sqlalchemy.sql.expression import ColumnOperators as ops
+from strawberry.arguments import is_unset
 
-from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, ObjectFilter
+from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany
 from strawberry_graphql_autoapi.core.types import IEntityModel, GraphQLOperation
 
 
@@ -67,36 +68,65 @@ def retrieve_(session: Session, model: Type[DeclarativeMeta], data: Any):
     return session.query(model).get(_get_model_pk_values(model, data))
 
 
-def add_default_ordering(model: Type[Union[DeclarativeMeta, IEntityModel]], ordering: List[Any]):
-    ordering_type = model.get_strawberry_type().ordering
-    return ordering + [ordering_type(**{k: OrderingDirection.DESC for k in model.get_primary_key()})]
+def create_default_ordering(model: Type[Union[DeclarativeMeta, IEntityModel]], ordering: List[Dict]):
+    return ordering + [{k: OrderingDirection.DESC for k in model.get_primary_key()}]
+
+
+def cleanup_ordering(ordering: List[Dict]):
+    result_ordering = []
+    for ordering_entry in ordering:
+        for field, value in ordering_entry.items():
+            if isinstance(value, list):
+                result_ordering.append({field: cleanup_ordering(value)})
+            elif not is_unset(value):
+                result_ordering.append({field: value})
+    return result_ordering
 
 
 def create_filter_op(column: Any, op_name: str, value: Any):
     return {
-        'exact': ops.__eq__(column, value)
+        'exact': ops.__eq__(column, value),
+        'gt': ops.__gt__(column, value),
     }.get(op_name)
 
 
-def create_object_filters(model: Type[Union[DeclarativeMeta, IEntityModel]], path: str, filter_: ObjectFilter):
-    filters = []
-    for col, value in dataclasses.asdict(filter_).items():
-        if value is None:
-            continue
-        if col == 'AND_':
-            filters.append(and_(*[create_object_filters(model, path, f) for f in value]))
-        elif col == 'OR_':
-            filters.append(or_(*[create_object_filters(model, path, f) for f in value]))
-        elif isinstance(value, ObjectFilter):
-            # TODO: model, joins
-            # noinspection PyTypeChecker
-            filters.append(create_object_filters(model.get_schema_manager().get_model_for_name(col), f'{path}.{col}', value))
-        else:
-            for operation, scalar_value in dataclasses.asdict(value).items():
-                filters.append(create_filter_op(getattr(model, col), operation, scalar_value))
-    return and_(*filters)
+def strip_typename(type_: Union[str, Type]) -> str:
+    while hasattr(type_, '__args__'):
+        type_ = type_.of_type
+    if isinstance(type_, str):
+        return type_
+    return type_.__name__
 
 
-def list_(session: Session, model: Type[DeclarativeMeta], data: Any):
-    ordering = add_default_ordering(model, getattr(data, 'ordering', []))
+def create_object_filters(model: Type[IEntityModel], path: str, filters: List[Dict], aggregate_op=and_):
+    result_filters = []
+    for filter_ in filters:
+        for col, value in filter_.items():
+            if is_unset(value):
+                continue
+            if col == 'AND_':
+                result_filters.append(create_object_filters(model, path, value))
+            elif col == 'OR_':
+                result_filters.append(create_object_filters(model, path, value, or_))
+            else:
+                for operation, filter_value in value.items():
+                    if is_unset(filter_value):
+                        continue
+                    if isinstance(filter_value, dict):
+                        # Nested filter
+                        # TODO: model, joins
+                        related_type_name = strip_typename(model.get_attribute_type(col))
+                        related_model = model.get_schema_manager().get_model_for_name(related_type_name)
+                        result_filters.append(create_object_filters(related_model, f'{path}.{col}', [filter_value]))
+                    else:
+                        result_filters.append(create_filter_op(getattr(model, col), operation, filter_value))
+    return aggregate_op(*result_filters)
+
+
+def list_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: QueryMany):
+    dict_ordering = [dataclasses.asdict(o) for o in getattr(data, 'ordering', [])]
+    ordering = create_default_ordering(model, dict_ordering)
+    ordering = cleanup_ordering(ordering)
+    dict_filter = [dataclasses.asdict(f) for f in getattr(data, 'filters', [])]
+    filter_ = create_object_filters(model, 'root', dict_filter)
     return session.execute(select(model)).scalars()
