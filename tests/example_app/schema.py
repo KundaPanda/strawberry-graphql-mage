@@ -1,12 +1,12 @@
 import enum
 from typing import List, Optional
 
-from strawberry_graphql_autoapi.core.backend import SQLAlchemyBackend
+from strawberry_graphql_autoapi.core.backend import DummyDataBackend
 from strawberry_graphql_autoapi.core.models import EntityModel
 from strawberry_graphql_autoapi.core.schema import SchemaManager
 
 
-dummy = SQLAlchemyBackend()
+dummy = DummyDataBackend()
 
 
 class Weapon(EntityModel):

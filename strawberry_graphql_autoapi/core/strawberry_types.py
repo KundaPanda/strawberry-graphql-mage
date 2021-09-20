@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass
-from typing import List, Optional as O, Callable, Optional
+from typing import List, Optional as O, Callable, Optional, Type, Union
 
 import strawberry
 from strawberry.arguments import UNSET
@@ -30,9 +30,9 @@ class StrawberryModelInputTypes:
 
 @dataclass
 class StrawberryModelType:
-    entity: EntityType
-    filter: 'ObjectFilter'
-    ordering: 'ObjectOrdering'
+    entity: Type[EntityType]
+    filter: Type['ObjectFilter']
+    ordering: Type['ObjectOrdering']
     input_types: Optional[StrawberryModelInputTypes] = None
     query_one: Optional[Callable] = None
     query_many: Optional[Callable] = None
@@ -51,7 +51,8 @@ class PrimaryKeyInput:
 
 @dataclass
 class ObjectFilter:
-    pass
+    AND_: Optional[List[Optional['ObjectFilter']]]
+    OR_: Optional[List[Optional['ObjectFilter']]]
 
 
 @dataclass

@@ -5,7 +5,7 @@ from typing import List, Type, Any, Union, Dict
 from sqlalchemy import select, delete, and_, or_
 from sqlalchemy.orm import DeclarativeMeta, Session
 
-from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult
+from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, ObjectFilter
 from strawberry_graphql_autoapi.core.types import IEntityModel, GraphQLOperation
 
 
@@ -66,5 +66,16 @@ def retrieve_(session: Session, model: Type[DeclarativeMeta], data: Any):
     return session.query(model).get(_get_model_pk_values(model, data))
 
 
+def add_default_ordering(model: Type[Union[DeclarativeMeta, IEntityModel]], ordering: List[Any]):
+    ordering_type = model.get_strawberry_type().ordering
+    return ordering + [ordering_type(**{k: OrderingDirection.DESC for k in model.get_primary_key()})]
+
+
+def create_object_filters(path: str, filter_: ObjectFilter):
+    return
+
+
+
 def list_(session: Session, model: Type[DeclarativeMeta], data: Any):
+    ordering = add_default_ordering(model, getattr(data, 'ordering', []))
     return session.execute(select(model)).scalars()

@@ -148,8 +148,12 @@ def create_ordering_input(model: Type[IEntityModel]) -> ObjectOrdering:
 def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
     filter_ = strawberry.input(type(GeneratedType.FILTER.get_typename(model.__name__), (ObjectFilter,),
                                     _create_fields({
-                                        k: get_filter_type(Optional[model.get_attribute_type(k)]) for k in
-                                        model.get_attributes(GraphQLOperation.QUERY_MANY)
+                                        'AND_': Optional[
+                                            List[Optional[GeneratedType.FILTER.get_typename(model.__name__)]]],
+                                        'OR_': Optional[
+                                            List[Optional[GeneratedType.FILTER.get_typename(model.__name__)]]],
+                                        **{k: get_filter_type(Optional[model.get_attribute_type(k)]) for k in
+                                           model.get_attributes(GraphQLOperation.QUERY_MANY)}
                                     })))
 
     setattr(sys.modules[ROOT_NS], filter_.__name__, filter_)
