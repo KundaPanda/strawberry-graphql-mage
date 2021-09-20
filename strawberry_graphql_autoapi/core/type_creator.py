@@ -6,6 +6,7 @@ from typing import Type, ForwardRef, Any, List, Optional, Dict, Union
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.arguments import UNSET
 from strawberry.field import StrawberryField
 from strawberry.scalars import is_scalar
 from strawberry.utils.typing import is_optional
@@ -36,7 +37,7 @@ class GeneratedType(enum.Enum):
 
 
 def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = GeneratedType.ENTITY) -> Dict[str, Any]:
-    strawberry_fields = {f: StrawberryField(f, type_annotation=defer_annotation(a, target_type), default=None)
+    strawberry_fields = {f: StrawberryField(f, type_annotation=defer_annotation(a, target_type), default_factory=lambda: UNSET, default=UNSET)
                          for f, a in fields.items()}
     return {
         **strawberry_fields,

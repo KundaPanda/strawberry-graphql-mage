@@ -12,7 +12,7 @@ class SchemaManager(ISchemaManager):
     _models: Dict[str, IEntityModel]
 
     def __init__(self, *models):
-        self._models = {m: GeneratedType.ENTITY.get_typename(m.__name__) for m in models}
+        self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
         for model in self._models.values():
             model.setup(self)
 

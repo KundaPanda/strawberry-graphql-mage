@@ -88,7 +88,7 @@ class ISchemaManager(abc.ABC):
         raise NotImplemented
 
     @abc.abstractmethod
-    def get_model_for_name(self, name: str) -> Optional['IEntityModel']:
+    def get_model_for_name(self, name: str) -> Optional[Type['IEntityModel']]:
         raise NotImplemented
 
 
@@ -135,7 +135,7 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def get_attribute_type(cls, attr: str) -> Type:
+    def get_attribute_type(cls, attr: str) -> Union[Type, str]:
         raise NotImplemented
 
     @classmethod
