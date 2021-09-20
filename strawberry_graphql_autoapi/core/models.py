@@ -5,7 +5,7 @@ from strawberry_graphql_autoapi.core.resolver import resolver_query_one, resolve
 from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType
 from strawberry_graphql_autoapi.core.type_creator import create_entity_type, \
     create_input_types, create_filter_input, create_ordering_input
-from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, IDataBackend
+from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, IDataBackend, ISchemaManager
 
 
 class EntityModel(IEntityModel):
@@ -13,6 +13,7 @@ class EntityModel(IEntityModel):
     _primary_key__: Any = None
     _strawberry_type: StrawberryModelType
     _properties: List[str]
+    _manager: ISchemaManager = None
 
     @classmethod
     def get_strawberry_type(cls):
@@ -43,7 +44,12 @@ class EntityModel(IEntityModel):
         return cls.__backend__.get_attribute_type(cls, attr)
 
     @classmethod
-    def setup(cls):
+    def get_schema_manager(cls):
+        return cls._manager
+
+    @classmethod
+    def setup(cls, manager):
+        cls._manager = manager
         cls._properties = cls.__backend__.get_attributes(cls)
         cls._strawberry_type = StrawberryModelType(
             entity=create_entity_type(cls),

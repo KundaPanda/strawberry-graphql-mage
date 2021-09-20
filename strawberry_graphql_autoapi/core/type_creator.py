@@ -97,7 +97,7 @@ def create_enum_type(attr: enum.EnumMeta):
     return enum_type, enum_filter_type, enum_ordering_type
 
 
-def create_entity_type(model: Type[IEntityModel]) -> EntityType:
+def create_entity_type(model: Type[IEntityModel]) -> Type[EntityType]:
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
@@ -132,7 +132,7 @@ def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     return input_types
 
 
-def create_ordering_input(model: Type[IEntityModel]) -> ObjectOrdering:
+def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
     ordering = strawberry.input(type(GeneratedType.ORDERING.get_typename(model.__name__), (ObjectOrdering,),
                                      _create_fields({
                                          k: get_ordering_type(Optional[model.get_attribute_type(k)])
@@ -145,7 +145,7 @@ def create_ordering_input(model: Type[IEntityModel]) -> ObjectOrdering:
     return ordering
 
 
-def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
+def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
     filter_ = strawberry.input(type(GeneratedType.FILTER.get_typename(model.__name__), (ObjectFilter,),
                                     _create_fields({
                                         'AND_': Optional[
@@ -162,7 +162,7 @@ def create_filter_input(model: Type[IEntityModel]) -> ObjectFilter:
     return filter_
 
 
-def create_primary_key_input(model: Type[IEntityModel]) -> PrimaryKeyInput:
+def create_primary_key_input(model: Type[IEntityModel]) -> Type[PrimaryKeyInput]:
     input_type = strawberry.input(type(GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__), (PrimaryKeyInput,),
                                        _create_fields({
                                            k: model.get_attribute_type(k) for k in model.get_primary_key()
@@ -173,7 +173,7 @@ def create_primary_key_input(model: Type[IEntityModel]) -> PrimaryKeyInput:
     return input_type
 
 
-def create_query_one_input(model: Type[IEntityModel]) -> QueryOne:
+def create_query_one_input(model: Type[IEntityModel]) -> Type[QueryOne]:
     query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
                                       _create_fields(
                                           {
@@ -187,7 +187,7 @@ def create_query_one_input(model: Type[IEntityModel]) -> QueryOne:
     return query_one
 
 
-def create_query_many_input(model: Type[IEntityModel]) -> QueryMany:
+def create_query_many_input(model: Type[IEntityModel]) -> Type[QueryMany]:
     query_many = strawberry.input(type(GeneratedType.QUERY_MANY.get_typename(model.__name__), (QueryMany,),
                                        _create_fields({
                                            'ordering': Optional[
@@ -202,7 +202,7 @@ def create_query_many_input(model: Type[IEntityModel]) -> QueryMany:
     return query_many
 
 
-def create_create_one_input(model: Type[IEntityModel]) -> EntityType:
+def create_create_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
     create_one = strawberry.input(type(GeneratedType.CREATE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
                                            f: (Optional[model.get_attribute_type(f)]
@@ -217,7 +217,7 @@ def create_create_one_input(model: Type[IEntityModel]) -> EntityType:
     return create_one
 
 
-def create_update_one_input(model: Type[IEntityModel]) -> EntityType:
+def create_update_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
     update_one = strawberry.input(type(GeneratedType.UPDATE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
                                            '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
@@ -234,7 +234,7 @@ def create_update_one_input(model: Type[IEntityModel]) -> EntityType:
     return update_one
 
 
-def create_delete_one_input(model: Type[IEntityModel]) -> EntityType:
+def create_delete_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
     delete_one = strawberry.input(type(GeneratedType.DELETE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
                                            '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(

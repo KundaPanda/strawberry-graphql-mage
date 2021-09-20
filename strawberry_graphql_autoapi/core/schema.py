@@ -1,19 +1,20 @@
-from typing import List
+from typing import Dict
 
 import strawberry
 from inflection import underscore, pluralize
 from strawberry import Schema
 
-from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel
+from strawberry_graphql_autoapi.core.type_creator import GeneratedType
+from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, ISchemaManager
 
 
-class SchemaManager:
-    _models: List[IEntityModel] = []
+class SchemaManager(ISchemaManager):
+    _models: Dict[str, IEntityModel]
 
     def __init__(self, *models):
-        self._models.extend(models)
-        for model in self._models:
-            model.setup()
+        self._models = {m: GeneratedType.ENTITY.get_typename(m.__name__) for m in models}
+        for model in self._models.values():
+            model.setup(self)
 
     @staticmethod
     def _add_operation(type_object, operation: GraphQLOperation, model: IEntityModel):
@@ -29,11 +30,17 @@ class SchemaManager:
             setattr(type_object, name, getattr(model.get_strawberry_type(), operation.name.lower()))
             return
 
+    def get_models(self):
+        return self._models[:]
+
+    def get_model_for_name(self, name: str):
+        return self._models.get(name, None)
+
     def get_schema(self):
         query_object = type('Query', (object,), {})
         mutation_object = type('Mutation', (object,), {})
 
-        for model in self._models:
+        for model in self._models.values():
             # Query
             self._add_operation(query_object, GraphQLOperation.QUERY_ONE, model)
             self._add_operation(query_object, GraphQLOperation.QUERY_MANY, model)
