@@ -4,6 +4,7 @@ import sys
 from functools import lru_cache
 from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional
 
+from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
 
 from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType, ROOT_NS
@@ -77,6 +78,20 @@ class IDataBackend(abc.ABC):
         raise NotImplemented
 
 
+class ISchemaManager(abc.ABC):
+    @abc.abstractmethod
+    def get_schema(self) -> Schema:
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def get_models(self) -> List['IEntityModel']:
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def get_model_for_name(self, name: str) -> Optional['IEntityModel']:
+        raise NotImplemented
+
+
 class IEntityModel(abc.ABC):
     __backend__: IDataBackend = None
     _primary_key__: Any = None
@@ -100,7 +115,12 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def setup(cls) -> None:
+    def get_schema_manager(cls) -> ISchemaManager:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def setup(cls, manager: ISchemaManager) -> None:
         raise NotImplemented
 
     @classmethod

@@ -4,6 +4,7 @@ from typing import List, Type, Any, Union, Dict
 
 from sqlalchemy import select, delete, and_, or_
 from sqlalchemy.orm import DeclarativeMeta, Session
+from sqlalchemy.sql.expression import ColumnOperators as ops
 
 from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, ObjectFilter
 from strawberry_graphql_autoapi.core.types import IEntityModel, GraphQLOperation
@@ -71,9 +72,29 @@ def add_default_ordering(model: Type[Union[DeclarativeMeta, IEntityModel]], orde
     return ordering + [ordering_type(**{k: OrderingDirection.DESC for k in model.get_primary_key()})]
 
 
-def create_object_filters(path: str, filter_: ObjectFilter):
-    return
+def create_filter_op(column: Any, op_name: str, value: Any):
+    return {
+        'exact': ops.__eq__(column, value)
+    }.get(op_name)
 
+
+def create_object_filters(model: Type[Union[DeclarativeMeta, IEntityModel]], path: str, filter_: ObjectFilter):
+    filters = []
+    for col, value in dataclasses.asdict(filter_).items():
+        if value is None:
+            continue
+        if col == 'AND_':
+            filters.append(and_(*[create_object_filters(model, path, f) for f in value]))
+        elif col == 'OR_':
+            filters.append(or_(*[create_object_filters(model, path, f) for f in value]))
+        elif isinstance(value, ObjectFilter):
+            # TODO: model, joins
+            # noinspection PyTypeChecker
+            filters.append(create_object_filters(model.get_schema_manager().get_model_for_name(col), f'{path}.{col}', value))
+        else:
+            for operation, scalar_value in dataclasses.asdict(value).items():
+                filters.append(create_filter_op(getattr(model, col), operation, scalar_value))
+    return and_(*filters)
 
 
 def list_(session: Session, model: Type[DeclarativeMeta], data: Any):
