@@ -20,6 +20,7 @@ from strawberry_graphql_autoapi.core.types import IEntityModel, ModuleBoundStraw
 class GeneratedType(enum.Enum):
     ENTITY = ''
     PRIMARY_KEY_INPUT = 'PrimaryKey'
+    PRIMARY_KEY_FIELD = 'PrimaryKeyField'
     QUERY_ONE = 'QueryOne'
     QUERY_MANY = 'QueryMany'
     CREATE_ONE = 'CreateOne'
@@ -37,14 +38,26 @@ class GeneratedType(enum.Enum):
 
 
 def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = GeneratedType.ENTITY) -> Dict[str, Any]:
-    strawberry_fields = {f: StrawberryField(f, type_annotation=defer_annotation(a, target_type), default_factory=lambda: UNSET, default=UNSET)
-                         for f, a in fields.items()}
+    strawberry_fields = {
+        f: StrawberryField(f, type_annotation=defer_annotation(a, target_type), default_factory=lambda: UNSET,
+                           default=UNSET)
+        for f, a in fields.items()}
     return {
         **strawberry_fields,
         '__annotations__': {
             f: a.type_annotation for f, a in strawberry_fields.items()
         }
     }
+
+
+def strip_typename(type_: Union[str, Type]) -> str:
+    while hasattr(type_, '__args__'):
+        type_ = type_.__args__[0]
+    if isinstance(type_, str):
+        return type_
+    if isinstance(type_, ForwardRef):
+        return type_.__forward_arg__
+    return type_.__name__
 
 
 def _apply_type_rename(name: str, target_type: GeneratedType):
@@ -119,12 +132,11 @@ def create_entity_type(model: Type[IEntityModel]) -> Type[EntityType]:
 def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     input_types = strawberry.input(
         type(GeneratedType.INPUTS.get_typename(model.__name__), (StrawberryModelInputTypes,), _create_fields({
-            'primary_key_input': create_primary_key_input(model),
+            'primary_key_field': create_primary_key_field(model),
             'query_one_input': create_query_one_input(model),
             'query_many_input': create_query_many_input(model),
             'create_one_input': create_create_one_input(model),
             'update_one_input': create_update_one_input(model),
-            'delete_one_input': create_delete_one_input(model),
         }))
     )
     setattr(sys.modules[ROOT_NS], input_types.__name__, input_types)
@@ -174,11 +186,23 @@ def create_primary_key_input(model: Type[IEntityModel]) -> Type[PrimaryKeyInput]
     return input_type
 
 
+def create_primary_key_field(model: Type[IEntityModel]) -> Type:
+    pk_field = strawberry.input(type(GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__), (EntityType,),
+                                     _create_fields({
+                                         'primary_key_': create_primary_key_input(model),
+                                     }, GeneratedType.PRIMARY_KEY_FIELD)))
+
+    setattr(sys.modules[ROOT_NS], pk_field.__name__, pk_field)
+    pk_field.__module__ = ROOT_NS
+
+    return pk_field
+
+
 def create_query_one_input(model: Type[IEntityModel]) -> Type[QueryOne]:
     query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
                                       _create_fields(
                                           {
-                                              '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                              'primary_key_': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
                                                   model.__name__)
                                           })))
 
@@ -204,13 +228,12 @@ def create_query_many_input(model: Type[IEntityModel]) -> Type[QueryMany]:
 
 
 def create_create_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
+    fields = {
+        f: model.get_attribute_type(f)
+        for f in model.get_attributes(GraphQLOperation.CREATE_ONE)
+    }
     create_one = strawberry.input(type(GeneratedType.CREATE_ONE.get_typename(model.__name__), (EntityType,),
-                                       _create_fields({
-                                           f: (Optional[model.get_attribute_type(f)]
-                                               if f in model.get_primary_key()
-                                               else model.get_attribute_type(f))
-                                           for f in model.get_attributes(GraphQLOperation.CREATE_ONE)
-                                       }, GeneratedType.CREATE_ONE)))
+                                       _create_fields(fields, GeneratedType.PRIMARY_KEY_FIELD)))
 
     setattr(sys.modules[ROOT_NS], create_one.__name__, create_one)
     create_one.__module__ = ROOT_NS
@@ -221,31 +244,16 @@ def create_create_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
 def create_update_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
     update_one = strawberry.input(type(GeneratedType.UPDATE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
-                                           '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
+                                           'primary_key_': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
                                                model.__name__),
-                                           **{f: (Optional[model.get_attribute_type(f)]
-                                                  if f in model.get_primary_key()
-                                                  else model.get_attribute_type(f))
+                                           **{f: Optional[model.get_attribute_type(f)]
                                               for f in model.get_attributes(GraphQLOperation.UPDATE_ONE)}
-                                       }, GeneratedType.UPDATE_ONE)))
+                                       }, GeneratedType.PRIMARY_KEY_FIELD)))
 
     setattr(sys.modules[ROOT_NS], update_one.__name__, update_one)
     update_one.__module__ = ROOT_NS
 
     return update_one
-
-
-def create_delete_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
-    delete_one = strawberry.input(type(GeneratedType.DELETE_ONE.get_typename(model.__name__), (EntityType,),
-                                       _create_fields({
-                                           '_primary_key': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
-                                               model.__name__),
-                                       }, GeneratedType.DELETE_ONE)))
-
-    setattr(sys.modules[ROOT_NS], delete_one.__name__, delete_one)
-    delete_one.__module__ = ROOT_NS
-
-    return delete_one
 
 
 def get_ordering_type(type_: Any):

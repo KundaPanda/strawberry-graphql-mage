@@ -19,13 +19,22 @@ class DeleteResult:
 
 
 @dataclass
+class PrimaryKeyInput:
+    pass
+
+
+@dataclass
+class PrimaryKeyField:
+    primary_key_: PrimaryKeyInput
+
+
+@dataclass
 class StrawberryModelInputTypes:
-    primary_key_input: 'PrimaryKeyInput'
+    primary_key_field: PrimaryKeyField
     query_one_input: 'QueryOne'
     query_many_input: 'QueryMany'
     create_one_input: EntityType
     update_one_input: EntityType
-    delete_one_input: EntityType
 
 
 @dataclass
@@ -42,11 +51,6 @@ class StrawberryModelType:
     update_many: Optional[Callable] = None
     delete_one: Optional[Callable] = None
     delete_many: Optional[Callable] = None
-
-
-@dataclass
-class PrimaryKeyInput:
-    pass
 
 
 @dataclass
@@ -104,7 +108,7 @@ class ScalarOrdering:
 
 @dataclass
 class QueryOne:
-    _primary_key: PrimaryKeyInput
+    primary_key_: PrimaryKeyInput
 
 
 @strawberry.input
