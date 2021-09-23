@@ -1,9 +1,11 @@
 from functools import lru_cache
-from typing import Iterable, Any, Type, Dict, Tuple, Set, Union, Optional, List
+from typing import Any, Type, Dict, Tuple, Set, Union, Optional, List
 
 from sqlalchemy import inspect, Integer, String
 from sqlalchemy.orm import ColumnProperty, DeclarativeMeta, RelationshipProperty, Mapper, ONETOMANY, MANYTOMANY, \
-    Session, sessionmaker
+    sessionmaker
+from sqlalchemy.orm.util import AliasedInsp
+from strawberry.types import Info
 
 from strawberry_graphql_autoapi.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
 from strawberry_graphql_autoapi.core.backend import DataBackendBase
@@ -40,7 +42,8 @@ class SQLAlchemyBackend(DataBackendBase):
 
     def get_attributes(self, model: Type[Union[IEntityModel, DeclarativeMeta]],
                        operation: Optional[GraphQLOperation] = None) -> List[str]:
-        all_ = [a.key for a in inspect(model).attrs]
+        inspection = inspect(model)
+        all_ = [a.key for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs)]
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
             return all_
         all_ = self._remove_polymorphic_cols(model, all_)
@@ -65,11 +68,14 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @lru_cache
     def get_attribute_type(self, model: Type[Union[IEntityModel, DeclarativeMeta]], attr: str) -> Type:
-        col: Union[ColumnProperty, RelationshipProperty] = getattr(inspect(model).attrs, attr)
+        inspection = inspect(model)
+        col: Union[ColumnProperty, RelationshipProperty] = \
+            getattr(inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs, attr)
         return self._get_attribute_type(col)
 
+    @lru_cache
     def get_attribute_types(self, model: Type[Union[IEntityModel, DeclarativeMeta]]) -> Dict[str, Type]:
-        return {attr.key: self._get_attribute_type(attr) for attr in inspect(model).attrs}
+        return {attr: self.get_attribute_type(model, attr) for attr in self.get_attributes(model)}
 
     def get_primary_key(self, model: Type[Union[IEntityModel, DeclarativeMeta]]) -> Tuple:
         return tuple(a.key for a in inspect(model).primary_key)
@@ -77,21 +83,33 @@ class SQLAlchemyBackend(DataBackendBase):
     def get_operations(self, model: Type[Union[IEntityModel, DeclarativeMeta]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def resolve(self, model: Type[Union[IEntityModel, DeclarativeMeta]], operation: GraphQLOperation, data: Any) -> Any:
+    def _build_selection(self, field, selection=None):
+        if selection is None:
+            selection = {}
+        for subfield in field.selections:
+            if subfield.selections:
+                selection[subfield.name] = {}
+                self._build_selection(subfield, selection[subfield.name])
+        return selection
+
+    def resolve(self, model: Type[Union[IEntityModel, DeclarativeMeta]], operation: GraphQLOperation, info: Info,
+                data: Any) -> Any:
         with self._session() as s:
-            if operation == GraphQLOperation.QUERY_MANY:
-                return list_(s, model, data)
-            if operation == GraphQLOperation.QUERY_ONE:
-                return retrieve_(s, model, data)
-            if operation == GraphQLOperation.CREATE_ONE:
-                return [*create_(s, model, [data]), None][0]
-            if operation == GraphQLOperation.CREATE_MANY:
-                return create_(s, model, data)
-            if operation == GraphQLOperation.UPDATE_ONE:
-                return [*update_(s, model, [data]), None][0]
-            if operation == GraphQLOperation.UPDATE_MANY:
-                return update_(s, model, data)
-            if operation == GraphQLOperation.DELETE_ONE:
-                return delete_(s, model, [data])
-            if operation == GraphQLOperation.DELETE_MANY:
-                return delete_(s, model, data)
+            for field in info.selected_fields:
+                selection = self._build_selection(field)
+                if operation == GraphQLOperation.QUERY_MANY:
+                    return list_(s, model, data, selection)
+                if operation == GraphQLOperation.QUERY_ONE:
+                    return retrieve_(s, model, data, selection)
+                if operation == GraphQLOperation.CREATE_ONE:
+                    return [*create_(s, model, [data], selection), None][0]
+                if operation == GraphQLOperation.CREATE_MANY:
+                    return create_(s, model, data, selection)
+                if operation == GraphQLOperation.UPDATE_ONE:
+                    return [*update_(s, model, [data], selection), None][0]
+                if operation == GraphQLOperation.UPDATE_MANY:
+                    return update_(s, model, data, selection)
+                if operation == GraphQLOperation.DELETE_ONE:
+                    return delete_(s, model, [data])
+                if operation == GraphQLOperation.DELETE_MANY:
+                    return delete_(s, model, data)

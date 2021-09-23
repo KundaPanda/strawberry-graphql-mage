@@ -11,7 +11,7 @@ from strawberry_graphql_autoapi.core.models import EntityModel
 from strawberry_graphql_autoapi.core.schema import SchemaManager
 from strawberry_graphql_autoapi.core.types import IEntityModel
 
-engine = create_engine('sqlite:///')
+engine = create_engine('sqlite:///', echo=True)
 backend = SQLAlchemyBackend(session_maker=sessionmaker(bind=engine))
 
 

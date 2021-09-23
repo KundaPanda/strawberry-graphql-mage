@@ -6,6 +6,7 @@ from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional
 
 from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.types import Info
 
 from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType, ROOT_NS
 
@@ -74,7 +75,7 @@ class IDataBackend(abc.ABC):
         return {GraphQLOperation(i) for i in range(1, 9)}
 
     @abc.abstractmethod
-    def resolve(self, model: Type['IEntityModel'], operation: GraphQLOperation, data: Any) -> Any:
+    def resolve(self, model: Type['IEntityModel'], operation: GraphQLOperation, info: Info, data: Any) -> Any:
         raise NotImplemented
 
 
@@ -94,7 +95,7 @@ class ISchemaManager(abc.ABC):
 
 class IEntityModel(abc.ABC):
     __backend__: IDataBackend = None
-    _primary_key__: Any = None
+    __primary_key__: Any = None
     _strawberry_type: StrawberryModelType
 
     @classmethod
@@ -110,7 +111,7 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def resolve(cls, operation: GraphQLOperation, data: Any) -> Any:
+    def resolve(cls, operation: GraphQLOperation, info: Info, data: Any) -> Any:
         raise NotImplemented
 
     @classmethod

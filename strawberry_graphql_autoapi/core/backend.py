@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional
 
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.types import Info
 
 from strawberry_graphql_autoapi.core.type_creator import defer_annotation
 from strawberry_graphql_autoapi.core.types import GraphQLOperation, IDataBackend, IEntityModel
@@ -37,12 +38,12 @@ class DummyDataBackend(DataBackendBase):
         return self.get_model_annotations(model)
 
     def get_primary_key(self, model: Type[IEntityModel]) -> Tuple:
-        return model._primary_key__
+        return model.__primary_key__
 
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, data: Any) -> Any:
+    def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
         if operation.value % 2 == 0:
             return []
         return None

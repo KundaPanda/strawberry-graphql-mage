@@ -15,7 +15,7 @@ class Weapon(EntityModel):
     owner: Optional['Entity']
     name: Optional[str]
 
-    _primary_key__ = ('id',)
+    __primary_key__ = ('id',)
     __backend__ = dummy
 
 
@@ -23,7 +23,7 @@ class Entity(EntityModel):
     id: int
     weapons: List[Weapon]
 
-    _primary_key__ = ('id',)
+    __primary_key__ = ('id',)
     __backend__ = dummy
 
 
