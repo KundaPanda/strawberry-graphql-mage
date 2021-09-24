@@ -8,7 +8,7 @@ import strawberry
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.arguments import UNSET
 from strawberry.field import StrawberryField
-from strawberry.scalars import is_scalar
+from strawberry.scalars import is_scalar, SCALAR_TYPES
 from strawberry.utils.typing import is_optional
 
 from strawberry_graphql_autoapi.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
@@ -50,13 +50,15 @@ def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = Generate
     }
 
 
-def strip_typename(type_: Union[str, Type]) -> str:
+def strip_typename(type_: Union[str, Type]) -> Union[str, Type]:
     while hasattr(type_, '__args__'):
         type_ = type_.__args__[0]
     if isinstance(type_, str):
         return type_
     if isinstance(type_, ForwardRef):
         return type_.__forward_arg__
+    if type_ in SCALAR_TYPES:
+        return type_
     return type_.__name__
 
 

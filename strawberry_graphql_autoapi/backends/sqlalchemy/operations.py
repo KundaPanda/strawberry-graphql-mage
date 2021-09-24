@@ -1,6 +1,6 @@
 import dataclasses
 from functools import partial
-from typing import List, Type, Any, Union, Dict, Callable, Tuple, Set
+from typing import List, Type, Any, Union, Dict, Callable, Tuple
 
 from sqlalchemy import select, delete, and_, or_
 from sqlalchemy.orm import DeclarativeMeta, Session, aliased, contains_eager
@@ -12,7 +12,7 @@ from strawberry.arguments import is_unset, UNSET
 
 from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany
 from strawberry_graphql_autoapi.core.type_creator import strip_typename
-from strawberry_graphql_autoapi.core.types import IEntityModel, GraphQLOperation
+from strawberry_graphql_autoapi.core.types import IEntityModel
 
 JoinsType = Dict[str, Tuple[Type[Union[AliasedClass, DeclarativeMeta]], Union[Join, Type[DeclarativeMeta]]]]
 
@@ -39,48 +39,75 @@ def _get_dict_pk_values(model: Type[Union[DeclarativeMeta, IEntityModel]], data:
     return tuple(data.get(key) for key in model.get_primary_key())
 
 
-def create_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: List[Any], selection: Set):
-    # TODO: create / add existing related
+def _set_instance_attrs(model: Type[Union[DeclarativeMeta, IEntityModel]], instance: object,
+                        input_object: dataclasses.dataclass, session: Session):
+    for prop in input_object.__dataclass_fields__:
+        value = getattr(input_object, prop)
+        if is_unset(value) or prop == 'primary_key_':
+            continue
+        dtype = strip_typename(model.get_attribute_type(prop))
+        if isinstance(dtype, str):
+            related_model = model.get_schema_manager().get_model_for_name(dtype)
+            if isinstance(value, list):
+                expr = select(related_model).where(_build_multiple_pk_query(related_model, value))
+                setattr(instance, prop, session.execute(expr).scalars().all())
+            else:
+                setattr(instance, prop, session.query(related_model).get(dataclasses.asdict(value.primary_key_)))
+        else:
+            setattr(instance, prop, value)
+
+
+def create_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: List[Any],
+            selection: Dict[str, Dict]):
+    # TODO: create related models as well maybe?
     models = []
     for create_type in data:
-        fields = {}
-        for prop in create_type.__dataclass_fields__:
-            value = getattr(create_type, prop)
-            if is_unset(value):
-                continue
-            if not isinstance(value, list):
-                fields[prop] = value
-            else:
-                related_name = model.get_attribute_type(prop)
-                related_model = model.get_schema_manager().get_model_for_name(strip_typename(related_name))
-                selected_instances = session \
-                    .execute(select(related_model)
-                             .where(_build_multiple_pk_query(related_model, value))
-                             ).scalars().all()
-                fields[prop] = selected_instances
-        models.append(model(**fields))
+        instance = model()
+        _set_instance_attrs(model, instance, create_type, session)
+        models.append(instance)
     session.add_all(models)
+    session.flush(models)
+    primary_keys = [{key: getattr(instance, key) for key in model.get_primary_key()} for instance in models]
     session.commit()
-    [session.refresh(m) for m in models]
-    return models
+
+    joins: JoinsType = {'': (model, model)}
+
+    eager_options = create_selection_joins(model, '', selection, joins)
+    ordering = create_ordering(model, '', add_default_ordering(model, []), joins)
+
+    expression = select(model, *[j[0] for j in joins.values()]) \
+        .select_from(*[j[1] for j in joins.values()]) \
+        .filter(_build_multiple_pk_query(model, [type('StubInput', (), {'primary_key_': type('StubPk', (), instance)})()
+                                                 for instance in primary_keys])) \
+        .order_by(*ordering)
+    if eager_options is not None:
+        expression = expression.options(eager_options)
+    return session.execute(expression).unique().scalars().all()
 
 
-def update_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: List[Any], selection: Set):
-    input_values = model.get_attributes(GraphQLOperation.CREATE_ONE)
+def update_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: List[Any],
+            selection: Dict[str, Dict]):
     pk_filter = _build_multiple_pk_query(model, data)
     entities = {_get_model_pk_values(model, en): en
                 for en in session.execute(select(model).where(pk_filter)).scalars().all()}
     for entry in data:
-        for column in input_values:
-            # TODO: update related
-            model_instance = entities[_get_model_pk_values(model, entry.primary_key_)]
-            setattr(model_instance, column,
-                    getattr(entry, column,
-                            getattr(model_instance, column)))
+        model_instance = entities[_get_model_pk_values(model, entry.primary_key_)]
+        _set_instance_attrs(model, model_instance, entry, session)
     session.add_all(entities.values())
     session.commit()
-    [session.refresh(e) for e in entities.values()]
-    return entities.values()
+
+    joins: JoinsType = {'': (model, model)}
+
+    eager_options = create_selection_joins(model, '', selection, joins)
+    ordering = create_ordering(model, '', add_default_ordering(model, []), joins)
+
+    expression = select(model, *[j[0] for j in joins.values()]) \
+        .select_from(*[j[1] for j in joins.values()]) \
+        .filter(pk_filter) \
+        .order_by(*ordering)
+    if eager_options is not None:
+        expression = expression.options(eager_options)
+    return session.execute(expression).unique().scalars().all()
 
 
 def delete_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]], data: List[Any]):
@@ -91,7 +118,7 @@ def delete_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]],
     return DeleteResult(affected_rows=r.rowcount)
 
 
-def retrieve_(session: Session, model: Type[DeclarativeMeta], data: Any, selection: Set):
+def retrieve_(session: Session, model: Type[DeclarativeMeta], data: Any, selection: Dict[str, Dict]):
     return session.query(model).get(_get_model_pk_values(model, data))
 
 
@@ -127,7 +154,7 @@ def _apply_nested(model: Type[IEntityModel], path: str, input_: Any, op: Callabl
         join_expression = getattr(model, ex.left.key) == getattr(related_model, ex.right.key) \
             if ex.right.table == related_model.__table__ \
             else getattr(model, ex.right.key) == getattr(related_model, ex.left.key)
-        joins[nested_path] = related_model, join(joins[path][1], related_model, join_expression)
+        joins[nested_path] = related_model, join(joins[path][1], related_model, join_expression, isouter=True)
     eager_options = contains_eager(getattr(model, attribute).of_type(joins[nested_path][0])) \
         if eager_options is None \
         else eager_options.contains_eager(getattr(model, attribute).of_type(joins[nested_path][0]))
