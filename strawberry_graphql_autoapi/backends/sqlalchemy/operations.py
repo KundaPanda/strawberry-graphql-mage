@@ -10,7 +10,8 @@ from sqlalchemy.sql.expression import ColumnOperators as ops, join, desc
 from sqlalchemy.sql.operators import ColumnOperators
 from strawberry.arguments import is_unset, UNSET
 
-from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany
+from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany, \
+    PrimaryKeyField
 from strawberry_graphql_autoapi.core.type_creator import strip_typename
 from strawberry_graphql_autoapi.core.types import IEntityModel
 
@@ -31,12 +32,16 @@ def _build_multiple_pk_query(model: Type[Union[DeclarativeMeta, IEntityModel]], 
         _build_pk_query(model, {k: getattr(entry.primary_key_, k) for k in model.get_primary_key()}) for entry in data)
 
 
-def _get_model_pk_values(model: Type[Union[DeclarativeMeta, IEntityModel]], data: Union[DeclarativeMeta, IEntityModel]):
+def _get_model_pk_values(model: Type[Union[DeclarativeMeta, IEntityModel]], data: dataclasses.dataclass):
     return tuple(getattr(data, key) for key in model.get_primary_key())
 
 
 def _get_dict_pk_values(model: Type[Union[DeclarativeMeta, IEntityModel]], data: Dict[str, Any]):
     return tuple(data.get(key) for key in model.get_primary_key())
+
+
+def _create_pk_class(data: Dict[str, Any]):
+    return type('StubInput', (), {'primary_key_': type('StubPk', (), data)})()
 
 
 def _set_instance_attrs(model: Type[Union[DeclarativeMeta, IEntityModel]], instance: object,
@@ -77,8 +82,7 @@ def create_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]],
 
     expression = select(model, *[j[0] for j in joins.values()]) \
         .select_from(*[j[1] for j in joins.values()]) \
-        .filter(_build_multiple_pk_query(model, [type('StubInput', (), {'primary_key_': type('StubPk', (), instance)})()
-                                                 for instance in primary_keys])) \
+        .filter(_build_multiple_pk_query(model, [_create_pk_class(instance) for instance in primary_keys])) \
         .order_by(*ordering)
     if eager_options is not None:
         expression = expression.options(eager_options)
@@ -118,8 +122,19 @@ def delete_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]],
     return DeleteResult(affected_rows=r.rowcount)
 
 
-def retrieve_(session: Session, model: Type[DeclarativeMeta], data: Any, selection: Dict[str, Dict]):
-    return session.query(model).get(_get_model_pk_values(model, data))
+def retrieve_(session: Session, model: Type[Union[DeclarativeMeta, IEntityModel]],
+              data: Union[PrimaryKeyField, dataclasses.dataclass], selection: Dict[str, Dict]):
+    pk_filter = _build_pk_query(model, data.primary_key_)
+    joins: JoinsType = {'': (model, model)}
+
+    eager_options = create_selection_joins(model, '', selection, joins)
+
+    expression = select(model, *[j[0] for j in joins.values()]) \
+        .select_from(*[j[1] for j in joins.values()]) \
+        .filter(pk_filter)
+    if eager_options is not None:
+        expression = expression.options(eager_options)
+    return session.execute(expression).unique().scalar()
 
 
 def add_default_ordering(model: Type[Union[DeclarativeMeta, IEntityModel]], ordering: List[Dict]):
