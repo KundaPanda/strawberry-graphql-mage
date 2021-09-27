@@ -1,12 +1,13 @@
 from abc import ABC
 from functools import lru_cache
-from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional
+from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional, List
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import Info
 
 from strawberry_graphql_autoapi.core.type_creator import defer_annotation
 from strawberry_graphql_autoapi.core.types import GraphQLOperation, IDataBackend, IEntityModel
+from strawberry_graphql_autoapi.core.utils import get_subclasses
 
 
 class DataBackendBase(IDataBackend, ABC):
@@ -19,6 +20,7 @@ class DataBackendBase(IDataBackend, ABC):
 
 
 class DummyDataBackend(DataBackendBase):
+
     @lru_cache
     def get_model_annotations(self, model: Type[IEntityModel]) -> Dict[str, Type]:
         current = model
@@ -39,6 +41,14 @@ class DummyDataBackend(DataBackendBase):
 
     def get_primary_key(self, model: Type[IEntityModel]) -> Tuple:
         return model.__primary_key__
+
+    def get_parent_class_name(self, model: Type['IEntityModel']) -> Optional[str]:
+        if model.mro()[1] != object:
+            return model.mro()[1].__name__
+
+    def get_children_class_names(self, model: Type['IEntityModel']) -> Optional[List[str]]:
+        if model.__subclasses__():
+            return get_subclasses(model)
 
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}

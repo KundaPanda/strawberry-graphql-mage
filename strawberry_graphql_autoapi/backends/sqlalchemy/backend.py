@@ -80,6 +80,17 @@ class SQLAlchemyBackend(DataBackendBase):
     def get_primary_key(self, model: Type[Union[IEntityModel, DeclarativeMeta]]) -> Tuple:
         return tuple(a.key for a in inspect(model).primary_key)
 
+    def get_parent_class_name(self, model: Type['IEntityModel']) -> Optional[str]:
+        inspection = inspect(model)
+        if inspection.polymorphic_on is not None:
+            return [m.class_.__name__ for m in inspection.polymorphic_map.values()
+                    if m.local_table == inspection.polymorphic_on.table][0]
+
+    def get_children_class_names(self, model: Type[Union['IEntityModel', DeclarativeMeta]]) -> Optional[List[str]]:
+        inspection = inspect(model)
+        if inspection.polymorphic_on is not None and inspection.polymorphic_on.table == model.__table__:
+            return [m.class_.__name__ for m in inspection.polymorphic_map.values()]
+
     def get_operations(self, model: Type[Union[IEntityModel, DeclarativeMeta]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 

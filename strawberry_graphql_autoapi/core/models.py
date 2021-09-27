@@ -46,15 +46,25 @@ class EntityModel(IEntityModel):
         return cls.__backend__.get_attribute_type(cls, attr)
 
     @classmethod
-    def get_schema_manager(cls):
+    def get_schema_manager(cls) -> ISchemaManager:
         return cls._manager
+
+    @classmethod
+    def get_parent_class_name(cls) -> Optional[str]:
+        return cls.__backend__.get_parent_class_name(cls)
+
+    @classmethod
+    def get_children_class_names(cls) -> Optional[List[str]]:
+        return cls.__backend__.get_children_class_names(cls)
 
     @classmethod
     def setup(cls, manager):
         cls._manager = manager
         cls._properties = cls.__backend__.get_attributes(cls)
+        base_entity, entity = create_entity_type(cls)
         cls._strawberry_type = StrawberryModelType(
-            entity=create_entity_type(cls),
+            base_entity=base_entity,
+            entity=entity,
             filter=create_filter_input(cls),
             ordering=create_ordering_input(cls),
         )

@@ -1,8 +1,8 @@
-import enum
+import dataclasses
 import enum
 import sys
 from inspect import isclass
-from typing import Type, ForwardRef, Any, List, Optional, Dict, Union
+from typing import Type, ForwardRef, Any, List, Optional, Dict, Union, Tuple
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
@@ -32,6 +32,7 @@ class GeneratedType(enum.Enum):
     INPUTS = 'Inputs'
     FILTER = 'Filter'
     ORDERING = 'Ordering'
+    POLYMORPHIC_INTERFACE = 'Polymorphic'
 
     def get_typename(self: 'GeneratedType', name: str):
         return name + self.value
@@ -113,7 +114,7 @@ def create_enum_type(attr: enum.EnumMeta):
     return enum_type, enum_filter_type, enum_ordering_type
 
 
-def create_entity_type(model: Type[IEntityModel]) -> Type[EntityType]:
+def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Type[EntityType]]:
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
@@ -122,24 +123,47 @@ def create_entity_type(model: Type[IEntityModel]) -> Type[EntityType]:
             enum_type, _, _ = create_enum_type(attr)
             attrs[name] = enum_type
 
-    type_object = type(model.__name__, (EntityType,), _create_fields(attrs))
-    type_ = strawberry.type(type_object)
+    children = model.get_children_class_names()
+    parent_name = model.get_parent_class_name()
+    entity = None
 
-    setattr(sys.modules[ROOT_NS], model.__name__, type_)
-    type_.__module__ = ROOT_NS
+    if children:
+        python_entity = type(GeneratedType.POLYMORPHIC_INTERFACE.get_typename(model.__name__),
+                             (EntityType,),
+                             _create_fields(attrs))
+        entity = strawberry.interface(python_entity)
 
-    return type_
+        setattr(sys.modules[ROOT_NS], entity.__name__, entity)
+        entity.__module__ = ROOT_NS
+
+    parent_cls = EntityType \
+        if parent_name is None \
+        else ModuleBoundStrawberryAnnotation(GeneratedType.POLYMORPHIC_INTERFACE.get_typename(parent_name)).resolve()
+
+    python_base_entity = type(model.__name__, (parent_cls,), _create_fields(attrs))
+    base_entity = strawberry.type(python_base_entity)
+
+    setattr(sys.modules[ROOT_NS], base_entity.__name__, base_entity)
+    base_entity.__module__ = ROOT_NS
+
+    if entity is None:
+        entity = base_entity
+
+    return base_entity, entity
 
 
 def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
-    input_types = strawberry.input(
-        type(GeneratedType.INPUTS.get_typename(model.__name__), (StrawberryModelInputTypes,), _create_fields({
-            'primary_key_field': create_primary_key_field(model),
-            'query_one_input': create_query_one_input(model),
-            'query_many_input': create_query_many_input(model),
-            'create_one_input': create_create_one_input(model),
-            'update_one_input': create_update_one_input(model),
-        }))
+    fields = _create_fields({
+        'primary_key_field': create_primary_key_field(model),
+        'query_one_input': create_query_one_input(model),
+        'query_many_input': create_query_many_input(model),
+        'create_one_input': create_create_one_input(model),
+        'update_one_input': create_update_one_input(model),
+    })
+    del fields['__annotations__']
+    input_types = dataclasses.make_dataclass(
+        GeneratedType.INPUTS.get_typename(model.__name__), fields,
+        bases=(StrawberryModelInputTypes,)
     )
     setattr(sys.modules[ROOT_NS], input_types.__name__, input_types)
     input_types.__module__ = ROOT_NS
