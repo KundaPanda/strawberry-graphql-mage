@@ -1,9 +1,10 @@
 import enum
 from dataclasses import dataclass
-from typing import List, Optional as O, Callable, Optional, Type, Union
+from typing import List, Optional as O, Callable, Optional, Type
 
 import strawberry
 from strawberry.arguments import UNSET
+from strawberry.type import StrawberryType
 
 ROOT_NS = 'strawberry_graphql_autoapi.core.types_generated'
 
@@ -40,6 +41,7 @@ class StrawberryModelInputTypes:
 @dataclass
 class StrawberryModelType:
     entity: Type[EntityType]
+    base_entity: Type[EntityType]
     filter: Type['ObjectFilter']
     ordering: Type['ObjectOrdering']
     input_types: Optional[StrawberryModelInputTypes] = None

@@ -71,6 +71,14 @@ class IDataBackend(abc.ABC):
         raise NotImplemented
 
     @abc.abstractmethod
+    def get_parent_class_name(self, model: Type['IEntityModel']) -> Optional[str]:
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def get_children_class_names(self, model: Type['IEntityModel']) -> Optional[List[str]]:
+        raise NotImplemented
+
+    @abc.abstractmethod
     def get_operations(self, model: Type['IEntityModel']) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
@@ -142,4 +150,14 @@ class IEntityModel(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def get_primary_key(cls) -> Tuple:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def get_parent_class_name(cls) -> Optional[str]:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def get_children_class_names(cls) -> Optional[List[str]]:
         raise NotImplemented
