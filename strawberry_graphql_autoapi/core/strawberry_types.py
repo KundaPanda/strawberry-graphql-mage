@@ -1,10 +1,9 @@
 import enum
 from dataclasses import dataclass
-from typing import List, Optional as O, Callable, Optional, Type
+from typing import List, Optional as O, Callable, Type
 
 import strawberry
 from strawberry.arguments import UNSET
-from strawberry.type import StrawberryType
 
 ROOT_NS = 'strawberry_graphql_autoapi.core.types_generated'
 
@@ -44,26 +43,26 @@ class StrawberryModelType:
     base_entity: Type[EntityType]
     filter: Type['ObjectFilter']
     ordering: Type['ObjectOrdering']
-    input_types: Optional[StrawberryModelInputTypes] = None
-    query_one: Optional[Callable] = None
-    query_many: Optional[Callable] = None
-    create_one: Optional[Callable] = None
-    create_many: Optional[Callable] = None
-    update_one: Optional[Callable] = None
-    update_many: Optional[Callable] = None
-    delete_one: Optional[Callable] = None
-    delete_many: Optional[Callable] = None
+    input_types: O[StrawberryModelInputTypes] = None
+    query_one: O[Callable] = None
+    query_many: O[Callable] = None
+    create_one: O[Callable] = None
+    create_many: O[Callable] = None
+    update_one: O[Callable] = None
+    update_many: O[Callable] = None
+    delete_one: O[Callable] = None
+    delete_many: O[Callable] = None
 
 
 @dataclass
 class ObjectFilter:
-    AND_: Optional[List[Optional['ObjectFilter']]]
-    OR_: Optional[List[Optional['ObjectFilter']]]
+    AND_: O[List[O['ObjectFilter']]]
+    OR_: O[List[O['ObjectFilter']]]
 
 
 @dataclass
 class ScalarFilter:
-    pass
+    NOT_: O[bool] = False
 
 
 @strawberry.input
@@ -90,6 +89,8 @@ class StringFilter(ScalarFilter):
     iexact: O[str] = UNSET
     contains: O[str] = UNSET
     icontains: O[str] = UNSET
+    like: O[str] = UNSET
+    ilike: O[str] = UNSET
 
 
 @dataclass

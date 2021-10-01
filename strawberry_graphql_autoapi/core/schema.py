@@ -1,8 +1,10 @@
 from typing import Dict
 
 import strawberry
+from graphql import GraphQLInterfaceType
 from inflection import underscore, pluralize
 from strawberry import Schema
+from strawberry.schema.types import ConcreteType
 
 from strawberry_graphql_autoapi.core.type_creator import GeneratedType
 from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, ISchemaManager
@@ -61,5 +63,15 @@ class SchemaManager(ISchemaManager):
         mutation = strawberry.type(mutation_object)
 
         if len(mutation.__annotations__) > 0:
-            return Schema(query=query, mutation=mutation)
-        return Schema(query=query)
+            schema = Schema(query=query, mutation=mutation)
+        else:
+            schema = Schema(query=query)
+
+        def resolve_interface_type(obj, info, type_):
+            return schema.schema_converter.type_map[obj.__class__.__name__].implementation
+
+        for entry in schema.schema_converter.type_map.values():
+            if isinstance(entry, ConcreteType) and isinstance(entry.implementation, GraphQLInterfaceType):
+                setattr(entry.implementation, 'resolve_type', resolve_interface_type)
+
+        return schema

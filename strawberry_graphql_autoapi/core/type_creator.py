@@ -32,7 +32,7 @@ class GeneratedType(enum.Enum):
     INPUTS = 'Inputs'
     FILTER = 'Filter'
     ORDERING = 'Ordering'
-    POLYMORPHIC_INTERFACE = 'Polymorphic'
+    POLYMORPHIC_BASE = '_'
 
     def get_typename(self: 'GeneratedType', name: str):
         return name + self.value
@@ -126,21 +126,23 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
     children = model.get_children_class_names()
     parent_name = model.get_parent_class_name()
     entity = None
+    base_name = GeneratedType.ENTITY.get_typename(model.__name__)
 
     if children:
-        python_entity = type(GeneratedType.POLYMORPHIC_INTERFACE.get_typename(model.__name__),
+        python_entity = type(GeneratedType.ENTITY.get_typename(model.__name__),
                              (EntityType,),
                              _create_fields(attrs))
         entity = strawberry.interface(python_entity)
 
         setattr(sys.modules[ROOT_NS], entity.__name__, entity)
         entity.__module__ = ROOT_NS
+        base_name = GeneratedType.POLYMORPHIC_BASE.get_typename(parent_name)
 
     parent_cls = EntityType \
         if parent_name is None \
-        else ModuleBoundStrawberryAnnotation(GeneratedType.POLYMORPHIC_INTERFACE.get_typename(parent_name)).resolve()
+        else ModuleBoundStrawberryAnnotation(GeneratedType.ENTITY.get_typename(parent_name)).resolve()
 
-    python_base_entity = type(model.__name__, (parent_cls,), _create_fields(attrs))
+    python_base_entity = type(base_name, (parent_cls,), _create_fields(attrs))
     base_entity = strawberry.type(python_base_entity)
 
     setattr(sys.modules[ROOT_NS], base_entity.__name__, base_entity)
