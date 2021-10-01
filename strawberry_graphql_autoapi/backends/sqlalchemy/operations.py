@@ -6,7 +6,7 @@ from typing import List, Type, Any, Union, Dict, Callable, Tuple
 
 from sqlalchemy import select, delete, and_, or_, Table, inspect, not_
 from sqlalchemy.orm import Session, aliased, contains_eager
-from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.orm.util import AliasedClass, with_polymorphic
 from sqlalchemy.sql import Join, ColumnElement
 from sqlalchemy.sql.expression import desc, func
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
@@ -78,12 +78,13 @@ def _apply_nested(model: Type[_SQLAlchemyModel], path: str, input_: Any, op: Cal
     prop = attr_getter(attribute)
     if nested_path not in selectables:
         related_type_name = strip_typename(model.get_attribute_type(attribute))
-        related_model = aliased(model.get_schema_manager().get_model_for_name(related_type_name), name=nested_path)
+        related_model_raw = model.get_schema_manager().get_model_for_name(related_type_name)
+        related_model = with_polymorphic(related_model_raw, '*', aliased=True)
         selectables[nested_path] = related_model
         ex = prop.expression
-        join_expression = attr_getter(ex.left.key) == getattr(related_model, ex.right.key) \
+        join_expression = ex.left == getattr(related_model, ex.right.key) \
             if inspect(select_from).local_table == ex.left.table \
-            else attr_getter(ex.right.key) == getattr(related_model, ex.left.key)
+            else ex.right == getattr(related_model, ex.left.key)
         selectables['__joins__'] = selectables['__joins__'].join(related_model, join_expression, isouter=True)
     eager_options = contains_eager(prop.of_type(selectables[nested_path])) \
         if eager_options is None \
@@ -105,7 +106,7 @@ def create_(session: Session, model: Type[Union[_SQLAlchemyModel, IEntityModel]]
     session.commit()
 
     data = [_create_pk_class(instance) for instance in primary_keys]
-    model_query = select(model).subquery()
+    model_query = select(with_polymorphic(model, '*')).subquery()
     selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
     pk_filter = _build_multiple_pk_query(model, model_query, data)
 
@@ -134,7 +135,7 @@ def update_(session: Session, model: Type[_SQLAlchemyModel], data: List[Any],
     session.add_all(entities.values())
     session.commit()
 
-    model_query = select(model).subquery()
+    model_query = select(with_polymorphic(model, '*')).subquery()
     selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
     pk_filter = _build_multiple_pk_query(model, model_query, data)
 
@@ -160,7 +161,7 @@ def delete_(session: Session, model: Type[_SQLAlchemyModel], data: List[Any]):
 
 def retrieve_(session: Session, model: Type[_SQLAlchemyModel],
               data: Union[PrimaryKeyField, dataclasses.dataclass], selection: Dict[str, Dict]):
-    model_query = select(model).subquery()
+    model_query = select(with_polymorphic(model, '*')).subquery()
     selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
     pk_filter = _build_pk_query(model, model_query, data.primary_key_)
 
@@ -189,12 +190,19 @@ def cleanup_ordering(ordering: List[Dict]):
     return result_ordering
 
 
-def create_selection_joins(model: Type[_SQLAlchemyModel], path: str, selection: Dict[str, Dict],
+def create_selection_joins(model: Type[_SQLAlchemyModel], path: str, selection: Dict[Union[str, Type], Dict],
                            selectables: SelectablesType, eager_options: Any = None) -> Tuple:
     eager_options_created = []
     for attr, sub_selection in selection.items():
-        eager_options_created.extend(
-            _apply_nested(model, path, sub_selection, create_selection_joins, attr, selectables, eager_options))
+        if isclass(attr) and issubclass(attr, _SQLAlchemyModel):
+            sub_path = f'{path}-{attr.__name__}'
+            selectables[sub_path] = getattr(model, attr.__name__)
+            eager_options_created.extend(
+                create_selection_joins(getattr(model, attr.__name__), sub_path, sub_selection,
+                                       selectables, eager_options))
+        else:
+            eager_options_created.extend(
+                _apply_nested(model, path, sub_selection, create_selection_joins, attr, selectables, eager_options))
     return tuple(eager_options_created) if eager_options_created else (eager_options,)
 
 
@@ -266,7 +274,7 @@ def create_object_filters(model: Type[_SQLAlchemyModel], path: str, filters: Lis
 
 def list_(session: Session, model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: QueryMany,
           selection: Dict[str, Dict]):
-    model_query = select(model).subquery()
+    model_query = select(with_polymorphic(model, '*')).subquery()
     selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
 
     eager_options = create_selection_joins(model, '', selection, selectables)
