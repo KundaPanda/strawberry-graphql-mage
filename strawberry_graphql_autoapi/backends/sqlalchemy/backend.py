@@ -1,11 +1,13 @@
 from functools import lru_cache
 from typing import Any, Type, Dict, Tuple, Set, Union, Optional, List
 
+from inflection import underscore
 from sqlalchemy import inspect, Integer, String
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, Mapper, ONETOMANY, MANYTOMANY, \
     sessionmaker
 from sqlalchemy.orm.util import AliasedInsp
 from strawberry.types import Info
+from strawberry.types.nodes import InlineFragment
 
 from strawberry_graphql_autoapi.backends.sqlalchemy.models import _SQLAlchemyModel
 from strawberry_graphql_autoapi.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
@@ -95,22 +97,22 @@ class SQLAlchemyBackend(DataBackendBase):
     def get_operations(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def _build_selection(self, field, selection=None):
-        if selection is None:
-            selection = {}
+    def _build_selection(self, field, manager):
+        selection = {}
         for subfield in field.selections:
             if subfield.selections:
-                if not hasattr(subfield, 'name'):
+                if isinstance(subfield, InlineFragment):
+                    selection[manager.get_model_for_name(subfield.type_condition)] = \
+                        self._build_selection(subfield, manager)
                     continue
-                selection[subfield.name] = {}
-                self._build_selection(subfield, selection[subfield.name])
+                selection[underscore(subfield.name)] = self._build_selection(subfield, manager)
         return selection
 
     def resolve(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], operation: GraphQLOperation, info: Info,
                 data: Any) -> Any:
         with self._session() as s:
             for field in info.selected_fields:
-                selection = self._build_selection(field)
+                selection = self._build_selection(field, model.get_schema_manager())
                 if operation == GraphQLOperation.QUERY_MANY:
                     return list_(s, model, data, selection)
                 if operation == GraphQLOperation.QUERY_ONE:
