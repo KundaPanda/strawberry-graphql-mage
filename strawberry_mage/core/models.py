@@ -2,12 +2,12 @@ from typing import Any, Set, List, Type, Dict, Tuple, Optional
 
 from strawberry.types import Info
 
-from strawberry_graphql_autoapi.core.resolver import resolver_query_one, resolver_query_many, resolver_create_one, \
+from strawberry_mage.core.resolver import resolver_query_one, resolver_query_many, resolver_create_one, \
     resolver_create_many, resolver_update_one, resolver_update_many, resolver_delete_one, resolver_delete_many
-from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType
-from strawberry_graphql_autoapi.core.type_creator import create_entity_type, \
+from strawberry_mage.core.strawberry_types import StrawberryModelType
+from strawberry_mage.core.type_creator import create_entity_type, \
     create_input_types, create_filter_input, create_ordering_input
-from strawberry_graphql_autoapi.core.types import GraphQLOperation, IEntityModel, IDataBackend, ISchemaManager
+from strawberry_mage.core.types import GraphQLOperation, IEntityModel, IDataBackend, ISchemaManager
 
 
 class EntityModel(IEntityModel):

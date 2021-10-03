@@ -1,0 +1,13 @@
+query simpleQuery {
+    archers {
+        id
+        entityClass
+        __typename
+    }
+    weapons {
+        id
+        ownerId
+        __typename
+        damage
+    }
+}

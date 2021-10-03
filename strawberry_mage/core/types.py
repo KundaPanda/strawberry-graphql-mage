@@ -8,7 +8,7 @@ from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import Info
 
-from strawberry_graphql_autoapi.core.strawberry_types import StrawberryModelType, ROOT_NS
+from strawberry_mage.core.strawberry_types import StrawberryModelType, ROOT_NS
 
 
 class ModuleBoundStrawberryAnnotation(StrawberryAnnotation):

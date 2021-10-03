@@ -9,10 +9,10 @@ from sqlalchemy.orm.util import AliasedInsp
 from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
-from strawberry_graphql_autoapi.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_autoapi.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
-from strawberry_graphql_autoapi.core.backend import DataBackendBase
-from strawberry_graphql_autoapi.core.types import IEntityModel, GraphQLOperation
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
+from strawberry_mage.core.backend import DataBackendBase
+from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class SQLAlchemyBackend(DataBackendBase):

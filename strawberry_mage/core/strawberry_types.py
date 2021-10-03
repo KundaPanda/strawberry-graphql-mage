@@ -5,7 +5,7 @@ from typing import List, Optional as O, Callable, Type
 import strawberry
 from strawberry.arguments import UNSET
 
-ROOT_NS = 'strawberry_graphql_autoapi.core.types_generated'
+ROOT_NS = 'strawberry_mage.core.types_generated'
 
 
 @dataclass
