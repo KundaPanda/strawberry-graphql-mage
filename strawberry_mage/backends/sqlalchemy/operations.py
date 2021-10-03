@@ -12,11 +12,11 @@ from sqlalchemy.sql.expression import desc, func
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry.arguments import is_unset, UNSET
 
-from strawberry_graphql_autoapi.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_autoapi.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany, \
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.core.strawberry_types import DeleteResult, OrderingDirection, QueryMany, \
     PrimaryKeyField
-from strawberry_graphql_autoapi.core.type_creator import strip_typename
-from strawberry_graphql_autoapi.core.types import IEntityModel
+from strawberry_mage.core.type_creator import strip_typename
+from strawberry_mage.core.types import IEntityModel
 
 SelectablesType = Dict[str, Union[Join, Type[_SQLAlchemyModel]]]
 
@@ -233,7 +233,7 @@ def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> Col
         'gt': ColOps.__gt__(column, value),
         'gte': ColOps.__ge__(column, value),
         'lt': ColOps.__lt__(column, value),
-        'le': ColOps.__le__(column, value),
+        'lte': ColOps.__le__(column, value),
     }.get(op_name)
     if negate:
         op = not_(op)
@@ -282,24 +282,25 @@ def list_(session: Session, model: Type[Union[_SQLAlchemyModel, IEntityModel]], 
     expression = select(selectables[''], selectables['__joins__']) \
         .select_from(selectables['__joins__'])
 
-    if not is_unset(data.filters):
-        raw_filter = [dataclasses.asdict(f) for f in data.filters]
-        filters = create_object_filters(model, '', raw_filter, selectables)
-        expression = expression.filter(*filters)
-
-    if not is_unset(data.ordering):
-        raw_ordering = [dataclasses.asdict(o) for o in data.ordering]
-        ordering = add_default_ordering(model, raw_ordering)
-        ordering = cleanup_ordering(ordering)
-        ordering = create_ordering(model, '', ordering, selectables)
-        expression = expression.order_by(*ordering)
-
     if eager_options != (None,):
         expression = expression.options(*eager_options)
 
-    if not is_unset(getattr(data, 'page_size', UNSET)):
-        expression = expression.limit(data.page_size)
-        if not is_unset(getattr(data, 'page_number', UNSET)):
-            expression = expression.offset((data.page_number - 1) * data.page_size)
+    if not is_unset(data):
+        if not is_unset(data.filters):
+            raw_filter = [dataclasses.asdict(f) for f in data.filters]
+            filters = create_object_filters(model, '', raw_filter, selectables)
+            expression = expression.filter(*filters)
+
+        if not is_unset(data.ordering):
+            raw_ordering = [dataclasses.asdict(o) for o in data.ordering]
+            ordering = add_default_ordering(model, raw_ordering)
+            ordering = cleanup_ordering(ordering)
+            ordering = create_ordering(model, '', ordering, selectables)
+            expression = expression.order_by(*ordering)
+
+        if not is_unset(data.page_size):
+            expression = expression.limit(data.page_size)
+            if not is_unset(data.page_number):
+                expression = expression.offset((data.page_number - 1) * data.page_size)
 
     return session.execute(expression).unique().scalars().all()

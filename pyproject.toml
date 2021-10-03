@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "modular-auto-graphql-api"
+name = "strawberry-mage"
 version = "0.1.0"
 description = ""
-authors = ["Vojtěch Dohnal <dohnal@ics.muni.cz>"]
+authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -13,6 +13,9 @@ uvicorn = {extras = ["standard"], version = "^0.15.0"}
 SQLAlchemy = "^1.4.23"
 
 [tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
+pytest-asyncio = "^0.15.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

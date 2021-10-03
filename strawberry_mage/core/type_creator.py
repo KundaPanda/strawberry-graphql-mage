@@ -11,10 +11,10 @@ from strawberry.field import StrawberryField
 from strawberry.scalars import is_scalar, SCALAR_TYPES
 from strawberry.utils.typing import is_optional
 
-from strawberry_graphql_autoapi.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
+from strawberry_mage.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
     StrawberryModelInputTypes, QueryMany, ObjectOrdering, ObjectFilter, SCALAR_FILTERS, \
     OrderingDirection
-from strawberry_graphql_autoapi.core.types import IEntityModel, ModuleBoundStrawberryAnnotation, GraphQLOperation
+from strawberry_mage.core.types import IEntityModel, ModuleBoundStrawberryAnnotation, GraphQLOperation
 
 
 class GeneratedType(enum.Enum):

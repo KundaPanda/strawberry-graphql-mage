@@ -5,9 +5,9 @@ from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional, List
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import Info
 
-from strawberry_graphql_autoapi.core.type_creator import defer_annotation
-from strawberry_graphql_autoapi.core.types import GraphQLOperation, IDataBackend, IEntityModel
-from strawberry_graphql_autoapi.core.utils import get_subclasses
+from strawberry_mage.core.type_creator import defer_annotation
+from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
+from strawberry_mage.core.utils import get_subclasses
 
 
 class DataBackendBase(IDataBackend, ABC):

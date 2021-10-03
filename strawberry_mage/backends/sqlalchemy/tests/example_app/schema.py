@@ -5,10 +5,10 @@ from inflection import underscore
 from sqlalchemy import Column, Integer, ForeignKey, String, Enum, Float, create_engine
 from sqlalchemy.orm import relationship, sessionmaker
 
-from strawberry_graphql_autoapi.backends.sqlalchemy.models import create_base_entity
-from strawberry_graphql_autoapi.core.schema import SchemaManager
+from strawberry_mage.backends.sqlalchemy.models import create_base_entity
+from strawberry_mage.core.schema import SchemaManager
 
-engine = create_engine('sqlite:///test.db', echo=True)
+engine = create_engine('sqlite:///', echo=True)
 
 Base = create_base_entity(sessionmaker(bind=engine))
 
@@ -73,6 +73,7 @@ class Archer(Entity):
 
 class King(Entity):
     id = Column(Integer, ForeignKey('entity.id'), primary_key=True)
+    name = Column(String)
     subjects = relationship('Entity', back_populates='submits_to', foreign_keys='Entity.submits_to_id')
 
     __mapper_args__ = {
