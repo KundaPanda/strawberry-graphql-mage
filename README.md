@@ -15,6 +15,7 @@ The aim of this project is to simplify graphql api creation without being tied t
 - [ ] Add more filters
 - [ ] Add options for custom data-types
 - [ ] Add tests
+- [ ] Setup CI
 - [ ] Try some authorization / authentication
 - [ ] Write instructions for using the app
 - [ ] Write instructions for creating custom backends

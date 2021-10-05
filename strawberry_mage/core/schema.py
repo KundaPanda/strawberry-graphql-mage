@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict
 
 import strawberry
@@ -38,6 +39,15 @@ class SchemaManager(ISchemaManager):
     def get_model_for_name(self, name: str):
         return self._models.get(name, None)
 
+    @lru_cache
+    def _collect_types(self):
+        types = []
+        for model in self._models.values():
+            entity = model.get_strawberry_type()
+            if entity.base_entity:
+                types.append(entity.base_entity)
+        return types
+
     def get_schema(self):
         query_object = type('Query', (object,), {})
         mutation_object = type('Mutation', (object,), {})
@@ -62,12 +72,14 @@ class SchemaManager(ISchemaManager):
         query = strawberry.type(query_object)
         mutation = strawberry.type(mutation_object)
 
-        if len(mutation.__annotations__) > 0:
-            schema = Schema(query=query, mutation=mutation)
-        else:
-            schema = Schema(query=query)
+        schema = Schema(query=query,
+                        mutation=(mutation if len(mutation.__annotations__) > 0 else None),
+                        types=self._collect_types())
 
         def resolve_interface_type(obj, info, type_):
+            if (base_type := schema.schema_converter.type_map.get(
+                    GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__))) is not None:
+                return base_type.implementation
             return schema.schema_converter.type_map[obj.__class__.__name__].implementation
 
         for entry in schema.schema_converter.type_map.values():
