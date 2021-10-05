@@ -3,15 +3,21 @@ from pathlib import Path
 import pytest
 from sqlalchemy.orm import Session
 
-from strawberry_mage.backends.sqlalchemy.tests.example_app.schema import schema as strawberry_schema
 from strawberry_mage.backends.sqlalchemy.tests.example_app.schema import *
+from strawberry_mage.backends.sqlalchemy.tests.example_app.schema import schema as strawberry_schema
 
 
-@pytest.fixture(scope='function', autouse=True)
-def prepare_database():
+@pytest.fixture(scope='function')
+def session():
     Base.metadata.create_all(bind=engine)
     s = Session(engine)
     s.begin()
+    yield s
+    s.close()
+
+
+@pytest.fixture(scope='function', autouse=True)
+def prepare_database(session):
     weapons = [
         Weapon(damage=10, name='mace'),
         Weapon(damage=10, name='bow'),
@@ -22,14 +28,14 @@ def prepare_database():
         Weapon(damage=30, name='lightning wand'),
         Weapon(damage=31, name='fire staff'),
     ]
-    s.add_all(weapons)
-    s.flush()
+    session.add_all(weapons)
+    session.flush()
     king1 = King(name='Vizimir II')
-    s.add(king1)
-    s.flush()
+    session.add(king1)
+    session.flush()
     king2 = King(name='Radovid V', submits_to=king1, weapons=[weapons[5]])
-    s.add(king2)
-    s.flush()
+    session.add(king2)
+    session.flush()
     entities = [
         Entity(),
         Entity(submits_to=king2),
@@ -40,9 +46,8 @@ def prepare_database():
         Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
         Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
     ]
-    s.add_all(entities)
-    s.commit()
-    s.close()
+    session.add_all(entities)
+    session.commit()
     yield
     Base.metadata.drop_all(bind=engine)
 
