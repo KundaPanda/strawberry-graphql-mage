@@ -17,6 +17,9 @@ class EntityModel(IEntityModel):
     _properties: List[str]
     _manager: ISchemaManager = None
 
+    def __hash__(self):
+        return hash(f'{self.__name__}({",".join(getattr(self, a) for a in self.get_primary_key())})')
+
     @classmethod
     def get_strawberry_type(cls):
         return cls._strawberry_type

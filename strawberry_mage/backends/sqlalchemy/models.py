@@ -1,4 +1,7 @@
+from functools import cached_property
+
 from inflection import underscore
+from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker, as_declarative, declared_attr
 
 from strawberry_mage.core.models import EntityModel
@@ -18,6 +21,10 @@ class _BaseMeta(type(IEntityModel), type(_Base)):
 
 class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
     __abstract__ = True
+
+    @cached_property
+    def __primary_key__(self):
+        return [c.name for c in inspect(self).primary_key]
 
 
 def create_base_entity(session_factory: sessionmaker):
