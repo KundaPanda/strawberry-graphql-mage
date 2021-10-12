@@ -21,9 +21,9 @@ async def test_simple_create(schema: Schema, session: Session, operations):
 
     assert result.errors is None
 
+    ids = sorted([e['id'] for e in result.data['createWeapons']], key=lambda e: e['id'])
     assert session.get(King, result.data['createKing']['id']) is not None
     assert len(result.data['createWeapons']) == 2
-    ids = sorted([e['id'] for e in result.data['createWeapons']])
     assert [e[0] for e in session.query(Weapon.id).where(Weapon.id.in_(ids)).order_by(Weapon.id)] == ids
 
 
@@ -35,10 +35,10 @@ async def test_simple_update(schema: Schema, session: Session, operations):
 
     assert result.errors is None
 
+    results = sorted(result.data['updateWeapons'], key=lambda e: e['id'])
     assert [w.id for w in session.get(Entity, 1).weapons] == [6]
     assert result.data['updateEntity']['weapons'] == [{'id': 6}]
     assert len(result.data['updateWeapons']) == 2
-    results = sorted(result.data['updateWeapons'], key=lambda e: e['id'])
     assert session.get(Weapon, 2).damage == 1 == results[0]['damage']
     assert session.get(Weapon, 3).owner.id == 4 == results[1]['owner']['id']
 
