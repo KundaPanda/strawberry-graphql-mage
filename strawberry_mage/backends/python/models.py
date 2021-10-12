@@ -1,11 +1,12 @@
-from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.core.models import EntityModel
 
 
 class PythonEntityModel(EntityModel):
+    __backrefs__ = {}
+    __backend__: 'PythonBackend'
 
     @classmethod
-    def setup(cls, manager):
-        super().setup(manager)
-        cls._sqla_model = SQLAlchemyModelConverter.convert(cls)
+    def post_setup(cls):
+        super().post_setup()
+        cls._sqla_model = cls.__backend__.converter.convert(cls)
         return cls

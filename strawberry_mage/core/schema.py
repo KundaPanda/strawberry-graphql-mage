@@ -17,7 +17,7 @@ class SchemaManager(ISchemaManager):
     def __init__(self, *models):
         self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
         for model in self._models.values():
-            model.setup(self)
+            model.pre_setup(self)
 
     @staticmethod
     def _add_operation(type_object, operation: GraphQLOperation, model: IEntityModel):
@@ -49,6 +49,8 @@ class SchemaManager(ISchemaManager):
         return types
 
     def get_schema(self):
+        for model in self._models.values():
+            model.post_setup()
         query_object = type('Query', (object,), {})
         mutation_object = type('Mutation', (object,), {})
 

@@ -7,6 +7,7 @@ from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
+from strawberry_mage.core.models import EntityModel
 from strawberry_mage.core.type_creator import defer_annotation
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
 from strawberry_mage.core.utils import get_subclasses
@@ -56,7 +57,7 @@ class DummyDataBackend(DataBackendBase):
         return model.__primary_key__
 
     def get_parent_class_name(self, model: Type['IEntityModel']) -> Optional[str]:
-        if model.mro()[1] != object:
+        if model.mro()[1] != EntityModel:
             return model.mro()[1].__name__
 
     def get_children_class_names(self, model: Type['IEntityModel']) -> Optional[List[str]]:

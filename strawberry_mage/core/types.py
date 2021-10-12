@@ -129,7 +129,12 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def setup(cls, manager: ISchemaManager) -> None:
+    def pre_setup(cls, manager: ISchemaManager) -> None:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def post_setup(cls) -> None:
         raise NotImplemented
 
     @classmethod

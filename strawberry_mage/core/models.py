@@ -11,6 +11,7 @@ from strawberry_mage.core.types import GraphQLOperation, IEntityModel, IDataBack
 
 
 class EntityModel(IEntityModel):
+
     __backend__: IDataBackend = None
     __primary_key__: Any = None
     _strawberry_type: StrawberryModelType
@@ -61,7 +62,7 @@ class EntityModel(IEntityModel):
         return cls.__backend__.get_children_class_names(cls)
 
     @classmethod
-    def setup(cls, manager):
+    def pre_setup(cls, manager):
         cls._manager = manager
         cls._properties = cls.__backend__.get_attributes(cls)
         base_entity, entity = create_entity_type(cls)
@@ -81,3 +82,7 @@ class EntityModel(IEntityModel):
         cls._strawberry_type.delete_one = resolver_delete_one(cls)
         cls._strawberry_type.delete_many = resolver_delete_many(cls)
         return cls
+
+    @classmethod
+    def post_setup(cls) -> None:
+        pass

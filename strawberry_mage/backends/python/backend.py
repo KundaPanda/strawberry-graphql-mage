@@ -1,13 +1,14 @@
-from inspect import isclass
-from typing import Any, Type, Set, Optional, Iterable, Dict
+from typing import Type, Set, Optional, Iterable, Dict
 
-from strawberry.types import Info
-
+from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.core.backend import DummyDataBackend
 from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class PythonBackend(DummyDataBackend):
+    def __init__(self, session_factory):
+        self.converter = SQLAlchemyModelConverter(session_factory)
+
     dataset = None
 
     def _collect_references(self, results: Dict[Type[IEntityModel], Set[IEntityModel]], entry: IEntityModel):
@@ -17,7 +18,6 @@ class PythonBackend(DummyDataBackend):
                 if attr not in results[type(attr)]:
                     results[type(attr)].add(attr)
                     self._collect_references(results, attr)
-
 
     def _build_dataset(self, model: IEntityModel, dataset: Iterable[IEntityModel]):
         resulting_dataset: Dict[Type[IEntityModel], Set[IEntityModel]] \
@@ -29,7 +29,6 @@ class PythonBackend(DummyDataBackend):
         for type_, entries in resulting_dataset.items():
             for entry in entries:
                 self._collect_references(resulting_dataset, entry)
-
 
     def add_dataset(self, dataset: Iterable[IEntityModel]):
         self.dataset = dataset
@@ -47,25 +46,29 @@ class PythonBackend(DummyDataBackend):
             return all_
         return []
 
+    def get_parent_class_name(self, model: Type[IEntityModel]):
+        if model.mro()[1].__name__ != 'PythonEntityModel':
+            return model.mro()[1].__name__
+
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
-        for field in info.selected_fields:
-            selection = self._build_selection(field, model.get_schema_manager())
-            if operation == GraphQLOperation.QUERY_MANY:
-                return list_(model, data, selection)
-            if operation == GraphQLOperation.QUERY_ONE:
-                return retrieve_(model, data, selection)
-            if operation == GraphQLOperation.CREATE_ONE:
-                return [*create_(model, [data], selection), None][0]
-            if operation == GraphQLOperation.CREATE_MANY:
-                return create_(model, data, selection)
-            if operation == GraphQLOperation.UPDATE_ONE:
-                return [*update_(model, [data], selection), None][0]
-            if operation == GraphQLOperation.UPDATE_MANY:
-                return update_(model, data, selection)
-            if operation == GraphQLOperation.DELETE_ONE:
-                return delete_(model, [data])
-            if operation == GraphQLOperation.DELETE_MANY:
-                return delete_(model, data)
+    # def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+    #     for field in info.selected_fields:
+    #         selection = self._build_selection(field, model.get_schema_manager())
+    #         if operation == GraphQLOperation.QUERY_MANY:
+    #             return list_(model, data, selection)
+    #         if operation == GraphQLOperation.QUERY_ONE:
+    #             return retrieve_(model, data, selection)
+    #         if operation == GraphQLOperation.CREATE_ONE:
+    #             return [*create_(model, [data], selection), None][0]
+    #         if operation == GraphQLOperation.CREATE_MANY:
+    #             return create_(model, data, selection)
+    #         if operation == GraphQLOperation.UPDATE_ONE:
+    #             return [*update_(model, [data], selection), None][0]
+    #         if operation == GraphQLOperation.UPDATE_MANY:
+    #             return update_(model, data, selection)
+    #         if operation == GraphQLOperation.DELETE_ONE:
+    #             return delete_(model, [data])
+    #         if operation == GraphQLOperation.DELETE_MANY:
+    #             return delete_(model, data)
