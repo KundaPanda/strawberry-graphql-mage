@@ -1,8 +1,16 @@
 import enum
 from typing import Optional, List
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from strawberry_mage.backends.python.backend import PythonBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.schema import SchemaManager
+
+engine = create_engine('sqlite:///', echo=True)
+
+backend = PythonBackend(sessionmaker(bind=engine))
 
 
 class Weapon(PythonEntityModel):
@@ -12,6 +20,7 @@ class Weapon(PythonEntityModel):
     name: Optional[str]
 
     __primary_key__ = ('id',)
+    __backend__ = backend
     __backrefs__ = {
         'owner': 'weapons'
     }
@@ -23,6 +32,7 @@ class Entity(PythonEntityModel):
     submits_to: Optional['King']
 
     __primary_key__ = ('id',)
+    __backend__ = backend
     __backrefs__ = {
         'weapons': 'owner',
         'submits_to': 'subjects',
@@ -39,6 +49,9 @@ class Mage(PythonEntityModel):
     id: int
     power_source: MageTypeEnum
 
+    __primary_key__ = ('id',)
+    __backend__ = backend
+
 
 class Archer(Entity):
     id: int
@@ -51,6 +64,8 @@ class King(Entity):
     subjects: List[Entity]
 
     __backrefs__ = {
+        'weapons': 'owner',
+        'submits_to': 'subjects',
         'subjects': 'submits_to',
     }
 

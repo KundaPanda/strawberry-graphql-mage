@@ -136,7 +136,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
 
         setattr(sys.modules[ROOT_NS], entity.__name__, entity)
         entity.__module__ = ROOT_NS
-        base_name = GeneratedType.POLYMORPHIC_BASE.get_typename(parent_name)
+        base_name = GeneratedType.POLYMORPHIC_BASE.get_typename(parent_name if parent_name else entity.__name__)
 
     parent_cls = EntityType \
         if parent_name is None \
