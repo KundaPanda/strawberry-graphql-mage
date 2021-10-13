@@ -1,15 +1,16 @@
 import enum
 
-from sqlalchemy import Column, Integer, ForeignKey, String, Enum, Float, create_engine
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy import Column, Integer, ForeignKey, String, Enum, Float
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import relationship
 
 from strawberry_mage.backends.sqlalchemy.models import create_base_entity
 from strawberry_mage.backends.sqlalchemy.utils import make_fk
 from strawberry_mage.core.schema import SchemaManager
 
-engine = create_engine('sqlite:///', echo=True)
+engine = create_async_engine('sqlite+aiosqlite:///', echo=True)
 
-Base = create_base_entity(sessionmaker(bind=engine))
+Base = create_base_entity(engine)
 
 
 class Weapon(Base):

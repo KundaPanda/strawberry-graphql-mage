@@ -1,7 +1,9 @@
 from functools import lru_cache
-from typing import Any, Type, Dict, Tuple, Set, Union, Optional, List
+from typing import Any, Type, Dict, Tuple, Set, Union, Optional, List, Iterable
 
 from sqlalchemy import inspect, Integer, String
+from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, Mapper, ONETOMANY, MANYTOMANY, \
     sessionmaker
 from sqlalchemy.orm.util import AliasedInsp
@@ -19,8 +21,8 @@ class SQLAlchemyBackend(DataBackendBase):
         String: str
     }
 
-    def __init__(self, session_maker: sessionmaker):
-        self._session = session_maker
+    def __init__(self, engine: Engine):
+        self._session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     @staticmethod
     def _remove_polymorphic_cols(model: Type[Union[IEntityModel, _SQLAlchemyModel]], cols: List[str]) -> List[str]:
@@ -95,24 +97,30 @@ class SQLAlchemyBackend(DataBackendBase):
     def get_operations(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def resolve(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], operation: GraphQLOperation, info: Info,
-                data: Any) -> Any:
-        with self._session() as s:
+    async def resolve(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], operation: GraphQLOperation, info: Info,
+                      data: Any, session_factory: Optional[sessionmaker] = None) -> Any:
+        async with (session_factory if session_factory else self._session)() as s:
             for field in info.selected_fields:
                 selection = self._build_selection(field, model.get_schema_manager())
                 if operation == GraphQLOperation.QUERY_MANY:
-                    return list_(s, model, data, selection)
+                    return await list_(s, model, data, selection)
                 if operation == GraphQLOperation.QUERY_ONE:
-                    return retrieve_(s, model, data, selection)
+                    return await retrieve_(s, model, data, selection)
                 if operation == GraphQLOperation.CREATE_ONE:
-                    return [*create_(s, model, [data], selection), None][0]
+                    return [*(await create_(s, model, [data], selection)), None][0]
                 if operation == GraphQLOperation.CREATE_MANY:
-                    return create_(s, model, data, selection)
+                    return await create_(s, model, data, selection)
                 if operation == GraphQLOperation.UPDATE_ONE:
-                    return [*update_(s, model, [data], selection), None][0]
+                    return [*(await update_(s, model, [data], selection)), None][0]
                 if operation == GraphQLOperation.UPDATE_MANY:
-                    return update_(s, model, data, selection)
+                    return await update_(s, model, data, selection)
                 if operation == GraphQLOperation.DELETE_ONE:
-                    return delete_(s, model, [data])
+                    return await delete_(s, model, [data])
                 if operation == GraphQLOperation.DELETE_MANY:
-                    return delete_(s, model, data)
+                    return await delete_(s, model, data)
+
+    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
+        pass
+
+    def post_setup(self) -> None:
+        pass

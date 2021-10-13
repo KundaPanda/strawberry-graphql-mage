@@ -1,3 +1,5 @@
+import asyncio
+
 from starlette.applications import Starlette
 from starlette.routing import Route, WebSocketRoute
 from strawberry.asgi import GraphQL
@@ -6,7 +8,10 @@ from strawberry_mage.backends.sqlalchemy.tests.example_app.schema import schema,
 
 
 def app(debug=False):
-    Base.metadata.create_all(bind=engine)
+    async def set_up():
+        async with engine.begin() as s:
+            await s.run_sync(Base.metadata.create_all)
+    asyncio.get_event_loop().create_task(set_up()).__await__()
     gql = GraphQL(schema)
     application = Starlette(debug, routes=[
         Route('/', gql),

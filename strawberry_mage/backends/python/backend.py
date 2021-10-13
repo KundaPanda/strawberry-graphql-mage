@@ -1,15 +1,23 @@
-from typing import Type, Set, Optional, Iterable, Dict
+import asyncio
+from asyncio import Queue
+from typing import Type, Set, Optional, Iterable, Dict, Any
+
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+from strawberry.types import Info
 
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
+from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.backend import DummyDataBackend
 from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class PythonBackend(DummyDataBackend):
-    def __init__(self, session_factory):
-        self.converter = SQLAlchemyModelConverter(session_factory)
-
     dataset = None
+
+    def __init__(self, engines_count=100):
+        self.converter = SQLAlchemyModelConverter(create_async_engine('sqlite+aiosqlite:///'))
+        self.engines = Queue(maxsize=engines_count)
 
     def _collect_references(self, results: Dict[Type[IEntityModel], Set[IEntityModel]], entry: IEntityModel):
         for a in entry.get_attributes():
@@ -52,6 +60,30 @@ class PythonBackend(DummyDataBackend):
 
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
+
+    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+        while self.engines.empty():
+            await asyncio.sleep(0.00001)
+        engine = await self.engines.get()
+        res = await model.sqla_model.__backend__.resolve(model.sqla_model, operation, info, data,
+                                                         sessionmaker(engine, expire_on_commit=False,
+                                                                      class_=AsyncSession))
+        await self.engines.put(engine)
+        return res
+
+    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
+        for _ in range(self.engines.maxsize):
+            e = create_async_engine('sqlite+aiosqlite://')
+            self.engines.put_nowait(e)
+
+            async def set_up():
+                async with e.begin() as conn:
+                    await conn.run_sync(self.converter.base.metadata.create_all)
+
+            asyncio.get_event_loop().create_task(set_up()).__await__()
+
+    async def post_setup(self) -> None:
+        pass
 
     # def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
     #     for field in info.selected_fields:
