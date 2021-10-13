@@ -1,16 +1,11 @@
 import enum
 from typing import Optional, List
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from strawberry_mage.backends.python.backend import PythonBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.schema import SchemaManager
 
-engine = create_engine('sqlite:///', echo=True)
-
-backend = PythonBackend(sessionmaker(bind=engine))
+backend = PythonBackend()
 
 
 class Weapon(PythonEntityModel):

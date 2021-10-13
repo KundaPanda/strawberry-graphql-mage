@@ -34,7 +34,6 @@ class DataBackendBase(IDataBackend, ABC):
 
 
 class DummyDataBackend(DataBackendBase):
-
     @lru_cache
     def _get_model_annotations(self, model: Type[IEntityModel]) -> Dict[str, Type]:
         current = model
@@ -67,7 +66,13 @@ class DummyDataBackend(DataBackendBase):
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
-    def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+    async def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
         if operation.value % 2 == 0:
             return []
         return None
+
+    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
+        pass
+
+    def post_setup(self) -> None:
+        pass

@@ -15,9 +15,12 @@ class SchemaManager(ISchemaManager):
     _models: Dict[str, IEntityModel]
 
     def __init__(self, *models):
+        if len(models) == 0:
+            raise IndexError('Need at least one model for the GraphQL schema.')
         self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
         for model in self._models.values():
             model.pre_setup(self)
+        models[0].__backend__.pre_setup(models)
 
     @staticmethod
     def _add_operation(type_object, operation: GraphQLOperation, model: IEntityModel):

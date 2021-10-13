@@ -11,7 +11,6 @@ from strawberry_mage.core.types import GraphQLOperation, IEntityModel, IDataBack
 
 
 class EntityModel(IEntityModel):
-
     __backend__: IDataBackend = None
     __primary_key__: Any = None
     _strawberry_type: StrawberryModelType
@@ -28,10 +27,6 @@ class EntityModel(IEntityModel):
     @classmethod
     def get_primary_key(cls) -> Tuple:
         return cls.__backend__.get_primary_key(cls)
-
-    @classmethod
-    def resolve(cls, operation: GraphQLOperation, info: Info, data: Any):
-        return cls.__backend__.resolve(cls, operation, info, data)
 
     @classmethod
     def get_operations(cls) -> Set[GraphQLOperation]:
@@ -60,6 +55,10 @@ class EntityModel(IEntityModel):
     @classmethod
     def get_children_class_names(cls) -> Optional[List[str]]:
         return cls.__backend__.get_children_class_names(cls)
+
+    @classmethod
+    async def resolve(cls, operation: GraphQLOperation, info: Info, data: Any):
+        return await cls.__backend__.resolve(cls, operation, info, data)
 
     @classmethod
     def pre_setup(cls, manager):

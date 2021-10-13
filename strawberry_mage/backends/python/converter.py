@@ -4,6 +4,8 @@ from inspect import isclass
 from typing import Type, Dict, Union, ForwardRef, Tuple
 
 from sqlalchemy import String, Integer, Float, Numeric, Column, JSON, Enum
+from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql.type_api import TypeEngine
@@ -16,9 +18,9 @@ from strawberry_mage.core.types import IEntityModel, ModuleBoundStrawberryAnnota
 
 
 class SQLAlchemyModelConverter:
-    def __init__(self, session_factory: sessionmaker):
-        self.session_factory = session_factory
-        self.base = create_base_entity(session_factory)
+    def __init__(self, engine: Engine):
+        self.session_factory = sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)
+        self.base = create_base_entity(engine)
 
     TYPE_MAP: Dict[Type, TypeEngine] = {
         str: String,
@@ -27,7 +29,8 @@ class SQLAlchemyModelConverter:
         Decimal: Numeric
     }
 
-    def _get_sqla_type(self, entity: Type[IEntityModel], attr: str) -> Tuple[Union[str, TypeEngine], bool, bool]:
+    def _get_sqla_type(self, entity: Type[IEntityModel], attr: str) \
+            -> Tuple[Union[enum.Enum, str, TypeEngine], bool, bool]:
         python_type = entity.get_attribute_type(attr)
         optional = is_optional(python_type)
         if optional and len(python_type.__args__) == 2:

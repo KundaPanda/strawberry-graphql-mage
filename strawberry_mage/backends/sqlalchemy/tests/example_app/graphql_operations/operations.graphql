@@ -35,7 +35,7 @@ mutation simpleUpdate($entityId: Int!, $weaponId: Int!, $weaponId1: Int!, $weapo
             id
         }
     }
-    updateWeapons(data: [{primaryKey_: {id: $weaponId1}, damage: 1}, {primaryKey_: {id: $weaponId2}, owner: {primaryKey_: {id: $ownerId}}}]) {
+    updateWeapons(data: [{primaryKey_: {id: $weaponId1}, damage: 123}, {primaryKey_: {id: $weaponId2}, owner: {primaryKey_: {id: $ownerId}}}]) {
         id
         damage
         name

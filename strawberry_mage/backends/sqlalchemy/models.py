@@ -2,6 +2,7 @@ from functools import cached_property
 
 from inflection import underscore
 from sqlalchemy import inspect
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, as_declarative, declared_attr
 
 from strawberry_mage.core.models import EntityModel
@@ -27,9 +28,9 @@ class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
         return [c.name for c in inspect(self).primary_key]
 
 
-def create_base_entity(session_factory: sessionmaker):
+def create_base_entity(engine: Engine):
     from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
     return type('SQLAlchemyModel', (_SQLAlchemyModel,), {
-        '__backend__': SQLAlchemyBackend(session_factory),
+        '__backend__': SQLAlchemyBackend(engine),
         '__abstract__': True
     })

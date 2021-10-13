@@ -2,7 +2,7 @@ import abc
 import enum
 import sys
 from functools import lru_cache
-from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional
+from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional, Iterable
 
 from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
@@ -83,7 +83,15 @@ class IDataBackend(abc.ABC):
         return {GraphQLOperation(i) for i in range(1, 9)}
 
     @abc.abstractmethod
-    def resolve(self, model: Type['IEntityModel'], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+    async def resolve(self, model: Type['IEntityModel'], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
+        raise NotImplemented
+
+    @abc.abstractmethod
+    def post_setup(self) -> None:
         raise NotImplemented
 
 
@@ -119,22 +127,7 @@ class IEntityModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def resolve(cls, operation: GraphQLOperation, info: Info, data: Any) -> Any:
-        raise NotImplemented
-
-    @classmethod
-    @abc.abstractmethod
     def get_schema_manager(cls) -> ISchemaManager:
-        raise NotImplemented
-
-    @classmethod
-    @abc.abstractmethod
-    def pre_setup(cls, manager: ISchemaManager) -> None:
-        raise NotImplemented
-
-    @classmethod
-    @abc.abstractmethod
-    def post_setup(cls) -> None:
         raise NotImplemented
 
     @classmethod
@@ -165,4 +158,19 @@ class IEntityModel(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def get_children_class_names(cls) -> Optional[List[str]]:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    async def resolve(cls, operation: GraphQLOperation, info: Info, data: Any) -> Any:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def pre_setup(cls, manager: ISchemaManager) -> None:
+        raise NotImplemented
+
+    @classmethod
+    @abc.abstractmethod
+    def post_setup(cls) -> None:
         raise NotImplemented
