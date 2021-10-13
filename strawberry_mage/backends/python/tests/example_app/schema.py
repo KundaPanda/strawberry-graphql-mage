@@ -23,7 +23,7 @@ class Weapon(PythonEntityModel):
 
 class Entity(PythonEntityModel):
     id: int
-    weapons: List[Weapon]
+    weapons: Optional[List[Weapon]]
     submits_to: Optional['King']
 
     __primary_key__ = ('id',)
@@ -34,7 +34,7 @@ class Entity(PythonEntityModel):
     }
 
 
-class Mage(PythonEntityModel):
+class Mage(Entity):
     class MageTypeEnum(enum.Enum):
         FIRE = 1
         WATER = 2
@@ -56,7 +56,7 @@ class Archer(Entity):
 class King(Entity):
     id: int
     name: Optional[str]
-    subjects: List[Entity]
+    subjects: Optional[List[Entity]]
 
     __backrefs__ = {
         'weapons': 'owner',

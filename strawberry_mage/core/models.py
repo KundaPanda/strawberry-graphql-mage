@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Set, List, Type, Dict, Tuple, Optional
 
 from strawberry.types import Info
@@ -10,11 +11,12 @@ from strawberry_mage.core.type_creator import create_entity_type, \
 from strawberry_mage.core.types import GraphQLOperation, IEntityModel, IDataBackend, ISchemaManager
 
 
+@dataclasses.dataclass
 class EntityModel(IEntityModel):
     __backend__: IDataBackend = None
     __primary_key__: Any = None
-    _strawberry_type: StrawberryModelType
-    _properties: List[str]
+    _strawberry_type: StrawberryModelType = None
+    _properties: List[str] = None
     _manager: ISchemaManager = None
 
     def __hash__(self):

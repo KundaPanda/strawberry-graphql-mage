@@ -1,4 +1,5 @@
 import abc
+import dataclasses
 import enum
 import sys
 from functools import lru_cache
@@ -109,9 +110,10 @@ class ISchemaManager(abc.ABC):
         raise NotImplemented
 
 
+@dataclasses.dataclass
 class IEntityModel(abc.ABC):
-    __backend__: IDataBackend = None
-    __primary_key__: Any = None
+    __backend__: IDataBackend
+    __primary_key__: Any
     _strawberry_type: StrawberryModelType
 
     @classmethod
