@@ -2,7 +2,6 @@
 
 schema {
     query: Query
-    mutation: Mutation
 }
 
 interface Entity {
@@ -16,10 +15,6 @@ type Archer implements Entity {
     id: Int!
     submitsTo: King
     weapons: [Weapon!]
-}
-
-type DeleteResult {
-    affectedRows: Int!
 }
 
 type Entity_ {
@@ -41,39 +36,6 @@ type Mage implements Entity {
     powerSource: MageTypeEnum!
     submitsTo: King
     weapons: [Weapon!]
-}
-
-type Mutation {
-    createArcher(data: ArcherCreateOne!): Archer
-    createArchers(data: [ArcherCreateOne!]!): [Archer]!
-    createEntities(data: [EntityCreateOne!]!): [Entity]!
-    createEntity(data: EntityCreateOne!): Entity
-    createKing(data: KingCreateOne!): King
-    createKings(data: [KingCreateOne!]!): [King]!
-    createMage(data: MageCreateOne!): Mage
-    createMages(data: [MageCreateOne!]!): [Mage]!
-    createWeapon(data: WeaponCreateOne!): Weapon
-    createWeapons(data: [WeaponCreateOne!]!): [Weapon]!
-    deleteArcher(data: ArcherPrimaryKeyField!): DeleteResult!
-    deleteArchers(data: [ArcherPrimaryKeyField!]!): DeleteResult!
-    deleteEntities(data: [EntityPrimaryKeyField!]!): DeleteResult!
-    deleteEntity(data: EntityPrimaryKeyField!): DeleteResult!
-    deleteKing(data: KingPrimaryKeyField!): DeleteResult!
-    deleteKings(data: [KingPrimaryKeyField!]!): DeleteResult!
-    deleteMage(data: MagePrimaryKeyField!): DeleteResult!
-    deleteMages(data: [MagePrimaryKeyField!]!): DeleteResult!
-    deleteWeapon(data: WeaponPrimaryKeyField!): DeleteResult!
-    deleteWeapons(data: [WeaponPrimaryKeyField!]!): DeleteResult!
-    updateArcher(data: ArcherUpdateOne!): Archer
-    updateArchers(data: [ArcherUpdateOne!]!): [Archer]!
-    updateEntities(data: [EntityUpdateOne!]!): [Entity]!
-    updateEntity(data: EntityUpdateOne!): Entity
-    updateKing(data: KingUpdateOne!): King
-    updateKings(data: [KingUpdateOne!]!): [King]!
-    updateMage(data: MageUpdateOne!): Mage
-    updateMages(data: [MageUpdateOne!]!): [Mage]!
-    updateWeapon(data: WeaponUpdateOne!): Weapon
-    updateWeapons(data: [WeaponUpdateOne!]!): [Weapon]!
 }
 
 type Query {
@@ -108,12 +70,6 @@ enum OrderingDirection {
     DESC
 }
 
-input ArcherCreateOne {
-    drawStrength: Float!
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
-}
-
 input ArcherFilter {
     AND_: [ArcherFilter]
     OR_: [ArcherFilter]
@@ -134,10 +90,6 @@ input ArcherPrimaryKey {
     id: Int!
 }
 
-input ArcherPrimaryKeyField {
-    primaryKey_: ArcherPrimaryKey!
-}
-
 input ArcherQueryMany {
     filters: [ArcherFilter]
     ordering: [ArcherOrdering]
@@ -147,18 +99,6 @@ input ArcherQueryMany {
 
 input ArcherQueryOne {
     primaryKey_: ArcherPrimaryKey!
-}
-
-input ArcherUpdateOne {
-    drawStrength: Float
-    primaryKey_: ArcherPrimaryKey!
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
-}
-
-input EntityCreateOne {
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
 }
 
 input EntityFilter {
@@ -179,10 +119,6 @@ input EntityPrimaryKey {
     id: Int!
 }
 
-input EntityPrimaryKeyField {
-    primaryKey_: EntityPrimaryKey!
-}
-
 input EntityQueryMany {
     filters: [EntityFilter]
     ordering: [EntityOrdering]
@@ -192,12 +128,6 @@ input EntityQueryMany {
 
 input EntityQueryOne {
     primaryKey_: EntityPrimaryKey!
-}
-
-input EntityUpdateOne {
-    primaryKey_: EntityPrimaryKey!
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
 }
 
 input FloatFilter {
@@ -216,13 +146,6 @@ input IntegerFilter {
     gte: Int
     lt: Int
     lte: Int
-}
-
-input KingCreateOne {
-    name: String
-    subjects: [EntityPrimaryKeyField!]
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
 }
 
 input KingFilter {
@@ -247,10 +170,6 @@ input KingPrimaryKey {
     id: Int!
 }
 
-input KingPrimaryKeyField {
-    primaryKey_: KingPrimaryKey!
-}
-
 input KingQueryMany {
     filters: [KingFilter]
     ordering: [KingOrdering]
@@ -260,20 +179,6 @@ input KingQueryMany {
 
 input KingQueryOne {
     primaryKey_: KingPrimaryKey!
-}
-
-input KingUpdateOne {
-    name: String
-    primaryKey_: KingPrimaryKey!
-    subjects: [EntityPrimaryKeyField!]
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
-}
-
-input MageCreateOne {
-    powerSource: MageTypeEnum!
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
 }
 
 input MageFilter {
@@ -296,10 +201,6 @@ input MagePrimaryKey {
     id: Int!
 }
 
-input MagePrimaryKeyField {
-    primaryKey_: MagePrimaryKey!
-}
-
 input MageQueryMany {
     filters: [MageFilter]
     ordering: [MageOrdering]
@@ -311,13 +212,6 @@ input MageQueryOne {
     primaryKey_: MagePrimaryKey!
 }
 
-input MageUpdateOne {
-    powerSource: MageTypeEnum
-    primaryKey_: MagePrimaryKey!
-    submitsTo: KingPrimaryKeyField
-    weapons: [WeaponPrimaryKeyField!]
-}
-
 input StringFilter {
     NOT_: Boolean = false
     contains: String
@@ -326,12 +220,6 @@ input StringFilter {
     iexact: String
     ilike: String
     like: String
-}
-
-input WeaponCreateOne {
-    damage: Int!
-    name: String
-    owner: EntityPrimaryKeyField
 }
 
 input WeaponFilter {
@@ -354,10 +242,6 @@ input WeaponPrimaryKey {
     id: Int!
 }
 
-input WeaponPrimaryKeyField {
-    primaryKey_: WeaponPrimaryKey!
-}
-
 input WeaponQueryMany {
     filters: [WeaponFilter]
     ordering: [WeaponOrdering]
@@ -366,12 +250,5 @@ input WeaponQueryMany {
 }
 
 input WeaponQueryOne {
-    primaryKey_: WeaponPrimaryKey!
-}
-
-input WeaponUpdateOne {
-    damage: Int
-    name: String
-    owner: EntityPrimaryKeyField
     primaryKey_: WeaponPrimaryKey!
 }
