@@ -41,20 +41,16 @@ class Mage(Entity):
         EARTH = 3
         AIR = 4
 
-    id: int
     power_source: MageTypeEnum
 
-    __primary_key__ = ('id',)
     __backend__ = backend
 
 
 class Archer(Entity):
-    id: int
     draw_strength: float
 
 
 class King(Entity):
-    id: int
     name: Optional[str]
     subjects: Optional[List[Entity]]
 

@@ -1,0 +1,52 @@
+query simpleQuery {
+    archers {
+        id
+        __typename
+    }
+    weapons {
+        id
+        __typename
+        damage
+    }
+}
+
+mutation simpleCreate {
+    createKing(data: {weapons: [], subjects: []}) {
+        id
+        __typename
+    }
+    createWeapons(data: [{damage: 10, name: "test"}, {damage: 100, name: "test2"}]) {
+        id
+        damage
+        name
+        __typename
+    }
+}
+
+mutation simpleUpdate($entityId: Int!, $weaponId: Int!, $weaponId1: Int!, $weaponId2: Int!,$ownerId: Int!) {
+    updateEntity(data: {primaryKey_: {id: $entityId}, weapons: [{primaryKey_: {id: $weaponId}}]}) {
+        id
+        __typename
+        weapons {
+            id
+        }
+    }
+    updateWeapons(data: [{primaryKey_: {id: $weaponId1}, damage: 123}, {primaryKey_: {id: $weaponId2}, owner: {primaryKey_: {id: $ownerId}}}]) {
+        id
+        damage
+        name
+        __typename
+        owner {
+            id
+        }
+    }
+}
+
+mutation simpleDelete($archerId: Int!, $weaponId1: Int!, $weaponId2: Int!) {
+    deleteArcher(data: {primaryKey_: {id: $archerId}}) {
+        affectedRows
+    }
+    deleteWeapons(data: [{primaryKey_: {id: $weaponId1}}, {primaryKey_: {id: $weaponId2}}]) {
+        affectedRows
+    }
+}
