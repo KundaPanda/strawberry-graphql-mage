@@ -204,6 +204,8 @@ async def create_selection_joins(model: Type[_SQLAlchemyModel], path: str, selec
     for attr, sub_selection in selection.items():
         if isclass(attr) and issubclass(attr, _SQLAlchemyModel):
             sub_path = f'{path}-{attr.__name__}'
+            if not hasattr(model, attr.__name__):
+                continue
             selectables[sub_path] = getattr(model, attr.__name__)
             eager_options_created.extend(
                 await create_selection_joins(getattr(model, attr.__name__), sub_path, sub_selection,

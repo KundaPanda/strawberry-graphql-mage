@@ -4,11 +4,12 @@ from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional, List
 
 from inflection import underscore
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
 from strawberry_mage.core.models import EntityModel
-from strawberry_mage.core.type_creator import defer_annotation
+from strawberry_mage.core.type_creator import defer_annotation, GeneratedType
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
 from strawberry_mage.core.utils import get_subclasses
 
@@ -19,8 +20,8 @@ class DataBackendBase(IDataBackend, ABC):
         for subfield in field.selections:
             if subfield.selections:
                 if isinstance(subfield, InlineFragment):
-                    selection[manager.get_model_for_name(subfield.type_condition)] = \
-                        self._build_selection(subfield, manager)
+                    model = manager.get_model_for_name(GeneratedType.get_original(subfield.type_condition))
+                    selection[model] = self._build_selection(subfield, manager)
                     continue
                 selection[underscore(subfield.name)] = self._build_selection(subfield, manager)
         return selection
@@ -61,10 +62,13 @@ class DummyDataBackend(DataBackendBase):
 
     def get_children_class_names(self, model: Type['IEntityModel']) -> Optional[List[str]]:
         if model.__subclasses__():
-            return get_subclasses(model)
+            return get_subclasses(model).union({model.__name__})
 
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
+
+    def get_polymorphic_type(self, base_type: ConcreteType):
+        return base_type.implementation
 
     async def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
         if operation.value % 2 == 0:

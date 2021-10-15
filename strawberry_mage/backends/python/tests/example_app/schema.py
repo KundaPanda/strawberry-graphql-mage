@@ -5,8 +5,6 @@ from strawberry_mage.backends.python.backend import PythonBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.schema import SchemaManager
 
-backend = PythonBackend()
-
 
 class Weapon(PythonEntityModel):
     id: int
@@ -15,7 +13,6 @@ class Weapon(PythonEntityModel):
     name: Optional[str]
 
     __primary_key__ = ('id',)
-    __backend__ = backend
     __backrefs__ = {
         'owner': 'weapons'
     }
@@ -27,7 +24,6 @@ class Entity(PythonEntityModel):
     submits_to: Optional['King']
 
     __primary_key__ = ('id',)
-    __backend__ = backend
     __backrefs__ = {
         'weapons': 'owner',
         'submits_to': 'subjects',
@@ -42,8 +38,6 @@ class Mage(Entity):
         AIR = 4
 
     power_source: MageTypeEnum
-
-    __backend__ = backend
 
 
 class Archer(Entity):
@@ -61,4 +55,5 @@ class King(Entity):
     }
 
 
-schema = SchemaManager(Weapon, Entity, Mage, Archer, King).get_schema()
+schema_manager = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=PythonBackend())
+schema = schema_manager.get_schema()

@@ -47,7 +47,31 @@ async def main():
 
 
 def app(debug=False):
-    from strawberry_mage.backends.python.tests.example_app.schema import schema
+    from strawberry_mage.backends.python.tests.example_app.schema import Weapon, Entity, King, Archer, Mage, schema, schema_manager
+    weapons = [
+        Weapon(damage=10, name='mace'),
+        Weapon(damage=10, name='bow'),
+        Weapon(damage=13, name='one-handed sword'),
+        Weapon(damage=17, name='crossbow'),
+        Weapon(damage=17, name='blue crossbow'),
+        Weapon(damage=20, name='two-handed sword'),
+        Weapon(damage=30, name='lightning wand'),
+        Weapon(damage=31, name='fire staff'),
+    ]
+    king1 = King(name='Vizimir II')
+    king2 = King(name='Radovid V', submits_to=king1, weapons=[weapons[5]])
+    entities = [
+        Entity(),
+        Entity(submits_to=king2),
+        Entity(submits_to=king1, weapons=[weapons[0]]),
+        Archer(submits_to=king1, weapons=[weapons[1]], draw_strength=30),
+        Archer(weapons=weapons[3:4], draw_strength=16),
+        Archer(draw_strength=40, submits_to=king1),
+        Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
+        Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
+    ]
+    data = [*weapons, king1, king2, *entities]
+    schema_manager.backend.add_dataset(data)
     gql = GraphQL(schema)
     application = Starlette(debug, routes=[
         Route('/', gql),

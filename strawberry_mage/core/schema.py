@@ -8,19 +8,25 @@ from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
 from strawberry_mage.core.type_creator import GeneratedType
-from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ISchemaManager
+from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ISchemaManager, IDataBackend
 
 
 class SchemaManager(ISchemaManager):
     _models: Dict[str, IEntityModel]
 
-    def __init__(self, *models):
+    def __init__(self, *models, backend: IDataBackend):
         if len(models) == 0:
             raise IndexError('Need at least one model for the GraphQL schema.')
         self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
+        self._backend = backend
         for model in self._models.values():
+            model.__backend__ = self._backend
             model.pre_setup(self)
-        models[0].__backend__.pre_setup(models)
+        self._backend.pre_setup(models)
+
+    @property
+    def backend(self):
+        return self._backend
 
     @staticmethod
     def _add_operation(type_object, operation: GraphQLOperation, model: IEntityModel):
@@ -54,7 +60,7 @@ class SchemaManager(ISchemaManager):
     def get_schema(self):
         for model in self._models.values():
             model.post_setup()
-        list(self._models.values())[0].__backend__.post_setup()
+        self._backend.post_setup()
         query_object = type('Query', (object,), {})
         mutation_object = type('Mutation', (object,), {})
 
@@ -85,8 +91,8 @@ class SchemaManager(ISchemaManager):
         def resolve_interface_type(obj, info, type_):
             if (base_type := schema.schema_converter.type_map.get(
                     GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__))) is not None:
-                return base_type.implementation
-            return schema.schema_converter.type_map[obj.__class__.__name__].implementation
+                return self._backend.get_polymorphic_type(base_type)
+            return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__])
 
         for entry in schema.schema_converter.type_map.values():
             if isinstance(entry, ConcreteType) and isinstance(entry.implementation, GraphQLInterfaceType):

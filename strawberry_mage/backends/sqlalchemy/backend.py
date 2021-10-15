@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, Mapper, ONETOMANY, MANYTOMANY, \
     sessionmaker
 from sqlalchemy.orm.util import AliasedInsp
+from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
@@ -96,6 +97,9 @@ class SQLAlchemyBackend(DataBackendBase):
 
     def get_operations(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
+
+    def get_polymorphic_type(self, base_type: ConcreteType):
+        return base_type.implementation
 
     async def resolve(self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], operation: GraphQLOperation, info: Info,
                       data: Any, session_factory: Optional[sessionmaker] = None) -> Any:

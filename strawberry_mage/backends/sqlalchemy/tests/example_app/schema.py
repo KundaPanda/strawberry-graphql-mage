@@ -68,7 +68,7 @@ class King(Entity):
     }
 
 
-schema = SchemaManager(Weapon, Entity, Mage, Archer, King).get_schema()
+schema = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=Base.__backend__).get_schema()
 
 if __name__ == '__main__':
     Base.metadata.create_all(bind=engine)

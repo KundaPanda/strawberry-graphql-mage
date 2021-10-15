@@ -59,6 +59,8 @@ class SQLAlchemyModelConverter:
     def convert(self, entity: Type[PythonEntityModel]):
         attrs = {}
         parent_name = entity.get_parent_class_name()
+        if parent_name == entity.__name__:
+            parent_name = None
         parent = self._get_related_entity(entity, parent_name) if parent_name else None
         inherited_attrs = []
         for attr in entity.get_attributes():

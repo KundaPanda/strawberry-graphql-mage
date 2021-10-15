@@ -6,18 +6,22 @@ from typing import Type, Set, Optional, Iterable, Dict, Any, List, Union
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 from sqlalchemy.orm import sessionmaker, make_transient
+from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
 from strawberry_mage.core.backend import DummyDataBackend
+from strawberry_mage.core.schema import SchemaManager
 from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class PythonBackend(DummyDataBackend):
     dataset: List[_SQLAlchemyModel] = []
     _dataset_lock: Lock = None
+    _models: Iterable[Type[PythonEntityModel]]
+    _sqla_manager: SchemaManager
 
     def __init__(self, engines_count=100):
         self.converter = SQLAlchemyModelConverter(create_async_engine('sqlite+aiosqlite:///'))
@@ -74,9 +78,14 @@ class PythonBackend(DummyDataBackend):
     def get_parent_class_name(self, model: Type[IEntityModel]):
         if model.mro()[1].__name__ != 'PythonEntityModel':
             return model.mro()[1].__name__
+        elif model.__subclasses__():
+            return model.__name__
 
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY}
+
+    def get_polymorphic_type(self, base_type: ConcreteType):
+        return base_type.implementation
 
     async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any,
                       dataset: Optional[Iterable[PythonEntityModel]] = None) -> Any:
@@ -101,10 +110,12 @@ class PythonBackend(DummyDataBackend):
         await self.engines.put(engine)
         return res
 
-    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
-        pass
+    def pre_setup(self, models: Iterable[Type[PythonEntityModel]]) -> None:
+        self._models = models
 
     def post_setup(self) -> None:
+        self._sqla_manager = SchemaManager(*[m.sqla_model for m in self._models],
+                                           backend=self.converter.base.__backend__)
         for i in range(self.engines.maxsize):
             e = create_async_engine(f'sqlite+aiosqlite://')
             self.engines.put_nowait(e)
