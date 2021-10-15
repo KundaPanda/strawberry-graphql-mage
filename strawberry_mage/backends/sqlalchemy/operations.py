@@ -315,4 +315,5 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
             if not is_unset(data.page_number):
                 expression = expression.offset((data.page_number - 1) * data.page_size)
 
+    all_ = (await session.execute(select(model))).scalars().all()
     return (await session.execute(expression)).unique().scalars().all()

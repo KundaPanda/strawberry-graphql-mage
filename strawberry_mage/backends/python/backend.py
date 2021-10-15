@@ -1,13 +1,11 @@
 import asyncio
-import dataclasses
-from asyncio import Queue
+from asyncio import Queue, Lock
 from concurrent.futures import ThreadPoolExecutor
 from inspect import ismethod
 from typing import Type, Set, Optional, Iterable, Dict, Any, List, Union
 
-from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, make_transient
 from strawberry.types import Info
 
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
@@ -19,7 +17,7 @@ from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 class PythonBackend(DummyDataBackend):
     dataset: List[_SQLAlchemyModel] = []
-    _dataset_dirty = False
+    _dataset_lock: Lock = None
 
     def __init__(self, engines_count=100):
         self.converter = SQLAlchemyModelConverter(create_async_engine('sqlite+aiosqlite:///'))
@@ -82,23 +80,24 @@ class PythonBackend(DummyDataBackend):
 
     async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any,
                       dataset: Optional[Iterable[PythonEntityModel]] = None) -> Any:
-        while self.engines.empty() or self._dataset_dirty:
+        if self._dataset_lock is None:
+            self._dataset_lock = Lock()
+        while self.engines.empty():
             await asyncio.sleep(0.00001)
         engine: AsyncEngine = await self.engines.get()
         if dataset:
             self.add_dataset(dataset)
-        async with AsyncSession(engine) as session:
-            self._dataset_dirty = True
-            session.add_all(self.dataset)
-            await session.commit()
-            session.expunge_all()
-            self._dataset_dirty = False
-        res = await model.sqla_model.__backend__.resolve(model.sqla_model, operation, info, data,
-                                                         sessionmaker(engine, expire_on_commit=False,
-                                                                      class_=AsyncSession))
-        async with AsyncSession(engine) as session:
-            for m in self.converter.base.metadata.sorted_tables:
-                await session.run_sync(lambda s: s.query(m).delete())
+        session_factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+        async with session_factory() as session:
+            async with self._dataset_lock:
+                session.add_all(self.dataset)
+                await session.commit()
+                for instance in self.dataset:
+                    make_transient(instance)
+        res = await model.sqla_model.__backend__.resolve(model.sqla_model, operation, info, data, session_factory)
+        async with engine.begin() as conn:
+            await conn.run_sync(self.converter.base.metadata.drop_all)
+            await conn.run_sync(self.converter.base.metadata.create_all)
         await self.engines.put(engine)
         return res
 
@@ -106,8 +105,8 @@ class PythonBackend(DummyDataBackend):
         pass
 
     def post_setup(self) -> None:
-        for _ in range(self.engines.maxsize):
-            e = create_async_engine('sqlite+aiosqlite://')
+        for i in range(self.engines.maxsize):
+            e = create_async_engine(f'sqlite+aiosqlite://')
             self.engines.put_nowait(e)
 
             async def set_up():
