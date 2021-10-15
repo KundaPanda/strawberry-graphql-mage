@@ -54,6 +54,7 @@ class SchemaManager(ISchemaManager):
     def get_schema(self):
         for model in self._models.values():
             model.post_setup()
+        list(self._models.values())[0].__backend__.post_setup()
         query_object = type('Query', (object,), {})
         mutation_object = type('Mutation', (object,), {})
 

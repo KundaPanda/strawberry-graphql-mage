@@ -12,27 +12,6 @@ from strawberry.asgi import GraphQL
 Base = declarative_base()
 
 
-#
-# class ModelA(EntityModel):
-#     x: 'ModelB'
-#
-#     @property
-#     def __backrefs__(self):
-#         return {
-#             self.x: ModelB.y
-#         }
-#
-#
-# class ModelB(EntityModel):
-#     y: ModelA
-#
-#     @property
-#     def __backrefs__(self):
-#         return {
-#             self.y: ModelA.x
-#         }
-#
-#
 async def cleanup_engine(engine: AsyncEngine, engines: Queue):
     async with AsyncSession(engine) as session:
         for m in Base.metadata.sorted_tables:
