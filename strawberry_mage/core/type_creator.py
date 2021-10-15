@@ -37,6 +37,13 @@ class GeneratedType(enum.Enum):
     def get_typename(self: 'GeneratedType', name: str):
         return name + self.value
 
+    @staticmethod
+    def get_original(name: str):
+        for t in GeneratedType:
+            if t != GeneratedType.ENTITY and name.endswith(t.value):
+                return name.rstrip(t.value)
+        return name
+
 
 def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = GeneratedType.ENTITY) -> Dict[str, Any]:
     strawberry_fields = {

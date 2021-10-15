@@ -31,9 +31,9 @@ async def dataset():
         Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
     ]
     data = [*weapons, king1, king2, *entities]
-    backend.add_dataset(data)
+    schema_manager.backend.add_dataset(data)
     yield data
-    backend.add_dataset([])
+    schema_manager.backend.add_dataset([])
 
 
 @pytest.fixture(scope='function')

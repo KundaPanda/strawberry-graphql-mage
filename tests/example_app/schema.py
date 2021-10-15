@@ -6,9 +6,6 @@ from strawberry_mage.core.models import EntityModel
 from strawberry_mage.core.schema import SchemaManager
 
 
-dummy = DummyDataBackend()
-
-
 class Weapon(EntityModel):
     id: int
     damage: int
@@ -16,7 +13,6 @@ class Weapon(EntityModel):
     name: Optional[str]
 
     __primary_key__ = ('id',)
-    __backend__ = dummy
 
 
 class Entity(EntityModel):
@@ -24,7 +20,6 @@ class Entity(EntityModel):
     weapons: List[Weapon]
 
     __primary_key__ = ('id',)
-    __backend__ = dummy
 
 
 class Mage(Entity):
@@ -33,6 +28,7 @@ class Mage(Entity):
         WATER = 2
         EARTH = 3
         AIR = 4
+
     power_source: MageTypeEnum
 
 
@@ -40,4 +36,6 @@ class Archer(Entity):
     draw_strength: float
 
 
-schema = SchemaManager(Weapon, Entity, Mage, Archer).get_schema()
+dummy = DummyDataBackend()
+
+schema = SchemaManager(Weapon, Entity, Mage, Archer, backend=dummy).get_schema()

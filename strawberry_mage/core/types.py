@@ -7,6 +7,7 @@ from typing import Any, Type, Tuple, Set, Dict, List, Union, Optional, Iterable
 
 from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 
 from strawberry_mage.core.strawberry_types import StrawberryModelType, ROOT_NS
@@ -95,8 +96,18 @@ class IDataBackend(abc.ABC):
     def post_setup(self) -> None:
         raise NotImplemented
 
+    @abc.abstractmethod
+    def get_polymorphic_type(self, base_type: ConcreteType):
+        raise NotImplemented
+
 
 class ISchemaManager(abc.ABC):
+
+    @property
+    @abc.abstractmethod
+    def backend(self) -> IDataBackend:
+        raise NotImplemented
+
     @abc.abstractmethod
     def get_schema(self) -> Schema:
         raise NotImplemented
