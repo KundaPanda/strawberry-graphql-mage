@@ -1,0 +1,254 @@
+# This file was generated based on ".graphqlconfig". Do not edit manually.
+
+schema {
+    query: Query
+}
+
+interface Entity {
+    id: Int!
+    submitsTo: King
+    weapons: [Weapon!]
+}
+
+type Archer implements Entity {
+    drawStrength: Float!
+    id: Int!
+    submitsTo: King
+    weapons: [Weapon!]
+}
+
+type Entity_ {
+    id: Int!
+    submitsTo: King
+    weapons: [Weapon!]
+}
+
+type King implements Entity {
+    id: Int!
+    name: String
+    subjects: [Entity!]
+    submitsTo: King
+    weapons: [Weapon!]
+}
+
+type Mage implements Entity {
+    id: Int!
+    powerSource: MageTypeEnum!
+    submitsTo: King
+    weapons: [Weapon!]
+}
+
+type Query {
+    archer(data: ArcherQueryOne!): Archer
+    archers(data: ArcherQueryMany): [Archer!]!
+    entities(data: EntityQueryMany): [Entity!]!
+    entity(data: EntityQueryOne!): Entity
+    king(data: KingQueryOne!): King
+    kings(data: KingQueryMany): [King!]!
+    mage(data: MageQueryOne!): Mage
+    mages(data: MageQueryMany): [Mage!]!
+    weapon(data: WeaponQueryOne!): Weapon
+    weapons(data: WeaponQueryMany): [Weapon!]!
+}
+
+type Weapon {
+    damage: Int!
+    id: Int!
+    name: String
+    owner: Entity
+}
+
+enum MageTypeEnum {
+    AIR
+    EARTH
+    FIRE
+    WATER
+}
+
+enum OrderingDirection {
+    ASC
+    DESC
+}
+
+input ArcherFilter {
+    AND_: [ArcherFilter]
+    OR_: [ArcherFilter]
+    drawStrength: FloatFilter
+    id: IntegerFilter
+    submitsTo: KingFilter
+    weapons: [WeaponFilter!]
+}
+
+input ArcherOrdering {
+    drawStrength: OrderingDirection
+    id: OrderingDirection
+    submitsTo: KingOrdering
+    weapons: [WeaponOrdering!]
+}
+
+input ArcherPrimaryKey {
+    id: Int!
+}
+
+input ArcherQueryMany {
+    filters: [ArcherFilter]
+    ordering: [ArcherOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
+}
+
+input ArcherQueryOne {
+    primaryKey_: ArcherPrimaryKey!
+}
+
+input EntityFilter {
+    AND_: [EntityFilter]
+    OR_: [EntityFilter]
+    id: IntegerFilter
+    submitsTo: KingFilter
+    weapons: [WeaponFilter!]
+}
+
+input EntityOrdering {
+    id: OrderingDirection
+    submitsTo: KingOrdering
+    weapons: [WeaponOrdering!]
+}
+
+input EntityPrimaryKey {
+    id: Int!
+}
+
+input EntityQueryMany {
+    filters: [EntityFilter]
+    ordering: [EntityOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
+}
+
+input EntityQueryOne {
+    primaryKey_: EntityPrimaryKey!
+}
+
+input FloatFilter {
+    NOT_: Boolean = false
+    exact: Float
+    gt: Float
+    gte: Float
+    lt: Float
+    lte: Float
+}
+
+input IntegerFilter {
+    NOT_: Boolean = false
+    exact: Int
+    gt: Int
+    gte: Int
+    lt: Int
+    lte: Int
+}
+
+input KingFilter {
+    AND_: [KingFilter]
+    OR_: [KingFilter]
+    id: IntegerFilter
+    name: StringFilter
+    subjects: [EntityFilter!]
+    submitsTo: KingFilter
+    weapons: [WeaponFilter!]
+}
+
+input KingOrdering {
+    id: OrderingDirection
+    name: OrderingDirection
+    subjects: [EntityOrdering!]
+    submitsTo: KingOrdering
+    weapons: [WeaponOrdering!]
+}
+
+input KingPrimaryKey {
+    id: Int!
+}
+
+input KingQueryMany {
+    filters: [KingFilter]
+    ordering: [KingOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
+}
+
+input KingQueryOne {
+    primaryKey_: KingPrimaryKey!
+}
+
+input MageFilter {
+    AND_: [MageFilter]
+    OR_: [MageFilter]
+    id: IntegerFilter
+    powerSource: MageTypeEnum
+    submitsTo: KingFilter
+    weapons: [WeaponFilter!]
+}
+
+input MageOrdering {
+    id: OrderingDirection
+    powerSource: MageTypeEnum
+    submitsTo: KingOrdering
+    weapons: [WeaponOrdering!]
+}
+
+input MagePrimaryKey {
+    id: Int!
+}
+
+input MageQueryMany {
+    filters: [MageFilter]
+    ordering: [MageOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
+}
+
+input MageQueryOne {
+    primaryKey_: MagePrimaryKey!
+}
+
+input StringFilter {
+    NOT_: Boolean = false
+    contains: String
+    exact: String
+    icontains: String
+    iexact: String
+    ilike: String
+    like: String
+}
+
+input WeaponFilter {
+    AND_: [WeaponFilter]
+    OR_: [WeaponFilter]
+    damage: IntegerFilter
+    id: IntegerFilter
+    name: StringFilter
+    owner: EntityFilter
+}
+
+input WeaponOrdering {
+    damage: OrderingDirection
+    id: OrderingDirection
+    name: OrderingDirection
+    owner: EntityOrdering
+}
+
+input WeaponPrimaryKey {
+    id: Int!
+}
+
+input WeaponQueryMany {
+    filters: [WeaponFilter]
+    ordering: [WeaponOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
+}
+
+input WeaponQueryOne {
+    primaryKey_: WeaponPrimaryKey!
+}

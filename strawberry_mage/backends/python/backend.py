@@ -1,8 +1,8 @@
 import asyncio
 from asyncio import Queue, Lock
 from concurrent.futures import ThreadPoolExecutor
-from inspect import ismethod
-from typing import Type, Set, Optional, Iterable, Dict, Any, List, Union
+from dataclasses import MISSING
+from typing import Type, Set, Optional, Iterable, Dict, Any, List
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 from sqlalchemy.orm import sessionmaker, make_transient
@@ -28,16 +28,12 @@ class PythonBackend(DummyDataBackend):
         self.engines = Queue(maxsize=engines_count)
 
     def _create_entity(self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], original: PythonEntityModel):
-        data = {
-            **{k: v for k, v in vars(original).items() if not k.startswith('_') and not ismethod(v)},
-            **self._collect_references(mappings, original)
-        }
-        return original.sqla_model(**data)
+        return original.sqla_model(**self._extract_attributes(mappings, original))
 
-    def _collect_references(self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel):
-        results: Dict[str, Union[_SQLAlchemyModel, Iterable[_SQLAlchemyModel]]] = {}
+    def _extract_attributes(self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel):
+        results: Dict[str, Any] = {}
         for a in entry.get_attributes():
-            attr = getattr(entry, a, None)
+            attr = getattr(entry, a, MISSING)
             if attr and isinstance(attr, PythonEntityModel):
                 if attr not in mappings:
                     mappings[attr] = self._create_entity(mappings, attr)
@@ -45,18 +41,21 @@ class PythonBackend(DummyDataBackend):
             elif isinstance(attr, list):
                 converted = []
                 for e in attr:
-                    if e not in mappings:
-                        mappings[e] = self._create_entity(mappings, e)
-                    converted.append(mappings[e])
+                    if isinstance(e, PythonEntityModel):
+                        if e not in mappings:
+                            mappings[e] = self._create_entity(mappings, e)
+                        converted.append(mappings[e])
+                    else:
+                        converted.append(e)
                 results[a] = converted
+            elif attr != MISSING:
+                results[a] = attr
         return results
 
     def _build_dataset(self, dataset: Iterable[PythonEntityModel]):
         mappings: Dict[PythonEntityModel, _SQLAlchemyModel] = {}
         for entry in dataset:
-            data = {**{k: v for k, v in vars(entry).items() if not k.startswith('_') and not ismethod(v)},
-                    **self._collect_references(mappings, entry)}
-            mappings[entry] = entry.sqla_model(**data)
+            mappings[entry] = self._create_entity(mappings, entry)
         return mappings
 
     def add_dataset(self, dataset: Iterable[PythonEntityModel]):

@@ -1,4 +1,5 @@
 import dataclasses
+from functools import lru_cache
 from typing import Any, Set, List, Type, Dict, Tuple, Optional
 
 from strawberry.types import Info
