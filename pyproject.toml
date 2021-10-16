@@ -12,6 +12,7 @@ starlette = "^0.16.0"
 uvicorn = {extras = ["standard"], version = "^0.15.0"}
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.25"}
 aiosqlite = "^0.17.0"
+frozendict = "^2.0.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

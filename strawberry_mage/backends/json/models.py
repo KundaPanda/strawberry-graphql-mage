@@ -31,10 +31,6 @@ class PythonEntityModel(EntityModel, metaclass=PyModelMeta):
         return self._sqla_model
 
     @classmethod
-    def get_sqla_model(cls) -> Type[_SQLAlchemyModel]:
-        return cls._sqla_model
-
-    @classmethod
     def post_setup(cls):
         super().post_setup()
         cls._sqla_model = cls.__backend__.converter.convert(cls)
