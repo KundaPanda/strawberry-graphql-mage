@@ -32,8 +32,8 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.field
-    def create(self, pk: int, weapons: List[int]) -> TestEntity:
-        return TestEntity(id=pk, weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons])
+    def create(self, weapons: List[int]) -> TestEntity:
+        return TestEntity(id=101, weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons])
 
     @strawberry.field
     def update(self, pk: int, weapons: List[int]) -> TestEntity:

@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import json
 from typing import Optional, List, Any, Type
 
 from strawberry.types import Info
@@ -71,7 +72,32 @@ async def resolve(model: Type[PythonEntityModel], operation: GraphQLOperation, i
         GraphQLOperation.DELETE_ONE: 'delete',
     }.get(operation)
     root = 'query' if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY} else 'mutation'
-    result = await graphql_app.execute(f'{root} {{ {op}{{ id __typename weapons {{ id __typename damage }} }} }}')
+    field = info.selected_fields[0]
+    pk_arg = field.arguments.get('data', {}).get('primaryKey_', {}).get('id')
+    arg = {k: v for k, v in field.arguments.get('data', {}).items() if k != 'primaryKey_'}
+    args = '( '
+    if pk_arg:
+        args += f'pk: {pk_arg}'
+    for name, value in arg.items():
+        if name != 'id':
+            if len(args) > 2:
+                args += ', '
+            args += f'{name}: {value}'
+    args += ')'
+    query_string = f"""
+    {root} {{
+        {op}{args if arg or (args != '( )') else ''} {{
+            id
+            __typename
+            weapons {{
+                id
+                __typename
+                damage
+            }}
+        }}
+    }}
+    """
+    result = await graphql_app.execute(query_string)
     return result.data[op]
 
 

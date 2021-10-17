@@ -36,6 +36,10 @@ class StrawberryModelInputTypes:
     create_one_input: EntityType
     update_one_input: EntityType
 
+    @classmethod
+    def get_types(cls):
+        return cls.__dataclass_fields__
+
 
 @dataclass
 class StrawberryModelType:
