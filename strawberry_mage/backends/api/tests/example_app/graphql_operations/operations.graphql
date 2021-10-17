@@ -1,0 +1,9 @@
+query simpleQuery {
+    entities {
+        id
+        weapons {
+            id
+        }
+        __typename
+    }
+}
