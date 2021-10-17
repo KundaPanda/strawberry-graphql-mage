@@ -1,9 +1,10 @@
-from typing import Set, Type, Any, Iterable, Optional, Callable, Coroutine
+from typing import Set, Type, Any, Iterable, Optional, Callable, Coroutine, Union, Dict, List
 
 from strawberry.types import Info
 
 from strawberry_mage.backends.api.backend import APIBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.core.strawberry_types import QueryOne, PrimaryKeyField
 from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
@@ -39,6 +40,12 @@ class CustomBackend(APIBackend):
         }
 
     async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any,
-                      dataset: Optional[Iterable[dict]] = None) -> Any:
+                      dataset: Optional[Union[List[dict], Dict[str, Any]]] = None) -> Any:
         api_dataset = await self.resolve_fn(model, operation, info, data)
-        return await super().resolve(model, operation, info, data, api_dataset)
+        if isinstance(api_dataset, list):
+            return await super().resolve(model, operation, info, data, api_dataset)
+        if isinstance(api_dataset, dict):
+            data = type('QueryOneStub', (PrimaryKeyField,), {'primary_key_': dict})(type('PkStub', (), {'id': api_dataset['id']})())
+            operation = GraphQLOperation.QUERY_ONE
+            return await super().resolve(model, operation, info, data, [api_dataset])
+

@@ -17,7 +17,7 @@ type Archer implements Entity {
     weapons: [Weapon!]
 }
 
-type Entity_ {
+type Entity_ implements Entity {
     id: Int!
     submitsTo: King
     weapons: [Weapon!]
@@ -74,16 +74,20 @@ input ArcherFilter {
     AND_: [ArcherFilter]
     OR_: [ArcherFilter]
     drawStrength: FloatFilter
+    entityPolymorphicType_: StringFilter
     id: IntegerFilter
     submitsTo: KingFilter
-    weapons: [WeaponFilter!]
+    submitsToId: IntegerFilter
+    weapons: [WeaponFilter]
 }
 
 input ArcherOrdering {
     drawStrength: OrderingDirection
+    entityPolymorphicType_: OrderingDirection
     id: OrderingDirection
     submitsTo: KingOrdering
-    weapons: [WeaponOrdering!]
+    submitsToId: OrderingDirection
+    weapons: [WeaponOrdering]
 }
 
 input ArcherPrimaryKey {
@@ -104,15 +108,19 @@ input ArcherQueryOne {
 input EntityFilter {
     AND_: [EntityFilter]
     OR_: [EntityFilter]
+    entityPolymorphicType_: StringFilter
     id: IntegerFilter
     submitsTo: KingFilter
-    weapons: [WeaponFilter!]
+    submitsToId: IntegerFilter
+    weapons: [WeaponFilter]
 }
 
 input EntityOrdering {
+    entityPolymorphicType_: OrderingDirection
     id: OrderingDirection
     submitsTo: KingOrdering
-    weapons: [WeaponOrdering!]
+    submitsToId: OrderingDirection
+    weapons: [WeaponOrdering]
 }
 
 input EntityPrimaryKey {
@@ -151,19 +159,23 @@ input IntegerFilter {
 input KingFilter {
     AND_: [KingFilter]
     OR_: [KingFilter]
+    entityPolymorphicType_: StringFilter
     id: IntegerFilter
     name: StringFilter
-    subjects: [EntityFilter!]
+    subjects: [EntityFilter]
     submitsTo: KingFilter
-    weapons: [WeaponFilter!]
+    submitsToId: IntegerFilter
+    weapons: [WeaponFilter]
 }
 
 input KingOrdering {
+    entityPolymorphicType_: OrderingDirection
     id: OrderingDirection
     name: OrderingDirection
-    subjects: [EntityOrdering!]
+    subjects: [EntityOrdering]
     submitsTo: KingOrdering
-    weapons: [WeaponOrdering!]
+    submitsToId: OrderingDirection
+    weapons: [WeaponOrdering]
 }
 
 input KingPrimaryKey {
@@ -184,17 +196,21 @@ input KingQueryOne {
 input MageFilter {
     AND_: [MageFilter]
     OR_: [MageFilter]
+    entityPolymorphicType_: StringFilter
     id: IntegerFilter
     powerSource: MageTypeEnum
     submitsTo: KingFilter
-    weapons: [WeaponFilter!]
+    submitsToId: IntegerFilter
+    weapons: [WeaponFilter]
 }
 
 input MageOrdering {
+    entityPolymorphicType_: OrderingDirection
     id: OrderingDirection
     powerSource: MageTypeEnum
     submitsTo: KingOrdering
-    weapons: [WeaponOrdering!]
+    submitsToId: OrderingDirection
+    weapons: [WeaponOrdering]
 }
 
 input MagePrimaryKey {
@@ -229,6 +245,7 @@ input WeaponFilter {
     id: IntegerFilter
     name: StringFilter
     owner: EntityFilter
+    ownerId: IntegerFilter
 }
 
 input WeaponOrdering {
@@ -236,6 +253,7 @@ input WeaponOrdering {
     id: OrderingDirection
     name: OrderingDirection
     owner: EntityOrdering
+    ownerId: OrderingDirection
 }
 
 input WeaponPrimaryKey {
