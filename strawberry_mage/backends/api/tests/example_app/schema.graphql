@@ -45,20 +45,35 @@ type Mage implements Entity {
 
 type Mutation {
     createArcher(data: ArcherCreateOne!): Archer
+    createArchers(data: [ArcherCreateOne!]!): [Archer]!
+    createEntities(data: [EntityCreateOne!]!): [Entity]!
     createEntity(data: EntityCreateOne!): Entity
     createKing(data: KingCreateOne!): King
+    createKings(data: [KingCreateOne!]!): [King]!
     createMage(data: MageCreateOne!): Mage
+    createMages(data: [MageCreateOne!]!): [Mage]!
     createWeapon(data: WeaponCreateOne!): Weapon
+    createWeapons(data: [WeaponCreateOne!]!): [Weapon]!
     deleteArcher(data: ArcherPrimaryKeyField!): DeleteResult!
+    deleteArchers(data: [ArcherPrimaryKeyField!]!): DeleteResult!
+    deleteEntities(data: [EntityPrimaryKeyField!]!): DeleteResult!
     deleteEntity(data: EntityPrimaryKeyField!): DeleteResult!
     deleteKing(data: KingPrimaryKeyField!): DeleteResult!
+    deleteKings(data: [KingPrimaryKeyField!]!): DeleteResult!
     deleteMage(data: MagePrimaryKeyField!): DeleteResult!
+    deleteMages(data: [MagePrimaryKeyField!]!): DeleteResult!
     deleteWeapon(data: WeaponPrimaryKeyField!): DeleteResult!
+    deleteWeapons(data: [WeaponPrimaryKeyField!]!): DeleteResult!
     updateArcher(data: ArcherUpdateOne!): Archer
+    updateArchers(data: [ArcherUpdateOne!]!): [Archer]!
+    updateEntities(data: [EntityUpdateOne!]!): [Entity]!
     updateEntity(data: EntityUpdateOne!): Entity
     updateKing(data: KingUpdateOne!): King
+    updateKings(data: [KingUpdateOne!]!): [King]!
     updateMage(data: MageUpdateOne!): Mage
+    updateMages(data: [MageUpdateOne!]!): [Mage]!
     updateWeapon(data: WeaponUpdateOne!): Weapon
+    updateWeapons(data: [WeaponUpdateOne!]!): [Weapon]!
 }
 
 type Query {
@@ -202,6 +217,7 @@ input FloatFilter {
     exact: Float
     gt: Float
     gte: Float
+    in_: [Float!]
     lt: Float
     lte: Float
 }
@@ -211,6 +227,7 @@ input IntegerFilter {
     exact: Int
     gt: Int
     gte: Int
+    in_: [Int!]
     lt: Int
     lte: Int
 }
@@ -334,6 +351,7 @@ input StringFilter {
     icontains: String
     iexact: String
     ilike: String
+    in_: [String!]
     like: String
 }
 

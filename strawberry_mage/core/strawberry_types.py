@@ -1,9 +1,15 @@
+import dataclasses
 import enum
 from dataclasses import dataclass
+from decimal import Decimal
+from functools import cached_property
 from typing import List, Optional as O, Callable, Type
 
 import strawberry
 from strawberry.arguments import UNSET
+from strawberry.schema.config import StrawberryConfig
+from strawberry.schema.schema_converter import GraphQLCoreConverter
+from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 
 ROOT_NS = 'strawberry_mage.core.types_generated'
 
@@ -30,15 +36,12 @@ class PrimaryKeyField:
 
 @dataclass
 class StrawberryModelInputTypes:
+    primary_key_input: PrimaryKeyInput
     primary_key_field: PrimaryKeyField
     query_one_input: 'QueryOne'
     query_many_input: 'QueryMany'
     create_one_input: EntityType
     update_one_input: EntityType
-
-    @classmethod
-    def get_types(cls):
-        return cls.__dataclass_fields__
 
 
 @dataclass
@@ -56,6 +59,10 @@ class StrawberryModelType:
     update_many: O[Callable] = None
     delete_one: O[Callable] = None
     delete_many: O[Callable] = None
+
+    @cached_property
+    def graphql_input_types(self):
+        return self.input_types.__annotations__
 
 
 @dataclass
@@ -76,6 +83,7 @@ class IntegerFilter(ScalarFilter):
     lte: O[int] = UNSET
     gt: O[int] = UNSET
     gte: O[int] = UNSET
+    in_: O[List[int]] = UNSET
 
 
 @strawberry.input
@@ -85,6 +93,17 @@ class FloatFilter(ScalarFilter):
     lte: O[float] = UNSET
     gt: O[float] = UNSET
     gte: O[float] = UNSET
+    in_: O[List[float]] = UNSET
+
+
+@strawberry.input
+class NumericFilter(ScalarFilter):
+    exact: O[Decimal] = UNSET
+    lt: O[Decimal] = UNSET
+    lte: O[Decimal] = UNSET
+    gt: O[Decimal] = UNSET
+    gte: O[Decimal] = UNSET
+    in_: O[List[Decimal]] = UNSET
 
 
 @strawberry.input
@@ -95,6 +114,7 @@ class StringFilter(ScalarFilter):
     icontains: O[str] = UNSET
     like: O[str] = UNSET
     ilike: O[str] = UNSET
+    in_: O[List[str]] = UNSET
 
 
 @dataclass
@@ -129,5 +149,6 @@ class QueryMany:
 SCALAR_FILTERS = {
     int: IntegerFilter,
     float: FloatFilter,
+    Decimal: NumericFilter,
     str: StringFilter
 }

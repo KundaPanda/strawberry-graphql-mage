@@ -246,6 +246,7 @@ def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> Col
         'gte': ColOps.__ge__(column, value),
         'lt': ColOps.__lt__(column, value),
         'lte': ColOps.__le__(column, value),
+        'in_': ColOps.in_(column, value),
     }.get(op_name)
     if negate:
         op = not_(op)
@@ -317,5 +318,4 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
             if not is_unset(data.page_number):
                 expression = expression.offset((data.page_number - 1) * data.page_size)
 
-    all_ = (await session.execute(select(model))).scalars().all()
     return (await session.execute(expression)).unique().scalars().all()

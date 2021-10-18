@@ -23,6 +23,13 @@ mutation simpleCreate {
             id
         }
     }
+    createEntities(data: [{weapons: []}, {weapons: [{primaryKey_: {id: 1}}]}]) {
+        id
+        __typename
+        weapons {
+            id
+        }
+    }
 }
 
 mutation simpleUpdate {
@@ -33,10 +40,20 @@ mutation simpleUpdate {
             id
         }
     }
+    updateEntities(data: [{primaryKey_: {id: 1}, weapons: []}, {primaryKey_: {id: 2}, weapons: [{primaryKey_: {id: 1}}]}]) {
+        id
+        __typename
+        weapons {
+            id
+        }
+    }
 }
 
 mutation simpleDelete {
     deleteEntity(data: {primaryKey_: {id: 1}}) {
+        affectedRows
+    }
+    deleteEntities(data: [{primaryKey_: {id: 1}}, {primaryKey_: {id: 2}}]) {
         affectedRows
     }
 }
