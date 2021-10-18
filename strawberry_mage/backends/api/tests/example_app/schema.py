@@ -1,15 +1,9 @@
-import dataclasses
 import enum
-import json
-from typing import Optional, List, Any, Type
+from typing import Optional, List
 
-from strawberry.types import Info
-
-from strawberry_mage.backends.api.tests.api import graphql_app
 from strawberry_mage.backends.api.tests.example_app.custom_backend import CustomBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.schema import SchemaManager
-from strawberry_mage.core.types import GraphQLOperation
 
 
 class Weapon(PythonEntityModel):
@@ -63,44 +57,6 @@ class King(Entity):
     }
 
 
-async def resolve(model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any):
-    op = {
-        GraphQLOperation.QUERY_ONE: 'retrieve',
-        GraphQLOperation.QUERY_MANY: 'list',
-        GraphQLOperation.CREATE_ONE: 'create',
-        GraphQLOperation.UPDATE_ONE: 'update',
-        GraphQLOperation.DELETE_ONE: 'delete',
-    }.get(operation)
-    root = 'query' if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY} else 'mutation'
-    field = info.selected_fields[0]
-    pk_arg = field.arguments.get('data', {}).get('primaryKey_', {}).get('id')
-    arg = {k: v for k, v in field.arguments.get('data', {}).items() if k != 'primaryKey_'}
-    args = '( '
-    if pk_arg:
-        args += f'pk: {pk_arg}'
-    for name, value in arg.items():
-        if name != 'id':
-            if len(args) > 2:
-                args += ', '
-            args += f'{name}: {value}'
-    args += ')'
-    query_string = f"""
-    {root} {{
-        {op}{args if arg or (args != '( )') else ''} {{
-            id
-            __typename
-            weapons {{
-                id
-                __typename
-                damage
-            }}
-        }}
-    }}
-    """
-    result = await graphql_app.execute(query_string)
-    return result.data[op]
-
-
-backend = CustomBackend(resolve=resolve)
+backend = CustomBackend()
 schema_manager = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=backend)
 schema = schema_manager.get_schema()

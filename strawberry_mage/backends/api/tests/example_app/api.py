@@ -29,11 +29,15 @@ class Query:
                 TestEntity(id=3, weapons=[TestWeapon(id=1102, damage=10)])]
 
 
+create_ids = [100]
+
+
 @strawberry.type
 class Mutation:
     @strawberry.field
     def create(self, weapons: List[int]) -> TestEntity:
-        return TestEntity(id=101, weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons])
+        create_ids.append(create_ids[-1] + 1)
+        return TestEntity(id=create_ids[-1], weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons])
 
     @strawberry.field
     def update(self, pk: int, weapons: List[int]) -> TestEntity:

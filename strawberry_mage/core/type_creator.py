@@ -163,6 +163,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
 
 def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     fields = _create_fields({
+        'primary_key_input':  create_primary_key_input(model),
         'primary_key_field': create_primary_key_field(model),
         'query_one_input': create_query_one_input(model),
         'query_many_input': create_query_many_input(model),
@@ -171,7 +172,8 @@ def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     })
     del fields['__annotations__']
     input_types = dataclasses.make_dataclass(
-        GeneratedType.INPUTS.get_typename(model.__name__), fields,
+        GeneratedType.INPUTS.get_typename(model.__name__),
+        [(f.name, f.type) for f in fields.values()],
         bases=(StrawberryModelInputTypes,)
     )
     setattr(sys.modules[ROOT_NS], input_types.__name__, input_types)
@@ -224,7 +226,7 @@ def create_primary_key_input(model: Type[IEntityModel]) -> Type[PrimaryKeyInput]
 def create_primary_key_field(model: Type[IEntityModel]) -> Type:
     pk_field = strawberry.input(type(GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__), (EntityType,),
                                      _create_fields({
-                                         'primary_key_': create_primary_key_input(model),
+                                         'primary_key_': GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__),
                                      }, GeneratedType.PRIMARY_KEY_FIELD)))
 
     setattr(sys.modules[ROOT_NS], pk_field.__name__, pk_field)
