@@ -234,23 +234,33 @@ async def create_ordering(model: Type[_SQLAlchemyModel], path: str, ordering: Li
     return result_ordering
 
 
+FILTER_OPS = {
+    'exact': lambda c, v: ColOps.__eq__(c, v),
+    'iexact': lambda c, v: ColOps.__eq__(func.lower(c), func.lower(v)),
+    'contains': lambda c, v: ColOps.contains(c, v),
+    'icontains': lambda c, v: ColOps.contains(func.lower(c), func.lower(v)),
+    'like': lambda c, v: ColOps.like(c, v),
+    'ilike': lambda c, v: ColOps.ilike(c, v),
+    'gt': lambda c, v: ColOps.__gt__(c, v),
+    'gte': lambda c, v: ColOps.__ge__(c, v),
+    'lt': lambda c, v: ColOps.__lt__(c, v),
+    'lte': lambda c, v: ColOps.__le__(c, v),
+    'in_': lambda c, v: ColOps.in_(c, v),
+}
+
+
 def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> ColOps:
-    op = {
-        'exact': ColOps.__eq__(column, value),
-        'iexact': ColOps.__eq__(func.lower(column), func.lower(value)),
-        'contains': ColOps.contains(column, value),
-        'icontains': ColOps.contains(func.lower(column), func.lower(value)),
-        'like': ColOps.like(column, value),
-        'ilike': ColOps.ilike(column, value),
-        'gt': ColOps.__gt__(column, value),
-        'gte': ColOps.__ge__(column, value),
-        'lt': ColOps.__lt__(column, value),
-        'lte': ColOps.__le__(column, value),
-        'in_': ColOps.in_(column, value),
-    }.get(op_name)
+    op = FILTER_OPS.get(op_name)(column, value)
     if negate:
         op = not_(op)
     return op
+
+
+def get_attr(selectables, path, attribute):
+    select_from = selectables[path]
+    return getattr(select_from, attribute) \
+        if (isinstance(select_from, AliasedClass) or isinstance(select_from, _SQLAlchemyModel)) \
+        else getattr(select_from.c, attribute)
 
 
 async def create_object_filters(model: Type[_SQLAlchemyModel], path: str, filters: List[Dict],
@@ -268,22 +278,20 @@ async def create_object_filters(model: Type[_SQLAlchemyModel], path: str, filter
             elif attribute == 'OR_':
                 nested_filters = await create_object_filters(model, path, value, selectables)
                 result_filters.append(or_(*nested_filters))
-            elif isinstance(value, list):
+            elif isinstance(value, dict) and 'AND_' in value:
                 # Nested filter
                 result_filters.extend(
-                    await _apply_nested(model, path, value, create_object_filters, attribute, selectables))
+                    await _apply_nested(model, path, [value], create_object_filters, attribute, selectables))
+                attr = get_attr(selectables, path, attribute)
+                result_filters.append(ColOps.__ne__(attr, None))
             else:
-                negate = value['NOT_']
-                del value['NOT_']
+                negate = value.pop('NOT_', False)
                 for operation, filter_value in value.items():
                     if is_unset(filter_value):
                         continue
                     else:
-                        select_from = selectables[path]
-                        col = getattr(select_from, attribute) \
-                            if (isinstance(select_from, AliasedClass) or isinstance(select_from, _SQLAlchemyModel)) \
-                            else getattr(select_from.c, attribute)
-                        result_filters.append(create_filter_op(col, operation, filter_value, negate))
+                        attr = get_attr(selectables, path, attribute)
+                        result_filters.append(create_filter_op(attr, operation, filter_value, negate))
     return result_filters
 
 
@@ -294,23 +302,29 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 
-    expression = select(selectables[''], selectables['__joins__']) \
-        .select_from(selectables['__joins__'])
-
-    if eager_options != (None,):
-        expression = expression.options(*eager_options)
-
+    expression = select(model)
+    filters, ordering = None, None
     if not is_unset(data):
         if not is_unset(data.filters):
             raw_filter = [dataclasses.asdict(f) for f in data.filters]
             filters = await create_object_filters(model, '', raw_filter, selectables)
-            expression = expression.filter(*filters)
 
         if not is_unset(data.ordering):
             raw_ordering = [dataclasses.asdict(o) for o in data.ordering]
             ordering = add_default_ordering(model, raw_ordering)
             ordering = cleanup_ordering(ordering)
             ordering = await create_ordering(model, '', ordering, selectables)
+
+        expression = select(selectables[''], selectables['__joins__']) \
+            .select_from(selectables['__joins__'])
+
+        if eager_options != (None,):
+            expression = expression.options(*eager_options)
+
+        if filters:
+            expression = expression.filter(*filters)
+
+        if ordering:
             expression = expression.order_by(*ordering)
 
         if not is_unset(data.page_size):

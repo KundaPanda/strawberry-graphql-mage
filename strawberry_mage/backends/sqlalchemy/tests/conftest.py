@@ -43,13 +43,14 @@ async def prepare_database(session):
             Entity(submits_to=king1, weapons=[weapons[0]]),
             Archer(submits_to=king1, weapons=[weapons[1]], draw_strength=30),
             Archer(weapons=weapons[3:4], draw_strength=16),
-            Archer(draw_strength=40, submits_to=king1),
+            Archer(draw_strength=40, submits_to=king2),
             Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
             Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
         ]
         session.add_all(entities)
         await session.commit()
-    yield
+    data = [*weapons, king1, king2, *entities]
+    yield data
     async with engine.begin() as s:
         await s.run_sync(Base.metadata.drop_all)
 

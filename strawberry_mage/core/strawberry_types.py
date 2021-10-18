@@ -1,15 +1,14 @@
-import dataclasses
 import enum
 from dataclasses import dataclass
+from datetime import datetime, date, time
 from decimal import Decimal
 from functools import cached_property
 from typing import List, Optional as O, Callable, Type
+from uuid import UUID
 
 import strawberry
+from strawberry import ID
 from strawberry.arguments import UNSET
-from strawberry.schema.config import StrawberryConfig
-from strawberry.schema.schema_converter import GraphQLCoreConverter
-from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 
 ROOT_NS = 'strawberry_mage.core.types_generated'
 
@@ -107,6 +106,11 @@ class NumericFilter(ScalarFilter):
 
 
 @strawberry.input
+class BooleanFilter(ScalarFilter):
+    exact: O[bool] = UNSET
+
+
+@strawberry.input
 class StringFilter(ScalarFilter):
     exact: O[str] = UNSET
     iexact: O[str] = UNSET
@@ -115,6 +119,43 @@ class StringFilter(ScalarFilter):
     like: O[str] = UNSET
     ilike: O[str] = UNSET
     in_: O[List[str]] = UNSET
+
+
+@strawberry.input
+class BytesFilter(ScalarFilter):
+    exact: O[bytes] = UNSET
+    contains: O[bytes] = UNSET
+    in_: O[List[bytes]] = UNSET
+
+
+@strawberry.input
+class DateTimeFilter(ScalarFilter):
+    exact: O[datetime] = UNSET
+    lt: O[datetime] = UNSET
+    lte: O[datetime] = UNSET
+    gt: O[datetime] = UNSET
+    gte: O[datetime] = UNSET
+    in_: O[List[datetime]] = UNSET
+
+
+@strawberry.input
+class DateFilter(ScalarFilter):
+    exact: O[date] = UNSET
+    lt: O[date] = UNSET
+    lte: O[date] = UNSET
+    gt: O[date] = UNSET
+    gte: O[date] = UNSET
+    in_: O[List[date]] = UNSET
+
+
+@strawberry.input
+class TimeFilter(ScalarFilter):
+    exact: O[time] = UNSET
+    lt: O[time] = UNSET
+    lte: O[time] = UNSET
+    gt: O[time] = UNSET
+    gte: O[time] = UNSET
+    in_: O[List[time]] = UNSET
 
 
 @dataclass
@@ -150,5 +191,12 @@ SCALAR_FILTERS = {
     int: IntegerFilter,
     float: FloatFilter,
     Decimal: NumericFilter,
-    str: StringFilter
+    str: StringFilter,
+    bool: BooleanFilter,
+    ID: StringFilter,
+    UUID: StringFilter,
+    datetime: DateTimeFilter,
+    date: DateFilter,
+    time: TimeFilter,
+    bytes: BytesFilter
 }
