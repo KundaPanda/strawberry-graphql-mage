@@ -9,7 +9,7 @@ from strawberry.annotation import StrawberryAnnotation
 from strawberry.arguments import UNSET
 from strawberry.field import StrawberryField
 from strawberry.scalars import is_scalar, SCALAR_TYPES
-from strawberry.utils.typing import is_optional
+from strawberry.utils.typing import is_optional, is_list
 
 from strawberry_mage.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
     StrawberryModelInputTypes, QueryMany, ObjectOrdering, ObjectFilter, SCALAR_FILTERS, \
@@ -298,6 +298,8 @@ def get_ordering_type(type_: Any):
         raise AttributeError('Should not be NoneType')
     if is_scalar(type_):
         return OrderingDirection
+    if is_list(type_):
+        return get_ordering_type(type_.__args__[0])
     if is_optional(type_):
         order_type = get_ordering_type(type_.__args__[0])
         if isinstance(order_type, StrawberryAnnotation):
@@ -312,6 +314,8 @@ def get_filter_type(type_: Any):
         return type_
     if is_scalar(type_):
         return SCALAR_FILTERS[type_]
+    if is_list(type_):
+        return get_filter_type(type_.__args__[0])
     if is_optional(type_):
         filter_type = get_filter_type(type_.__args__[0])
         if isinstance(filter_type, StrawberryAnnotation):

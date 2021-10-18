@@ -12,6 +12,32 @@ query simpleQuery {
     }
 }
 
+query nestedSelectQuery {
+    archers {
+        id
+        submitsTo {
+            id
+            subjects {
+                id
+                ...on Archer {
+                    id
+                }
+            }
+        }
+        weapons {
+            id
+            damage
+        }
+    }
+}
+
+query nestedFilterQuery {
+    archers(data: {filters: [{submitsTo: {weapons: {damage: {gt: 10}}}}]}) {
+        id
+        submitsToId
+    }
+}
+
 mutation simpleCreate {
     createKing(data: {weapons: [], subjects: []}) {
         id

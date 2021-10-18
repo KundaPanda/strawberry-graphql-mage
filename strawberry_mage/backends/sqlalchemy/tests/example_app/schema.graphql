@@ -135,7 +135,7 @@ input ArcherFilter {
     id: IntegerFilter
     submitsTo: KingFilter
     submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+    weapons: WeaponFilter
 }
 
 input ArcherOrdering {
@@ -144,7 +144,7 @@ input ArcherOrdering {
     id: OrderingDirection
     submitsTo: KingOrdering
     submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+    weapons: WeaponOrdering
 }
 
 input ArcherPrimaryKey {
@@ -187,7 +187,7 @@ input EntityFilter {
     id: IntegerFilter
     submitsTo: KingFilter
     submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+    weapons: WeaponFilter
 }
 
 input EntityOrdering {
@@ -195,7 +195,7 @@ input EntityOrdering {
     id: OrderingDirection
     submitsTo: KingOrdering
     submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+    weapons: WeaponOrdering
 }
 
 input EntityPrimaryKey {
@@ -229,6 +229,7 @@ input FloatFilter {
     exact: Float
     gt: Float
     gte: Float
+    in_: [Float!]
     lt: Float
     lte: Float
 }
@@ -238,6 +239,7 @@ input IntegerFilter {
     exact: Int
     gt: Int
     gte: Int
+    in_: [Int!]
     lt: Int
     lte: Int
 }
@@ -256,20 +258,20 @@ input KingFilter {
     entityClass: StringFilter
     id: IntegerFilter
     name: StringFilter
-    subjects: [EntityFilter]
+    subjects: EntityFilter
     submitsTo: KingFilter
     submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+    weapons: WeaponFilter
 }
 
 input KingOrdering {
     entityClass: OrderingDirection
     id: OrderingDirection
     name: OrderingDirection
-    subjects: [EntityOrdering]
+    subjects: EntityOrdering
     submitsTo: KingOrdering
     submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+    weapons: WeaponOrdering
 }
 
 input KingPrimaryKey {
@@ -317,7 +319,7 @@ input MageFilter {
     submitsTo: KingFilter
     submitsToId: IntegerFilter
     test: MageTypeEnum
-    weapons: [WeaponFilter]
+    weapons: WeaponFilter
 }
 
 input MageOrdering {
@@ -327,7 +329,7 @@ input MageOrdering {
     submitsTo: KingOrdering
     submitsToId: OrderingDirection
     test: MageTypeEnum
-    weapons: [WeaponOrdering]
+    weapons: WeaponOrdering
 }
 
 input MagePrimaryKey {
@@ -365,6 +367,7 @@ input StringFilter {
     icontains: String
     iexact: String
     ilike: String
+    in_: [String!]
     like: String
 }
 
