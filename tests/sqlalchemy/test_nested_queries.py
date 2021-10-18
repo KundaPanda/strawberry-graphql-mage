@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.orm import joinedload, aliased
 from strawberry import Schema
 
@@ -47,3 +47,20 @@ async def test_nested_filter(schema: Schema, operations, session):
                                      )).unique().scalars().all()
     assert len(result.data['archers']) == len(archers)
     assert sorted([a.id for a in archers]) == [r['id'] for r in result.data['archers']]
+
+
+@pytest.mark.asyncio
+async def test_nested_ordering(schema: Schema, operations, session):
+    result = await schema.execute(operations, operation_name='nestedOrderingQuery')
+
+    assert result.errors is None
+
+    k = aliased(King)
+    w = aliased(Weapon)
+    archers = (await session.execute(select(Archer)
+                                     .outerjoin(k, Archer.submits_to)
+                                     .outerjoin(w, Archer.weapons)
+                                     .order_by(desc(w.damage), desc(Archer.draw_strength), desc(Archer.id))
+                                     )).unique().scalars().all()
+    assert len(result.data['archers']) == len(archers)
+    assert [r['id'] for r in result.data['archers']] == [a.id for a in archers]

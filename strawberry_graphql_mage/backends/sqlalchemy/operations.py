@@ -226,6 +226,8 @@ async def create_ordering(model: Type[_SQLAlchemyModel], path: str, ordering: Li
     result_ordering = []
     for entry in ordering:
         for attribute, value in entry.items():
+            if is_unset(value):
+                continue
             if isinstance(value, OrderingDirection):
                 select_from = selectables[path]
                 col = getattr(select_from, attribute) \
@@ -233,7 +235,7 @@ async def create_ordering(model: Type[_SQLAlchemyModel], path: str, ordering: Li
                     else getattr(select_from.c, attribute)
                 result_ordering.append(desc(col) if value == OrderingDirection.DESC else col)
             else:
-                result_ordering.extend(await _apply_nested(model, path, value, create_ordering, attribute, selectables))
+                result_ordering.extend(await _apply_nested(model, path, [value], create_ordering, attribute, selectables))
     return result_ordering
 
 

@@ -38,6 +38,16 @@ query nestedFilterQuery {
     }
 }
 
+query nestedOrderingQuery {
+    archers(data: {ordering: [{weapons: {damage: DESC}}, {drawStrength: DESC}]}) {
+        id
+        weapons {
+            damage
+        }
+        drawStrength
+    }
+}
+
 mutation simpleCreate {
     createKing(data: {weapons: [], subjects: []}) {
         id
