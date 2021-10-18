@@ -1,4 +1,4 @@
-# Strawberry-MAGE
+# Strawberry-GraphQL-MAGE
 An automated, modular, backend-agnostic GraphQL schema generator.
 
 The aim of this project is to simplify graphql api creation without being tied to one specific data backend.
