@@ -3,7 +3,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.orm import joinedload, aliased
 from strawberry import Schema
 
-from tests.sqlalchemy.example_app.schema import Archer, King, Weapon
+from tests.sqlalchemy.example_app.schema import Archer, King, Weapon, Entity
 
 
 @pytest.mark.asyncio
@@ -64,3 +64,14 @@ async def test_nested_ordering(schema: Schema, operations, session):
                                      )).unique().scalars().all()
     assert len(result.data['archers']) == len(archers)
     assert [r['id'] for r in result.data['archers']] == [a.id for a in archers]
+
+
+@pytest.mark.asyncio
+async def test_polymorphic_fragment(schema: Schema, operations, session):
+    result = await schema.execute(operations, operation_name='fragmentQuery')
+
+    assert result.errors is None
+
+    entities = (await session.execute(select(Entity))).unique().scalars().all()
+    assert len(result.data['entities']) == len(entities)
+    assert [r['id'] for r in result.data['entities']] == [a.id for a in entities]
