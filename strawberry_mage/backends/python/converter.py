@@ -12,10 +12,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.type_api import TypeEngine
 from strawberry.utils.typing import is_optional, is_list
 
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.backends.sqlalchemy.models import create_base_entity
-from strawberry_graphql_mage.backends.sqlalchemy.utils import make_composite_fk
-from strawberry_graphql_mage.core.types import IEntityModel
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.backends.sqlalchemy.models import create_base_entity
+from strawberry_mage.backends.sqlalchemy.utils import make_composite_fk
+from strawberry_mage.core.types import IEntityModel
 
 
 class SQLAlchemyModelConverter:

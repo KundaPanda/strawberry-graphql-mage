@@ -3,10 +3,10 @@ from typing import Set, Type, Any, Iterable, Optional, Callable, Union, Dict, Li
 
 from strawberry.types import Info
 
-from strawberry_graphql_mage.backends.api.backend import APIBackend
+from strawberry_mage.backends.api.backend import APIBackend
 from tests.api.example_app.api import graphql_app
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.core.types import GraphQLOperation, IEntityModel
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
 class CustomBackend(APIBackend):

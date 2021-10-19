@@ -3,10 +3,10 @@ from typing import Type, Optional, Iterable, Dict, Any, List, Callable
 
 from strawberry.types import Info
 
-from strawberry_graphql_mage.backends.python.backend import PythonBackend
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_mage.core.types import GraphQLOperation
+from strawberry_mage.backends.python.backend import PythonBackend
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.core.types import GraphQLOperation
 
 
 class JSONBackend(PythonBackend):

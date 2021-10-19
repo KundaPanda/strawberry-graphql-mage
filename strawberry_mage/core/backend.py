@@ -8,10 +8,10 @@ from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
-from strawberry_graphql_mage.core.models import EntityModel
-from strawberry_graphql_mage.core.type_creator import defer_annotation, GeneratedType
-from strawberry_graphql_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
-from strawberry_graphql_mage.core.utils import get_subclasses
+from strawberry_mage.core.models import EntityModel
+from strawberry_mage.core.type_creator import defer_annotation, GeneratedType
+from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
+from strawberry_mage.core.utils import get_subclasses
 
 
 class DataBackendBase(IDataBackend, ABC):

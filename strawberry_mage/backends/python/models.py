@@ -1,7 +1,7 @@
 from typing import Type, Dict
 
-from strawberry_graphql_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_mage.core.models import EntityModel
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.core.models import EntityModel
 
 
 class PyModelMeta(type(EntityModel), type):

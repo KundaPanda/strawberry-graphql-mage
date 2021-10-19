@@ -10,7 +10,7 @@ import strawberry
 from strawberry import ID
 from strawberry.arguments import UNSET
 
-ROOT_NS = 'strawberry_graphql_mage.core.types_generated'
+ROOT_NS = 'strawberry_mage.core.types_generated'
 
 
 @dataclass

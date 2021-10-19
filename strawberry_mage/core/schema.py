@@ -7,8 +7,8 @@ from inflection import underscore, pluralize
 from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
-from strawberry_graphql_mage.core.type_creator import GeneratedType
-from strawberry_graphql_mage.core.types import GraphQLOperation, IEntityModel, ISchemaManager, IDataBackend
+from strawberry_mage.core.type_creator import GeneratedType
+from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ISchemaManager, IDataBackend
 
 
 class SchemaManager(ISchemaManager):
