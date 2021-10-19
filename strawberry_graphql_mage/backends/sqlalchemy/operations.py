@@ -6,7 +6,7 @@ from typing import List, Type, Any, Union, Dict, Callable, Tuple
 
 from sqlalchemy import select, delete, and_, or_, Table, inspect, not_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased, contains_eager, selectinload, RelationshipProperty
+from sqlalchemy.orm import contains_eager, selectinload, RelationshipProperty
 from sqlalchemy.orm.util import AliasedClass, with_polymorphic
 from sqlalchemy.sql import Join, ColumnElement
 from sqlalchemy.sql.expression import desc, func
@@ -26,7 +26,7 @@ def _build_pk_query(model: Type[_SQLAlchemyModel], selectable: Union[Table, Type
     pk = model.get_primary_key()
     attribute_getter = data.get if isinstance(data, dict) else partial(getattr, data)
     column_getter = partial(getattr, selectable) \
-        if isclass(selectable) and issubclass(selectable, IEntityModel) \
+        if (isclass(selectable) and issubclass(selectable, IEntityModel)) or isinstance(selectable, AliasedClass) \
         else partial(getattr, selectable.c)
     conditions = [column_getter(key) == attribute_getter(key) for key in pk]
     return and_(*conditions)
@@ -112,15 +112,15 @@ async def create_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEn
     await session.commit()
 
     data = [_create_pk_class(instance) for instance in primary_keys]
-    model_query = select(with_polymorphic(model, '*')).subquery()
-    selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
-    pk_filter = _build_multiple_pk_query(model, model_query, data)
+    polymorphic_model = with_polymorphic(model, '*', aliased=True)
+    model_query = select(polymorphic_model)
+    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
     ordering = await create_ordering(model, '', add_default_ordering(model, []), selectables)
 
-    expression = select(selectables[''], selectables['__joins__']) \
-        .select_from(selectables['__joins__']) \
+    expression = selectables['__joins__'] \
         .filter(pk_filter) \
         .order_by(*ordering)
     if eager_options != (None,):
@@ -146,15 +146,15 @@ async def update_(session: AsyncSession, model: Type[_SQLAlchemyModel], data: Li
     session.add_all(entities.values())
     await session.commit()
 
-    model_query = select(with_polymorphic(model, '*')).subquery()
-    selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
-    pk_filter = _build_multiple_pk_query(model, model_query, data)
+    polymorphic_model = with_polymorphic(model, '*', aliased=True)
+    model_query = select(polymorphic_model)
+    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
     ordering = await create_ordering(model, '', add_default_ordering(model, []), selectables)
 
-    expression = select(selectables[''], selectables['__joins__']) \
-        .select_from(selectables['__joins__']) \
+    expression = selectables['__joins__'] \
         .filter(pk_filter) \
         .order_by(*ordering)
     if eager_options != (None,):
@@ -172,15 +172,14 @@ async def delete_(session: AsyncSession, model: Type[_SQLAlchemyModel], data: Li
 
 async def retrieve_(session: AsyncSession, model: Type[_SQLAlchemyModel],
                     data: Union[PrimaryKeyField, dataclasses.dataclass], selection: Dict[str, Dict]):
-    model_query = select(with_polymorphic(model, '*')).subquery()
-    selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
-    pk_filter = _build_pk_query(model, model_query, data.primary_key_)
+    polymorphic_model = with_polymorphic(model, '*', aliased=True)
+    model_query = select(polymorphic_model)
+    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    pk_filter = _build_pk_query(model, polymorphic_model, data.primary_key_)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 
-    expression = select(selectables[''], selectables['__joins__']) \
-        .select_from(selectables['__joins__']) \
-        .filter(pk_filter)
+    expression = selectables['__joins__'].filter(pk_filter)
     if eager_options != (None,):
         expression = expression.options(*eager_options)
     return (await session.execute(expression)).unique().scalar()
@@ -304,13 +303,12 @@ async def create_object_filters(model: Type[_SQLAlchemyModel], path: str, filter
 async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: QueryMany,
                 selection: Dict[str, Dict]):
     polymorphic_model = with_polymorphic(model, '*', aliased=True)
-    model_query = select(polymorphic_model).subquery()
+    model_query = select(polymorphic_model)
     selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 
-    expression = select(selectables[''], selectables['__joins__']) \
-        .select_from(selectables['__joins__'])
+    expression = selectables['__joins__']
 
     if eager_options != (None,):
         expression = expression.options(*eager_options)
@@ -328,8 +326,7 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
             ordering = await create_ordering(model, '', ordering, selectables)
 
         # Expression needs to be created again, selectables may have been modified in filters / ordering builder
-        expression = select(selectables[''], selectables['__joins__']) \
-            .select_from(selectables['__joins__'])
+        expression = selectables['__joins__']
 
         if eager_options != (None,):
             expression = expression.options(*eager_options)
