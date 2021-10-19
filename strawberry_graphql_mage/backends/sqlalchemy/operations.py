@@ -235,7 +235,8 @@ async def create_ordering(model: Type[_SQLAlchemyModel], path: str, ordering: Li
                     else getattr(select_from.c, attribute)
                 result_ordering.append(desc(col) if value == OrderingDirection.DESC else col)
             else:
-                result_ordering.extend(await _apply_nested(model, path, [value], create_ordering, attribute, selectables))
+                result_ordering.extend(
+                    await _apply_nested(model, path, [value], create_ordering, attribute, selectables))
     return result_ordering
 
 
@@ -302,8 +303,9 @@ async def create_object_filters(model: Type[_SQLAlchemyModel], path: str, filter
 
 async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: QueryMany,
                 selection: Dict[str, Dict]):
-    model_query = select(with_polymorphic(model, '*')).subquery()
-    selectables: SelectablesType = {'': aliased(model, model_query), '__joins__': model_query}
+    polymorphic_model = with_polymorphic(model, '*', aliased=True)
+    model_query = select(polymorphic_model).subquery()
+    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 

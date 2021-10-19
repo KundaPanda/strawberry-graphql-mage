@@ -47,6 +47,20 @@ query nestedOrderingQuery {
         drawStrength
     }
 }
+query fragmentQuery {
+    entities {
+        id
+        ...on Archer {
+            drawStrength
+        }
+        ...on Mage {
+            powerSource
+        }
+        ...on Entity_ {
+            __typename
+        }
+    }
+}
 
 mutation simpleCreate {
     createKing(data: {weapons: [], subjects: []}) {
