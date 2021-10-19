@@ -89,7 +89,7 @@ async def _apply_nested(model: Type[_SQLAlchemyModel], path: str, input_: Any, o
         join_expression = ex.left == getattr(related_model, ex.right.key) \
             if inspect(select_from).local_table == ex.left.table \
             else ex.right == getattr(related_model, ex.left.key)
-        selectables['__joins__'] = selectables['__joins__'].join(related_model, join_expression, isouter=True)
+        selectables['__selection__'] = selectables['__selection__'].join(related_model, join_expression, isouter=True)
     eager_options = contains_eager(prop.of_type(selectables[nested_path])) \
         if eager_options is None \
         else eager_options.contains_eager(prop.of_type(selectables[nested_path]))
@@ -114,13 +114,13 @@ async def create_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEn
     data = [_create_pk_class(instance) for instance in primary_keys]
     polymorphic_model = with_polymorphic(model, '*', aliased=True)
     model_query = select(polymorphic_model)
-    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    selectables: SelectablesType = {'': polymorphic_model, '__selection__': model_query}
     pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
     ordering = await create_ordering(model, '', add_default_ordering(model, []), selectables)
 
-    expression = selectables['__joins__'] \
+    expression = selectables['__selection__'] \
         .filter(pk_filter) \
         .order_by(*ordering)
     if eager_options != (None,):
@@ -148,13 +148,13 @@ async def update_(session: AsyncSession, model: Type[_SQLAlchemyModel], data: Li
 
     polymorphic_model = with_polymorphic(model, '*', aliased=True)
     model_query = select(polymorphic_model)
-    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    selectables: SelectablesType = {'': polymorphic_model, '__selection__': model_query}
     pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
     ordering = await create_ordering(model, '', add_default_ordering(model, []), selectables)
 
-    expression = selectables['__joins__'] \
+    expression = selectables['__selection__'] \
         .filter(pk_filter) \
         .order_by(*ordering)
     if eager_options != (None,):
@@ -174,12 +174,12 @@ async def retrieve_(session: AsyncSession, model: Type[_SQLAlchemyModel],
                     data: Union[PrimaryKeyField, dataclasses.dataclass], selection: Dict[str, Dict]):
     polymorphic_model = with_polymorphic(model, '*', aliased=True)
     model_query = select(polymorphic_model)
-    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    selectables: SelectablesType = {'': polymorphic_model, '__selection__': model_query}
     pk_filter = _build_pk_query(model, polymorphic_model, data.primary_key_)
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 
-    expression = selectables['__joins__'].filter(pk_filter)
+    expression = selectables['__selection__'].filter(pk_filter)
     if eager_options != (None,):
         expression = expression.options(*eager_options)
     return (await session.execute(expression)).unique().scalar()
@@ -304,11 +304,11 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
                 selection: Dict[str, Dict]):
     polymorphic_model = with_polymorphic(model, '*', aliased=True)
     model_query = select(polymorphic_model)
-    selectables: SelectablesType = {'': polymorphic_model, '__joins__': model_query}
+    selectables: SelectablesType = {'': polymorphic_model, '__selection__': model_query}
 
     eager_options = await create_selection_joins(model, '', selection, selectables)
 
-    expression = selectables['__joins__']
+    expression = selectables['__selection__']
 
     if eager_options != (None,):
         expression = expression.options(*eager_options)
@@ -326,7 +326,7 @@ async def list_(session: AsyncSession, model: Type[Union[_SQLAlchemyModel, IEnti
             ordering = await create_ordering(model, '', ordering, selectables)
 
         # Expression needs to be created again, selectables may have been modified in filters / ordering builder
-        expression = selectables['__joins__']
+        expression = selectables['__selection__']
 
         if eager_options != (None,):
             expression = expression.options(*eager_options)
