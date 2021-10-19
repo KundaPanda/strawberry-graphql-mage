@@ -4,10 +4,10 @@ from typing import Type, Optional, Iterable, Any
 from strawberry.arguments import UNSET
 from strawberry.types import Info
 
-from strawberry_graphql_mage.backends.json.backend import JSONBackend
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.core.strawberry_types import IntegerFilter
-from strawberry_graphql_mage.core.types import GraphQLOperation
+from strawberry_mage.backends.json.backend import JSONBackend
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.core.strawberry_types import IntegerFilter
+from strawberry_mage.core.types import GraphQLOperation
 
 
 class APIBackend(JSONBackend):

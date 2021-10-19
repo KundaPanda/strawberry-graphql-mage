@@ -9,12 +9,12 @@ from sqlalchemy.orm import sessionmaker, make_transient
 from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 
-from strawberry_graphql_mage.backends.python.converter import SQLAlchemyModelConverter
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_mage.core.backend import DummyDataBackend
-from strawberry_graphql_mage.core.schema import SchemaManager
-from strawberry_graphql_mage.core.types import IEntityModel, GraphQLOperation
+from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.core.backend import DummyDataBackend
+from strawberry_mage.core.schema import SchemaManager
+from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class PythonBackend(DummyDataBackend):

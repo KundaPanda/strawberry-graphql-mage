@@ -10,10 +10,10 @@ from sqlalchemy.orm.util import AliasedInsp
 from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 
-from strawberry_graphql_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_graphql_mage.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
-from strawberry_graphql_mage.core.backend import DataBackendBase
-from strawberry_graphql_mage.core.types import IEntityModel, GraphQLOperation
+from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.backends.sqlalchemy.operations import list_, create_, retrieve_, update_, delete_
+from strawberry_mage.core.backend import DataBackendBase
+from strawberry_mage.core.types import IEntityModel, GraphQLOperation
 
 
 class SQLAlchemyBackend(DataBackendBase):

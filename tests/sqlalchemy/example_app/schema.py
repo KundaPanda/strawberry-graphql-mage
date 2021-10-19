@@ -4,9 +4,9 @@ from sqlalchemy import Column, Integer, ForeignKey, String, Enum, Float
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import relationship
 
-from strawberry_graphql_mage.backends.sqlalchemy.models import create_base_entity
-from strawberry_graphql_mage.backends.sqlalchemy.utils import make_fk
-from strawberry_graphql_mage.core.schema import SchemaManager
+from strawberry_mage.backends.sqlalchemy.models import create_base_entity
+from strawberry_mage.backends.sqlalchemy.utils import make_fk
+from strawberry_mage.core.schema import SchemaManager
 
 engine = create_async_engine('sqlite+aiosqlite:///')
 

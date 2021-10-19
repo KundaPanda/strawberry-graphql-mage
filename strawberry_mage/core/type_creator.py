@@ -2,19 +2,20 @@ import dataclasses
 import enum
 import sys
 from inspect import isclass
-from typing import Type, ForwardRef, Any, List, Optional, Dict, Union, Tuple
+from typing import Type, ForwardRef, Any, List, Optional, Dict, Union
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.arguments import UNSET
 from strawberry.field import StrawberryField
-from strawberry.scalars import is_scalar, SCALAR_TYPES
+from strawberry.scalars import is_scalar
+from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.utils.typing import is_optional, is_list
 
-from strawberry_graphql_mage.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
+from strawberry_mage.core.strawberry_types import QueryOne, PrimaryKeyInput, ROOT_NS, EntityType, \
     StrawberryModelInputTypes, QueryMany, ObjectOrdering, ObjectFilter, SCALAR_FILTERS, \
     OrderingDirection
-from strawberry_graphql_mage.core.types import IEntityModel, ModuleBoundStrawberryAnnotation, GraphQLOperation
+from strawberry_mage.core.types import IEntityModel, ModuleBoundStrawberryAnnotation, GraphQLOperation
 
 
 class GeneratedType(enum.Enum):
@@ -65,7 +66,7 @@ def strip_typename(type_: Union[str, Type]) -> Union[str, Type]:
         return type_
     if isinstance(type_, ForwardRef):
         return type_.__forward_arg__
-    if type_ in SCALAR_TYPES:
+    if is_scalar(type_, DEFAULT_SCALAR_REGISTRY):
         return type_
     return type_.__name__
 
@@ -121,7 +122,7 @@ def create_enum_type(attr: enum.EnumMeta):
     return enum_type, enum_filter_type, enum_ordering_type
 
 
-def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Type[EntityType]]:
+def create_entity_type(model: Type[IEntityModel]) -> tuple[type, Union[type, Any]]:
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
@@ -163,7 +164,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
 
 def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     fields = _create_fields({
-        'primary_key_input':  create_primary_key_input(model),
+        'primary_key_input': create_primary_key_input(model),
         'primary_key_field': create_primary_key_field(model),
         'query_one_input': create_query_one_input(model),
         'query_many_input': create_query_many_input(model),
@@ -182,7 +183,7 @@ def create_input_types(model: Type[IEntityModel]) -> StrawberryModelInputTypes:
     return input_types
 
 
-def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
+def create_ordering_input(model: Type[IEntityModel]) -> type:
     ordering = strawberry.input(type(GeneratedType.ORDERING.get_typename(model.__name__), (ObjectOrdering,),
                                      _create_fields({
                                          k: get_ordering_type(Optional[model.get_attribute_type(k)])
@@ -195,7 +196,7 @@ def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
     return ordering
 
 
-def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
+def create_filter_input(model: Type[IEntityModel]) -> type:
     filter_ = strawberry.input(type(GeneratedType.FILTER.get_typename(model.__name__), (ObjectFilter,),
                                     _create_fields({
                                         'AND_': Optional[
@@ -212,7 +213,7 @@ def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
     return filter_
 
 
-def create_primary_key_input(model: Type[IEntityModel]) -> Type[PrimaryKeyInput]:
+def create_primary_key_input(model: Type[IEntityModel]) -> type:
     input_type = strawberry.input(type(GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__), (PrimaryKeyInput,),
                                        _create_fields({
                                            k: model.get_attribute_type(k) for k in model.get_primary_key()
@@ -235,7 +236,7 @@ def create_primary_key_field(model: Type[IEntityModel]) -> Type:
     return pk_field
 
 
-def create_query_one_input(model: Type[IEntityModel]) -> Type[QueryOne]:
+def create_query_one_input(model: Type[IEntityModel]) -> type:
     query_one = strawberry.input(type(GeneratedType.QUERY_ONE.get_typename(model.__name__), (QueryOne,),
                                       _create_fields(
                                           {
@@ -249,7 +250,7 @@ def create_query_one_input(model: Type[IEntityModel]) -> Type[QueryOne]:
     return query_one
 
 
-def create_query_many_input(model: Type[IEntityModel]) -> Type[QueryMany]:
+def create_query_many_input(model: Type[IEntityModel]) -> type:
     query_many = strawberry.input(type(GeneratedType.QUERY_MANY.get_typename(model.__name__), (QueryMany,),
                                        _create_fields({
                                            'ordering': Optional[
@@ -264,7 +265,7 @@ def create_query_many_input(model: Type[IEntityModel]) -> Type[QueryMany]:
     return query_many
 
 
-def create_create_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
+def create_create_one_input(model: Type[IEntityModel]) -> type:
     fields = {
         f: model.get_attribute_type(f)
         for f in model.get_attributes(GraphQLOperation.CREATE_ONE)
@@ -278,7 +279,7 @@ def create_create_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
     return create_one
 
 
-def create_update_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
+def create_update_one_input(model: Type[IEntityModel]) -> type:
     update_one = strawberry.input(type(GeneratedType.UPDATE_ONE.get_typename(model.__name__), (EntityType,),
                                        _create_fields({
                                            'primary_key_': GeneratedType.PRIMARY_KEY_INPUT.get_typename(
@@ -296,7 +297,7 @@ def create_update_one_input(model: Type[IEntityModel]) -> Type[EntityType]:
 def get_ordering_type(type_: Any):
     if type_ is type(None):
         raise AttributeError('Should not be NoneType')
-    if is_scalar(type_):
+    if is_scalar(type_, DEFAULT_SCALAR_REGISTRY):
         return OrderingDirection
     if is_list(type_):
         return get_ordering_type(type_.__args__[0])
@@ -312,7 +313,7 @@ def get_ordering_type(type_: Any):
 def get_filter_type(type_: Any):
     if type_ is type(None):
         return type_
-    if is_scalar(type_):
+    if is_scalar(type_, DEFAULT_SCALAR_REGISTRY):
         return SCALAR_FILTERS[type_]
     if is_list(type_):
         return get_filter_type(type_.__args__[0])

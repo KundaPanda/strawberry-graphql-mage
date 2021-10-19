@@ -5,8 +5,8 @@ from sqlalchemy import inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, as_declarative, declared_attr, declarative_base
 
-from strawberry_graphql_mage.core.models import EntityModel
-from strawberry_graphql_mage.core.types import IEntityModel
+from strawberry_mage.core.models import EntityModel
+from strawberry_mage.core.types import IEntityModel
 
 
 _Base = declarative_base()
@@ -33,7 +33,7 @@ class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
 
 
 def create_base_entity(engine: Engine):
-    from strawberry_graphql_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
+    from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
     new_base = declarative_base()
     return type('SQLAlchemyModel', (new_base, _SQLAlchemyModel,), {
         '__backend__': SQLAlchemyBackend(engine),

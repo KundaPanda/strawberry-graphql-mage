@@ -6,9 +6,9 @@ from strawberry.arguments import StrawberryArgument, UNSET
 from strawberry.types import Info
 from strawberry.types.fields.resolver import StrawberryResolver
 
-from strawberry_graphql_mage.core.strawberry_types import DeleteResult
-from strawberry_graphql_mage.core.type_creator import GeneratedType
-from strawberry_graphql_mage.core.types import GraphQLOperation, IEntityModel, ModuleBoundStrawberryAnnotation
+from strawberry_mage.core.strawberry_types import DeleteResult
+from strawberry_mage.core.type_creator import GeneratedType
+from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ModuleBoundStrawberryAnnotation
 
 
 class ModuleBoundStrawberryResolver(StrawberryResolver):

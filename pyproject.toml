@@ -3,21 +3,24 @@ name = "strawberry-mage"
 version = "0.1.0"
 description = ""
 authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
+packages = [
+    { include = "strawberry_mage" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-strawberry-graphql = "^0.81.0"
+strawberry-graphql = "^0.84.0"
 inflection = "^0.5.1"
 starlette = "^0.16.0"
-uvicorn = {extras = ["standard"], version = "^0.15.0"}
-SQLAlchemy = {extras = ["asyncio"], version = "^1.4.25"}
+uvicorn = { extras = ["standard"], version = "^0.15.0" }
+SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
-pytest-cov = "^2.12.1"
-pytest-asyncio = "^0.15.1"
+pytest-cov = "^3.0.0"
+pytest-asyncio = "^0.16.0"
 yappi = "^1.3.3"
 
 [tool.pytest.ini_options]

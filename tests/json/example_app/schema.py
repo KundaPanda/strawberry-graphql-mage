@@ -1,9 +1,9 @@
 import enum
 from typing import Optional, List
 
-from strawberry_graphql_mage.backends.json.backend import JSONBackend
-from strawberry_graphql_mage.backends.python.models import PythonEntityModel
-from strawberry_graphql_mage.core.schema import SchemaManager
+from strawberry_mage.backends.json.backend import JSONBackend
+from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.core.schema import SchemaManager
 
 
 class Weapon(PythonEntityModel):
