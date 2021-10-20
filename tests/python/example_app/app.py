@@ -26,10 +26,18 @@ async def main():
     models = []
     for i in range(tables):
         models.append(
-            type(f'Model_{i}', (Base,), {'__tablename__': f'model_{i}', 'id': Column(Integer, primary_key=True)}))
+            type(
+                f"Model_{i}",
+                (Base,),
+                {
+                    "__tablename__": f"model_{i}",
+                    "id": Column(Integer, primary_key=True),
+                },
+            )
+        )
     engines = Queue()
     for _ in range(engines_count):
-        e = create_async_engine('sqlite+aiosqlite://')
+        e = create_async_engine("sqlite+aiosqlite://")
         future = asyncio.create_task(engines.put(e))
         async with e.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -40,26 +48,37 @@ async def main():
             await asyncio.sleep(0.1)
         engine = engines.get_nowait()
         asyncio.create_task(cleanup_engine(engine, engines))
-    await asyncio.gather(*[t for t in asyncio.all_tasks() if t.get_coro().__name__ != main.__name__])
+    await asyncio.gather(
+        *[t for t in asyncio.all_tasks() if t.get_coro().__name__ != main.__name__]
+    )
     end = default_timer()
-    print(f'{iterations} iterations took {end - start} seconds')
-    print(f'One iteration took {(end - start) / iterations * 1000} milliseconds')
+    print(f"{iterations} iterations took {end - start} seconds")
+    print(f"One iteration took {(end - start) / iterations * 1000} milliseconds")
 
 
 def app(debug=False):
-    from tests.python.example_app.schema import Weapon, Entity, King, Archer, Mage, schema, schema_manager
+    from tests.python.example_app.schema import (
+        Weapon,
+        Entity,
+        King,
+        Archer,
+        Mage,
+        schema,
+        schema_manager,
+    )
+
     weapons = [
-        Weapon(damage=10, name='mace'),
-        Weapon(damage=10, name='bow'),
-        Weapon(damage=13, name='one-handed sword'),
-        Weapon(damage=17, name='crossbow'),
-        Weapon(damage=17, name='blue crossbow'),
-        Weapon(damage=20, name='two-handed sword'),
-        Weapon(damage=30, name='lightning wand'),
-        Weapon(damage=31, name='fire staff'),
+        Weapon(damage=10, name="mace"),
+        Weapon(damage=10, name="bow"),
+        Weapon(damage=13, name="one-handed sword"),
+        Weapon(damage=17, name="crossbow"),
+        Weapon(damage=17, name="blue crossbow"),
+        Weapon(damage=20, name="two-handed sword"),
+        Weapon(damage=30, name="lightning wand"),
+        Weapon(damage=31, name="fire staff"),
     ]
-    king1 = King(name='Vizimir II')
-    king2 = King(name='Radovid V', submits_to=king1, weapons=[weapons[5]])
+    king1 = King(name="Vizimir II")
+    king2 = King(name="Radovid V", submits_to=king1, weapons=[weapons[5]])
     entities = [
         Entity(),
         Entity(submits_to=king2),
@@ -67,18 +86,19 @@ def app(debug=False):
         Archer(submits_to=king1, weapons=[weapons[1]], draw_strength=30),
         Archer(weapons=weapons[3:4], draw_strength=16),
         Archer(draw_strength=40, submits_to=king1),
-        Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
-        Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
+        Mage(
+            weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR
+        ),
+        Mage(
+            weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE
+        ),
     ]
     data = [*weapons, king1, king2, *entities]
     schema_manager.backend.add_dataset(data)
     gql = GraphQL(schema)
-    application = Starlette(debug, routes=[
-        Route('/', gql),
-        WebSocketRoute('/', gql)
-    ])
+    application = Starlette(debug, routes=[Route("/", gql), WebSocketRoute("/", gql)])
     return application
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

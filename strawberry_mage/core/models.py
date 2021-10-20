@@ -1,15 +1,31 @@
 import dataclasses
-from functools import lru_cache
-from typing import Any, Set, List, Type, Dict, Tuple, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple, Type
 
 from strawberry.types import Info
 
-from strawberry_mage.core.resolver import resolver_query_one, resolver_query_many, resolver_create_one, \
-    resolver_create_many, resolver_update_one, resolver_update_many, resolver_delete_one, resolver_delete_many
+from strawberry_mage.core.resolver import (
+    resolver_create_many,
+    resolver_create_one,
+    resolver_delete_many,
+    resolver_delete_one,
+    resolver_query_many,
+    resolver_query_one,
+    resolver_update_many,
+    resolver_update_one,
+)
 from strawberry_mage.core.strawberry_types import StrawberryModelType
-from strawberry_mage.core.type_creator import create_entity_type, \
-    create_input_types, create_filter_input, create_ordering_input
-from strawberry_mage.core.types import GraphQLOperation, IEntityModel, IDataBackend, ISchemaManager
+from strawberry_mage.core.type_creator import (
+    create_entity_type,
+    create_filter_input,
+    create_input_types,
+    create_ordering_input,
+)
+from strawberry_mage.core.types import (
+    GraphQLOperation,
+    IDataBackend,
+    IEntityModel,
+    ISchemaManager,
+)
 
 
 @dataclasses.dataclass
@@ -22,7 +38,9 @@ class EntityModel(IEntityModel):
     _manager: ISchemaManager = None
 
     def __hash__(self):
-        return hash(f'{self.__class__.__name__}({",".join(str(getattr(self, a, "")) for a in self.get_attributes())})')
+        return hash(
+            f'{self.__class__.__name__}({",".join(str(getattr(self, a, "")) for a in self.get_attributes())})'
+        )
 
     @classmethod
     def get_strawberry_type(cls):

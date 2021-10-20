@@ -1,14 +1,29 @@
 [tool.poetry]
-name = "strawberry-mage"
-version = "0.1.0"
-description = ""
+name = "strawberry-graphql-mage"
+version = "0.0.1a0"
+description = "An automated, modular, backend-agnostic GraphQL schema generator"
+license = "MIT"
 authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
+maintainers = []
+readme = "README.md"
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+]
 packages = [
     { include = "strawberry_mage" }
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 strawberry-graphql = "^0.84.0"
 inflection = "^0.5.1"
 starlette = "^0.16.0"
@@ -22,6 +37,12 @@ pytest = "^6.2.5"
 pytest-cov = "^3.0.0"
 pytest-asyncio = "^0.16.0"
 yappi = "^1.3.3"
+nox = "^2021.10.1"
+pre-commit = "^2.15.0"
+safety = "^1.10.3"
+mypy = "^0.910"
+poetry = "^1.1.11"
+SQLAlchemy = {extras = ["mypy"], version = "^1.4.26"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -29,6 +50,16 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/KundaPanda/strawberry-graphql-mage/"
+
+
+[tool.coverage.run]
+include = [
+    "strawberry_mage/*"
+]
+parallel = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

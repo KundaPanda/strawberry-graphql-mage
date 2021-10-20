@@ -1,11 +1,19 @@
-# Strawberry-GraphQL-MAGE
+# Strawberry-GraphQL-Mage
+
 An automated, modular, backend-agnostic GraphQL schema generator.
 
 The aim of this project is to simplify graphql api creation without being tied to one specific data backend.
 
 Performance is currently not a major factor - this is mostly a helper library to make creating GraphQL endpoints easier.
 
+## Still under heavy development
+
+Feel free to use it and create issues though.
+
+Contributions are welcome as well.
+
 ## TO-DO:
+
 - [x] Generating a basic GraphQL schema
 - [x] Queries
 - [x] Mutations

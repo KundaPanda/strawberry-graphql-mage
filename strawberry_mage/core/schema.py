@@ -8,7 +8,12 @@ from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
 from strawberry_mage.core.type_creator import GeneratedType
-from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ISchemaManager, IDataBackend
+from strawberry_mage.core.types import (
+    GraphQLOperation,
+    IEntityModel,
+    ISchemaManager,
+    IDataBackend,
+)
 
 
 class SchemaManager(ISchemaManager):
@@ -16,8 +21,10 @@ class SchemaManager(ISchemaManager):
 
     def __init__(self, *models, backend: IDataBackend):
         if len(models) == 0:
-            raise IndexError('Need at least one model for the GraphQL schema.')
-        self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
+            raise IndexError("Need at least one model for the GraphQL schema.")
+        self._models = {
+            GeneratedType.ENTITY.get_typename(m.__name__): m for m in models
+        }
         self._backend = backend
         for model in self._models.values():
             model.__backend__ = self._backend
@@ -37,9 +44,13 @@ class SchemaManager(ISchemaManager):
                 name = pluralize(name)
             name = underscore(name)
             if operation.value > 2:
-                name = operation.name.lower().split('_')[0] + '_' + name
+                name = operation.name.lower().split("_")[0] + "_" + name
 
-            setattr(type_object, name, getattr(model.get_strawberry_type(), operation.name.lower()))
+            setattr(
+                type_object,
+                name,
+                getattr(model.get_strawberry_type(), operation.name.lower()),
+            )
             return
 
     def get_models(self):
@@ -61,8 +72,8 @@ class SchemaManager(ISchemaManager):
         for model in self._models.values():
             model.post_setup()
         self._backend.post_setup()
-        query_object = type('Query', (object,), {})
-        mutation_object = type('Mutation', (object,), {})
+        query_object = type("Query", (object,), {})
+        mutation_object = type("Mutation", (object,), {})
 
         for model in self._models.values():
             # Query
@@ -84,18 +95,27 @@ class SchemaManager(ISchemaManager):
         query = strawberry.type(query_object)
         mutation = strawberry.type(mutation_object)
 
-        schema = Schema(query=query,
-                        mutation=(mutation if len(mutation.__annotations__) > 0 else None),
-                        types=self._collect_types())
+        schema = Schema(
+            query=query,
+            mutation=(mutation if len(mutation.__annotations__) > 0 else None),
+            types=self._collect_types(),
+        )
 
         def resolve_interface_type(obj, info, type_):
-            if (base_type := schema.schema_converter.type_map.get(
-                    GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__))) is not None:
+            if (
+                base_type := schema.schema_converter.type_map.get(
+                    GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
+                )
+            ) is not None:
                 return self._backend.get_polymorphic_type(base_type)
-            return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__])
+            return self._backend.get_polymorphic_type(
+                schema.schema_converter.type_map[obj.__class__.__name__]
+            )
 
         for entry in schema.schema_converter.type_map.values():
-            if isinstance(entry, ConcreteType) and isinstance(entry.implementation, GraphQLInterfaceType):
-                setattr(entry.implementation, 'resolve_type', resolve_interface_type)
+            if isinstance(entry, ConcreteType) and isinstance(
+                entry.implementation, GraphQLInterfaceType
+            ):
+                setattr(entry.implementation, "resolve_type", resolve_interface_type)
 
         return schema

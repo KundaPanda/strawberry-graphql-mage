@@ -8,17 +8,28 @@ from strawberry.types.fields.resolver import StrawberryResolver
 
 from strawberry_mage.core.strawberry_types import DeleteResult
 from strawberry_mage.core.type_creator import GeneratedType
-from strawberry_mage.core.types import GraphQLOperation, IEntityModel, ModuleBoundStrawberryAnnotation
+from strawberry_mage.core.types import (
+    GraphQLOperation,
+    IEntityModel,
+    ModuleBoundStrawberryAnnotation,
+)
 
 
 class ModuleBoundStrawberryResolver(StrawberryResolver):
     @cached_property
     def arguments(self) -> List[StrawberryArgument]:
         args = super().arguments
-        return [StrawberryArgument(a.python_name, a.graphql_name,
-                                   ModuleBoundStrawberryAnnotation.from_annotation(a.type_annotation),
-                                   a.is_subscription, a.description, a.default)
-                for a in args]
+        return [
+            StrawberryArgument(
+                a.python_name,
+                a.graphql_name,
+                ModuleBoundStrawberryAnnotation.from_annotation(a.type_annotation),
+                a.is_subscription,
+                a.description,
+                a.default,
+            )
+            for a in args
+        ]
 
 
 def resolver_query_one(model: Type[IEntityModel]):

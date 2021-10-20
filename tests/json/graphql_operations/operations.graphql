@@ -1,11 +1,11 @@
 query simpleQuery {
-    archers {
-        id
-        __typename
-    }
-    weapons {
-        id
-        __typename
-        damage
-    }
+  archers {
+    id
+    __typename
+  }
+  weapons {
+    id
+    __typename
+    damage
+  }
 }

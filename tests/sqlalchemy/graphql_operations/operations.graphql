@@ -1,106 +1,136 @@
 query simpleQuery {
-    archers {
-        id
-        entityClass
-        __typename
-    }
-    weapons {
-        id
-        ownerId
-        __typename
-        damage
-    }
+  archers {
+    id
+    entityClass
+    __typename
+  }
+  weapons {
+    id
+    ownerId
+    __typename
+    damage
+  }
 }
 
 query nestedSelectQuery {
-    archers {
+  archers {
+    id
+    submitsTo {
+      id
+      subjects {
         id
-        submitsTo {
-            id
-            subjects {
-                id
-                ...on Archer {
-                    id
-                }
-            }
+        ... on Archer {
+          id
         }
-        weapons {
-            id
-            damage
-        }
+      }
     }
+    weapons {
+      id
+      damage
+    }
+  }
 }
 
 query nestedFilterQuery {
-    archers(data: {filters: [{submitsTo: {weapons: {damage: {gt: 10}}}}]}) {
-        id
-        submitsToId
-    }
+  archers(
+    data: { filters: [{ submitsTo: { weapons: { damage: { gt: 10 } } } }] }
+  ) {
+    id
+    submitsToId
+  }
 }
 
 query nestedOrderingQuery {
-    archers(data: {ordering: [{weapons: {damage: DESC}}, {drawStrength: DESC}]}) {
-        id
-        weapons {
-            damage
-        }
-        drawStrength
+  archers(
+    data: { ordering: [{ weapons: { damage: DESC } }, { drawStrength: DESC }] }
+  ) {
+    id
+    weapons {
+      damage
     }
+    drawStrength
+  }
 }
 query fragmentQuery {
-    entities {
-        id
-        ...on Archer {
-            drawStrength
-        }
-        ...on Mage {
-            powerSource
-        }
-        ...on Entity_ {
-            __typename
-        }
+  entities {
+    id
+    ... on Archer {
+      drawStrength
     }
+    ... on Mage {
+      powerSource
+    }
+    ... on Entity_ {
+      __typename
+    }
+  }
 }
 
 mutation simpleCreate {
-    createKing(data: {weapons: [], subjects: []}) {
-        id
-        entityClass
-        __typename
-    }
-    createWeapons(data: [{damage: 10, name: "test"}, {damage: 100, name: "test2"}]) {
-        id
-        damage
-        name
-        __typename
-    }
+  createKing(data: { weapons: [], subjects: [] }) {
+    id
+    entityClass
+    __typename
+  }
+  createWeapons(
+    data: [{ damage: 10, name: "test" }, { damage: 100, name: "test2" }]
+  ) {
+    id
+    damage
+    name
+    __typename
+  }
 }
 
-mutation simpleUpdate($entityId: Int!, $weaponId: Int!, $weaponId1: Int!, $weaponId2: Int!,$ownerId: Int!) {
-    updateEntity(data: {primaryKey_: {id: $entityId}, weapons: [{primaryKey_: {id: $weaponId}}]}) {
-        id
-        entityClass
-        __typename
-        weapons {
-            id
-        }
+mutation simpleUpdate(
+  $entityId: Int!
+  $weaponId: Int!
+  $weaponId1: Int!
+  $weaponId2: Int!
+  $ownerId: Int!
+) {
+  updateEntity(
+    data: {
+      primaryKey_: { id: $entityId }
+      weapons: [{ primaryKey_: { id: $weaponId } }]
     }
-    updateWeapons(data: [{primaryKey_: {id: $weaponId1}, damage: 123}, {primaryKey_: {id: $weaponId2}, owner: {primaryKey_: {id: $ownerId}}}]) {
-        id
-        damage
-        name
-        __typename
-        owner {
-            id
-        }
+  ) {
+    id
+    entityClass
+    __typename
+    weapons {
+      id
     }
+  }
+  updateWeapons(
+    data: [
+      { primaryKey_: { id: $weaponId1 }, damage: 123 }
+      {
+        primaryKey_: { id: $weaponId2 }
+        owner: { primaryKey_: { id: $ownerId } }
+      }
+    ]
+  ) {
+    id
+    damage
+    name
+    __typename
+    owner {
+      id
+    }
+  }
 }
 
 mutation simpleDelete($archerId: Int!, $weaponId1: Int!, $weaponId2: Int!) {
-    deleteArcher(data: {primaryKey_: {id: $archerId}}) {
-        affectedRows
-    }
-    deleteWeapons(data: [{primaryKey_: {id: $weaponId1}}, {primaryKey_: {id: $weaponId2}}]) {
-        affectedRows
-    }
+  deleteArcher(data: { primaryKey_: { id: $archerId } }) {
+    affectedRows
+  }
+  deleteWeapons(
+    data: [
+      { primaryKey_: { id: $weaponId1 } }
+      { primaryKey_: { id: $weaponId2 } }
+    ]
+  ) {
+    affectedRows
+  }
 }
