@@ -5,6 +5,7 @@ import sys
 from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
+from sqlalchemy.orm import registry
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from strawberry import Schema
 from strawberry.annotation import StrawberryAnnotation
@@ -33,7 +34,9 @@ class ModuleBoundStrawberryAnnotation(StrawberryAnnotation):
 
 
 class SqlAlchemyModel(metaclass=DeclarativeMeta):
+    __abstract__ = True
     __tablename__: str
+    registry = registry()
 
 
 class Order(enum.Enum):

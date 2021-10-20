@@ -4,6 +4,8 @@ requirements.txt
 
 .idea/dataSources.xml
 
+**/*.tmp
+
 
 
 ### Python template
