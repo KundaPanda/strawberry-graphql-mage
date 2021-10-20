@@ -1,6 +1,6 @@
 from abc import ABC
 from functools import lru_cache
-from typing import Type, Iterable, Any, Tuple, Set, Dict, Optional, List
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 from inflection import underscore
 from strawberry.annotation import StrawberryAnnotation
@@ -9,7 +9,7 @@ from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
 from strawberry_mage.core.models import EntityModel
-from strawberry_mage.core.type_creator import defer_annotation, GeneratedType
+from strawberry_mage.core.type_creator import GeneratedType, defer_annotation
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
 from strawberry_mage.core.utils import get_subclasses
 
@@ -20,10 +20,14 @@ class DataBackendBase(IDataBackend, ABC):
         for subfield in field.selections:
             if subfield.selections:
                 if isinstance(subfield, InlineFragment):
-                    model = manager.get_model_for_name(GeneratedType.get_original(subfield.type_condition))
+                    model = manager.get_model_for_name(
+                        GeneratedType.get_original(subfield.type_condition)
+                    )
                     selection[model] = self._build_selection(subfield, manager)
                     continue
-                selection[underscore(subfield.name)] = self._build_selection(subfield, manager)
+                selection[underscore(subfield.name)] = self._build_selection(
+                    subfield, manager
+                )
         return selection
 
     def register_model(self, model: Type[IEntityModel]):
@@ -39,13 +43,23 @@ class DummyDataBackend(DataBackendBase):
     def _get_model_annotations(self, model: Type[IEntityModel]) -> Dict[str, Type]:
         current = model
         annotations = {}
-        while hasattr(current, '__annotations__'):
+        while hasattr(current, "__annotations__"):
             annotations.update(current.__annotations__)
-            current = current.mro()[1]
-        return {f: self.get_strawberry_field_type(a) for f, a in annotations.items() if not f.startswith('_')}
+            current = current.__mro__[1]
+        return {
+            f: self.get_strawberry_field_type(a)
+            for f, a in annotations.items()
+            if not f.startswith("_")
+        }
 
-    def get_attributes(self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None) -> Iterable[Any]:
-        return [k for k, v in self._get_model_annotations(model).items() if not k.startswith('_')]
+    def get_attributes(
+            self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
+    ) -> List[Any]:
+        return [
+            k
+            for k, v in self._get_model_annotations(model).items()
+            if not k.startswith("_")
+        ]
 
     def get_attribute_type(self, model: Type[IEntityModel], attr: str) -> Type:
         return self._get_model_annotations(model).get(attr)
@@ -56,11 +70,13 @@ class DummyDataBackend(DataBackendBase):
     def get_primary_key(self, model: Type[IEntityModel]) -> Tuple:
         return model.__primary_key__
 
-    def get_parent_class_name(self, model: Type['IEntityModel']) -> Optional[str]:
+    def get_parent_class_name(self, model: Type["IEntityModel"]) -> Optional[str]:
         if model.mro()[1] != EntityModel:
             return model.mro()[1].__name__
 
-    def get_children_class_names(self, model: Type['IEntityModel']) -> Optional[List[str]]:
+    def get_children_class_names(
+            self, model: Type["IEntityModel"]
+    ) -> Optional[List[str]]:
         if model.__subclasses__():
             return get_subclasses(model).union({model.__name__})
 
@@ -70,12 +86,20 @@ class DummyDataBackend(DataBackendBase):
     def get_polymorphic_type(self, base_type: ConcreteType):
         return base_type.implementation
 
-    async def resolve(self, model: Type[IEntityModel], operation: GraphQLOperation, info: Info, data: Any) -> Any:
+    async def resolve(
+            self,
+            model: Type[IEntityModel],
+            operation: GraphQLOperation,
+            info: Info,
+            data: Any,
+            *args,
+            **kwargs
+    ) -> Any:
         if operation.value % 2 == 0:
             return []
         return None
 
-    def pre_setup(self, models: Iterable[Type['IEntityModel']]) -> None:
+    def pre_setup(self, models: Iterable[Type["IEntityModel"]]) -> None:
         pass
 
     def post_setup(self) -> None:

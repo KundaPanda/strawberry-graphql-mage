@@ -14,19 +14,19 @@ class CustomBackend(APIBackend):
         super().__init__(*args, **kwargs)
 
     def _build_graphql_input(self, root: str, op: str, entry: Dict[str, Any]):
-        pk_arg = entry.get('primaryKey_', {}).get('id')
-        arg = {k: v for k, v in entry.items() if k != 'primaryKey_'}
-        args = '( '
+        pk_arg = entry.get("primaryKey_", {}).get("id")
+        arg = {k: v for k, v in entry.items() if k != "primaryKey_"}
+        args = "( "
         if pk_arg:
-            args += f'pk: {pk_arg}'
+            args += f"pk: {pk_arg}"
         for name, value in arg.items():
-            if name != 'id':
+            if name != "id":
                 if isinstance(value, list) and len(value) > 0:
-                    value = [json.loads(v['primaryKey_']['id']) for v in value]
+                    value = [json.loads(v["primaryKey_"]["id"]) for v in value]
                 if len(args) > 2:
-                    args += ', '
-                args += f'{name}: {value}'
-        args += ')'
+                    args += ", "
+                args += f"{name}: {value}"
+        args += ")"
         query_string = f"""
         {root} {{
             {op}{args if arg or (args != '( )') else ''} {{
@@ -40,7 +40,7 @@ class CustomBackend(APIBackend):
             }}
         }}
         """
-        if op == 'delete':
+        if op == "delete":
             query_string = f"""
             {root} {{
                 {op}{args if arg or (args != '( )') else ''}
@@ -48,24 +48,40 @@ class CustomBackend(APIBackend):
             """
         return query_string
 
-    async def api_resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any):
+    async def api_resolve(
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+    ):
         op = {
-            GraphQLOperation.QUERY_ONE: 'retrieve',
-            GraphQLOperation.QUERY_MANY: 'list',
-            GraphQLOperation.CREATE_ONE: 'create',
-            GraphQLOperation.CREATE_MANY: 'create',
-            GraphQLOperation.UPDATE_ONE: 'update',
-            GraphQLOperation.UPDATE_MANY: 'update',
-            GraphQLOperation.DELETE_ONE: 'delete',
-            GraphQLOperation.DELETE_MANY: 'delete',
+            GraphQLOperation.QUERY_ONE: "retrieve",
+            GraphQLOperation.QUERY_MANY: "list",
+            GraphQLOperation.CREATE_ONE: "create",
+            GraphQLOperation.CREATE_MANY: "create",
+            GraphQLOperation.UPDATE_ONE: "update",
+            GraphQLOperation.UPDATE_MANY: "update",
+            GraphQLOperation.DELETE_ONE: "delete",
+            GraphQLOperation.DELETE_MANY: "delete",
         }.get(operation)
-        root = 'query' if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY} else 'mutation'
+        root = (
+            "query"
+            if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY}
+            else "mutation"
+        )
         field = info.selected_fields[0]
-        data = field.arguments.get('data', {})
+        data = field.arguments.get("data", {})
         results = []
         if isinstance(data, list):
             for entry in data:
-                results.append((await graphql_app.execute(self._build_graphql_input(root, op, entry))).data[op])
+                results.append(
+                    (
+                        await graphql_app.execute(
+                            self._build_graphql_input(root, op, entry)
+                        )
+                    ).data[op]
+                )
             if operation == GraphQLOperation.DELETE_MANY:
                 return sum(results)
             return results
@@ -73,16 +89,18 @@ class CustomBackend(APIBackend):
         result = await graphql_app.execute(query_string)
         return result.data[op]
 
-    def add_dataset(self, dataset: Iterable[dict], model: Optional[Type[PythonEntityModel]] = None,
-                    model_mapper: Callable[[dict], Type[PythonEntityModel]] = None):
+    def add_dataset(
+        self,
+        dataset: Iterable[dict],
+        model: Optional[Type[PythonEntityModel]] = None,
+        model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+    ):
         from tests.api.example_app.schema import Entity, Weapon
-        mapping = {
-            'TestEntity': Entity,
-            'TestWeapon': Weapon
-        }
+
+        mapping = {"TestEntity": Entity, "TestWeapon": Weapon}
 
         def get_model(entry: dict):
-            return mapping[entry['__typename']]
+            return mapping[entry["__typename"]]
 
         return super().add_dataset(dataset, model_mapper=get_model)
 
@@ -98,7 +116,13 @@ class CustomBackend(APIBackend):
             GraphQLOperation.DELETE_MANY,
         }
 
-    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any,
-                      dataset: Optional[Union[List[dict], Dict[str, Any]]] = None) -> Any:
+    async def resolve(
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        dataset: Optional[Union[List[dict], Dict[str, Any]]] = None,
+    ) -> Any:
         api_dataset = await self.api_resolve(model, operation, info, data)
         return await super().resolve(model, operation, info, data, api_dataset)

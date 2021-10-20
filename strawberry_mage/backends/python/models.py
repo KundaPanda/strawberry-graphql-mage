@@ -1,7 +1,12 @@
-from typing import Type, Dict
+from __future__ import annotations
+
+from typing import Dict, TYPE_CHECKING, Type
 
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
 from strawberry_mage.core.models import EntityModel
+
+if TYPE_CHECKING:
+    from strawberry_mage.backends.python.backend import PythonBackend
 
 
 class PyModelMeta(type(EntityModel), type):
@@ -16,7 +21,7 @@ class PyModelMeta(type(EntityModel), type):
 
 class PythonEntityModel(EntityModel, metaclass=PyModelMeta):
     __backrefs__: Dict[str, str] = {}
-    __backend__: 'PythonBackend'
+    __backend__: PythonBackend
     _sqla_model: Type[_SQLAlchemyModel]
 
     def __init__(self, **kwargs):

@@ -3,11 +3,10 @@ from functools import cached_property
 from inflection import underscore
 from sqlalchemy import inspect
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, as_declarative, declared_attr, declarative_base
+from sqlalchemy.orm import declarative_base, declared_attr
 
 from strawberry_mage.core.models import EntityModel
 from strawberry_mage.core.types import IEntityModel
-
 
 _Base = declarative_base()
 
@@ -34,8 +33,13 @@ class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
 
 def create_base_entity(engine: Engine):
     from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
+
     new_base = declarative_base()
-    return type('SQLAlchemyModel', (new_base, _SQLAlchemyModel,), {
-        '__backend__': SQLAlchemyBackend(engine),
-        '__abstract__': True
-    })
+    return type(
+        "SQLAlchemyModel",
+        (
+            new_base,
+            _SQLAlchemyModel,
+        ),
+        {"__backend__": SQLAlchemyBackend(engine), "__abstract__": True},
+    )

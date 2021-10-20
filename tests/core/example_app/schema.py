@@ -9,17 +9,17 @@ from strawberry_mage.core.schema import SchemaManager
 class Weapon(EntityModel):
     id: int
     damage: int
-    owner: Optional['Entity']
+    owner: Optional["Entity"]
     name: Optional[str]
 
-    __primary_key__ = ('id',)
+    __primary_key__ = ("id",)
 
 
 class Entity(EntityModel):
     id: int
     weapons: List[Weapon]
 
-    __primary_key__ = ('id',)
+    __primary_key__ = ("id",)
 
 
 class Mage(Entity):

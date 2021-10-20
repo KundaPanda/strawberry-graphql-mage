@@ -1,272 +1,272 @@
 # This file was generated based on ".graphqlconfig". Do not edit manually.
 
 schema {
-    query: Query
+  query: Query
 }
 
 interface Entity {
-    id: Int!
-    submitsTo: King
-    weapons: [Weapon!]
+  id: Int!
+  submitsTo: King
+  weapons: [Weapon!]
 }
 
 type Archer implements Entity {
-    drawStrength: Float!
-    id: Int!
-    submitsTo: King
-    weapons: [Weapon!]
+  drawStrength: Float!
+  id: Int!
+  submitsTo: King
+  weapons: [Weapon!]
 }
 
 type Entity_ implements Entity {
-    id: Int!
-    submitsTo: King
-    weapons: [Weapon!]
+  id: Int!
+  submitsTo: King
+  weapons: [Weapon!]
 }
 
 type King implements Entity {
-    id: Int!
-    name: String
-    subjects: [Entity!]
-    submitsTo: King
-    weapons: [Weapon!]
+  id: Int!
+  name: String
+  subjects: [Entity!]
+  submitsTo: King
+  weapons: [Weapon!]
 }
 
 type Mage implements Entity {
-    id: Int!
-    powerSource: MageTypeEnum!
-    submitsTo: King
-    weapons: [Weapon!]
+  id: Int!
+  powerSource: MageTypeEnum!
+  submitsTo: King
+  weapons: [Weapon!]
 }
 
 type Query {
-    archer(data: ArcherQueryOne!): Archer
-    archers(data: ArcherQueryMany): [Archer!]!
-    entities(data: EntityQueryMany): [Entity!]!
-    entity(data: EntityQueryOne!): Entity
-    king(data: KingQueryOne!): King
-    kings(data: KingQueryMany): [King!]!
-    mage(data: MageQueryOne!): Mage
-    mages(data: MageQueryMany): [Mage!]!
-    weapon(data: WeaponQueryOne!): Weapon
-    weapons(data: WeaponQueryMany): [Weapon!]!
+  archer(data: ArcherQueryOne!): Archer
+  archers(data: ArcherQueryMany): [Archer!]!
+  entities(data: EntityQueryMany): [Entity!]!
+  entity(data: EntityQueryOne!): Entity
+  king(data: KingQueryOne!): King
+  kings(data: KingQueryMany): [King!]!
+  mage(data: MageQueryOne!): Mage
+  mages(data: MageQueryMany): [Mage!]!
+  weapon(data: WeaponQueryOne!): Weapon
+  weapons(data: WeaponQueryMany): [Weapon!]!
 }
 
 type Weapon {
-    damage: Int!
-    id: Int!
-    name: String
-    owner: Entity
+  damage: Int!
+  id: Int!
+  name: String
+  owner: Entity
 }
 
 enum MageTypeEnum {
-    AIR
-    EARTH
-    FIRE
-    WATER
+  AIR
+  EARTH
+  FIRE
+  WATER
 }
 
 enum OrderingDirection {
-    ASC
-    DESC
+  ASC
+  DESC
 }
 
 input ArcherFilter {
-    AND_: [ArcherFilter]
-    OR_: [ArcherFilter]
-    drawStrength: FloatFilter
-    entityPolymorphicType_: StringFilter
-    id: IntegerFilter
-    submitsTo: KingFilter
-    submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+  AND_: [ArcherFilter]
+  OR_: [ArcherFilter]
+  drawStrength: FloatFilter
+  entityPolymorphicType_: StringFilter
+  id: IntegerFilter
+  submitsTo: KingFilter
+  submitsToId: IntegerFilter
+  weapons: [WeaponFilter]
 }
 
 input ArcherOrdering {
-    drawStrength: OrderingDirection
-    entityPolymorphicType_: OrderingDirection
-    id: OrderingDirection
-    submitsTo: KingOrdering
-    submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+  drawStrength: OrderingDirection
+  entityPolymorphicType_: OrderingDirection
+  id: OrderingDirection
+  submitsTo: KingOrdering
+  submitsToId: OrderingDirection
+  weapons: [WeaponOrdering]
 }
 
 input ArcherPrimaryKey {
-    id: Int!
+  id: Int!
 }
 
 input ArcherQueryMany {
-    filters: [ArcherFilter]
-    ordering: [ArcherOrdering]
-    pageNumber: Int = 1
-    pageSize: Int = 30
+  filters: [ArcherFilter]
+  ordering: [ArcherOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
 }
 
 input ArcherQueryOne {
-    primaryKey_: ArcherPrimaryKey!
+  primaryKey_: ArcherPrimaryKey!
 }
 
 input EntityFilter {
-    AND_: [EntityFilter]
-    OR_: [EntityFilter]
-    entityPolymorphicType_: StringFilter
-    id: IntegerFilter
-    submitsTo: KingFilter
-    submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+  AND_: [EntityFilter]
+  OR_: [EntityFilter]
+  entityPolymorphicType_: StringFilter
+  id: IntegerFilter
+  submitsTo: KingFilter
+  submitsToId: IntegerFilter
+  weapons: [WeaponFilter]
 }
 
 input EntityOrdering {
-    entityPolymorphicType_: OrderingDirection
-    id: OrderingDirection
-    submitsTo: KingOrdering
-    submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+  entityPolymorphicType_: OrderingDirection
+  id: OrderingDirection
+  submitsTo: KingOrdering
+  submitsToId: OrderingDirection
+  weapons: [WeaponOrdering]
 }
 
 input EntityPrimaryKey {
-    id: Int!
+  id: Int!
 }
 
 input EntityQueryMany {
-    filters: [EntityFilter]
-    ordering: [EntityOrdering]
-    pageNumber: Int = 1
-    pageSize: Int = 30
+  filters: [EntityFilter]
+  ordering: [EntityOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
 }
 
 input EntityQueryOne {
-    primaryKey_: EntityPrimaryKey!
+  primaryKey_: EntityPrimaryKey!
 }
 
 input FloatFilter {
-    NOT_: Boolean = false
-    exact: Float
-    gt: Float
-    gte: Float
-    lt: Float
-    lte: Float
+  NOT_: Boolean = false
+  exact: Float
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
 }
 
 input IntegerFilter {
-    NOT_: Boolean = false
-    exact: Int
-    gt: Int
-    gte: Int
-    lt: Int
-    lte: Int
+  NOT_: Boolean = false
+  exact: Int
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
 }
 
 input KingFilter {
-    AND_: [KingFilter]
-    OR_: [KingFilter]
-    entityPolymorphicType_: StringFilter
-    id: IntegerFilter
-    name: StringFilter
-    subjects: [EntityFilter]
-    submitsTo: KingFilter
-    submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+  AND_: [KingFilter]
+  OR_: [KingFilter]
+  entityPolymorphicType_: StringFilter
+  id: IntegerFilter
+  name: StringFilter
+  subjects: [EntityFilter]
+  submitsTo: KingFilter
+  submitsToId: IntegerFilter
+  weapons: [WeaponFilter]
 }
 
 input KingOrdering {
-    entityPolymorphicType_: OrderingDirection
-    id: OrderingDirection
-    name: OrderingDirection
-    subjects: [EntityOrdering]
-    submitsTo: KingOrdering
-    submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+  entityPolymorphicType_: OrderingDirection
+  id: OrderingDirection
+  name: OrderingDirection
+  subjects: [EntityOrdering]
+  submitsTo: KingOrdering
+  submitsToId: OrderingDirection
+  weapons: [WeaponOrdering]
 }
 
 input KingPrimaryKey {
-    id: Int!
+  id: Int!
 }
 
 input KingQueryMany {
-    filters: [KingFilter]
-    ordering: [KingOrdering]
-    pageNumber: Int = 1
-    pageSize: Int = 30
+  filters: [KingFilter]
+  ordering: [KingOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
 }
 
 input KingQueryOne {
-    primaryKey_: KingPrimaryKey!
+  primaryKey_: KingPrimaryKey!
 }
 
 input MageFilter {
-    AND_: [MageFilter]
-    OR_: [MageFilter]
-    entityPolymorphicType_: StringFilter
-    id: IntegerFilter
-    powerSource: MageTypeEnum
-    submitsTo: KingFilter
-    submitsToId: IntegerFilter
-    weapons: [WeaponFilter]
+  AND_: [MageFilter]
+  OR_: [MageFilter]
+  entityPolymorphicType_: StringFilter
+  id: IntegerFilter
+  powerSource: MageTypeEnum
+  submitsTo: KingFilter
+  submitsToId: IntegerFilter
+  weapons: [WeaponFilter]
 }
 
 input MageOrdering {
-    entityPolymorphicType_: OrderingDirection
-    id: OrderingDirection
-    powerSource: MageTypeEnum
-    submitsTo: KingOrdering
-    submitsToId: OrderingDirection
-    weapons: [WeaponOrdering]
+  entityPolymorphicType_: OrderingDirection
+  id: OrderingDirection
+  powerSource: MageTypeEnum
+  submitsTo: KingOrdering
+  submitsToId: OrderingDirection
+  weapons: [WeaponOrdering]
 }
 
 input MagePrimaryKey {
-    id: Int!
+  id: Int!
 }
 
 input MageQueryMany {
-    filters: [MageFilter]
-    ordering: [MageOrdering]
-    pageNumber: Int = 1
-    pageSize: Int = 30
+  filters: [MageFilter]
+  ordering: [MageOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
 }
 
 input MageQueryOne {
-    primaryKey_: MagePrimaryKey!
+  primaryKey_: MagePrimaryKey!
 }
 
 input StringFilter {
-    NOT_: Boolean = false
-    contains: String
-    exact: String
-    icontains: String
-    iexact: String
-    ilike: String
-    like: String
+  NOT_: Boolean = false
+  contains: String
+  exact: String
+  icontains: String
+  iexact: String
+  ilike: String
+  like: String
 }
 
 input WeaponFilter {
-    AND_: [WeaponFilter]
-    OR_: [WeaponFilter]
-    damage: IntegerFilter
-    id: IntegerFilter
-    name: StringFilter
-    owner: EntityFilter
-    ownerId: IntegerFilter
+  AND_: [WeaponFilter]
+  OR_: [WeaponFilter]
+  damage: IntegerFilter
+  id: IntegerFilter
+  name: StringFilter
+  owner: EntityFilter
+  ownerId: IntegerFilter
 }
 
 input WeaponOrdering {
-    damage: OrderingDirection
-    id: OrderingDirection
-    name: OrderingDirection
-    owner: EntityOrdering
-    ownerId: OrderingDirection
+  damage: OrderingDirection
+  id: OrderingDirection
+  name: OrderingDirection
+  owner: EntityOrdering
+  ownerId: OrderingDirection
 }
 
 input WeaponPrimaryKey {
-    id: Int!
+  id: Int!
 }
 
 input WeaponQueryMany {
-    filters: [WeaponFilter]
-    ordering: [WeaponOrdering]
-    pageNumber: Int = 1
-    pageSize: Int = 30
+  filters: [WeaponFilter]
+  ordering: [WeaponOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
 }
 
 input WeaponQueryOne {
-    primaryKey_: WeaponPrimaryKey!
+  primaryKey_: WeaponPrimaryKey!
 }

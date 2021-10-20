@@ -8,25 +8,23 @@ from strawberry_mage.core.schema import SchemaManager
 
 class Weapon(PythonEntityModel):
     id: int
-    owner: Optional['Entity']
+    owner: Optional["Entity"]
     damage: int
     name: Optional[str]
 
-    __primary_key__ = ('id',)
-    __backrefs__ = {
-        'owner': 'weapons'
-    }
+    __primary_key__ = ("id",)
+    __backrefs__ = {"owner": "weapons"}
 
 
 class Entity(PythonEntityModel):
     id: int
     weapons: Optional[List[Weapon]]
-    submits_to: Optional['King']
+    submits_to: Optional["King"]
 
-    __primary_key__ = ('id',)
+    __primary_key__ = ("id",)
     __backrefs__ = {
-        'weapons': 'owner',
-        'submits_to': 'subjects',
+        "weapons": "owner",
+        "submits_to": "subjects",
     }
 
 
@@ -49,11 +47,13 @@ class King(Entity):
     subjects: Optional[List[Entity]]
 
     __backrefs__ = {
-        'weapons': 'owner',
-        'submits_to': 'subjects',
-        'subjects': 'submits_to',
+        "weapons": "owner",
+        "submits_to": "subjects",
+        "subjects": "submits_to",
     }
 
 
-schema_manager = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=PythonBackend())
+schema_manager = SchemaManager(
+    Weapon, Entity, Mage, Archer, King, backend=PythonBackend()
+)
 schema = schema_manager.get_schema()
