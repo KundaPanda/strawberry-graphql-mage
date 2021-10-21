@@ -128,7 +128,6 @@ def tests(session_: Session) -> None:
     poetry_install(session_)
     try:
         session_.run("coverage", "run", "--parallel", "-m", "pytest", *session_.posargs)
-        session_.notify("coverage")
     finally:
         _cleanup_requirements()
 
