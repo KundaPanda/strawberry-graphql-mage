@@ -126,5 +126,24 @@ def tests(session_: Session) -> None:
     """Run the test suite."""
     _export_requirements(session_)
     poetry_install(session_)
-    session_.run("python", "-m", "pytest", "--cov", "--cov-append", "--cov-report=")
-    _cleanup_requirements()
+    try:
+        session_.run("coverage", "run", "--parallel", "-m", "pytest", *session_.posargs)
+        session_.notify("coverage")
+    finally:
+        _cleanup_requirements()
+
+
+@session(python="3.10")
+def coverage(session_: Session) -> None:
+    """Produce the coverage report."""
+    # Do not use session.posargs unless this is the only session.
+    nsessions = len(session_._runner.manifest)
+    has_args = session_.posargs and nsessions == 1
+    args = session_.posargs if has_args else ["report", "-i"]
+
+    session_.install("coverage[toml]")
+
+    if not has_args and any(Path().glob(".coverage.*")):
+        session_.run("coverage", "combine")
+
+    session_.run("coverage", *args)
