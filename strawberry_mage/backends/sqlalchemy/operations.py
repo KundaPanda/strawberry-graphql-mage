@@ -14,7 +14,12 @@ from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry.arguments import is_unset
 
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_mage.core.strawberry_types import (DeleteResult, OrderingDirection, PrimaryKeyField, QueryMany)
+from strawberry_mage.core.strawberry_types import (
+    DeleteResult,
+    OrderingDirection,
+    PrimaryKeyField,
+    QueryMany,
+)
 from strawberry_mage.core.type_creator import strip_typename
 from strawberry_mage.core.types import IEntityModel
 

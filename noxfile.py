@@ -9,12 +9,10 @@ package = "strawberry_graphql_mage"
 python_versions = ["3.10", "3.9", "3.8"]
 nox.needs_version = ">= 2021.10.1"
 nox.options.sessions = (
-    "export_requirements",
     "pre-commit",
     "safety",
     "mypy",
     "tests",
-    "cleanup_requirements",
 )
 nox.options.reuse_existing_virtualenvs = True
 
@@ -70,8 +68,7 @@ def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
         hook.write_text("\n".join(lines))
 
 
-@session(name="export_requirements", python="3.10")
-def export_requirements(session_: Session):
+def _export_requirements(session_: Session):
     session_.run(
         "poetry",
         "export",
@@ -82,8 +79,7 @@ def export_requirements(session_: Session):
     )
 
 
-@session(name="cleanup_requirements", python="3.10")
-def cleanup_requirements(session_: Session):
+def _cleanup_requirements():
     requirements.unlink()
 
 
@@ -95,31 +91,40 @@ def poetry_install(session_: Session):
 def pre_commit(session_: Session) -> None:
     """Lint using pre-commit."""
     args = session_.posargs or ["run", "--all-files", "--show-diff-on-failure"]
+    _export_requirements(session_)
+    poetry_install(session_)
     session_.install("pre-commit")
     session_.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session_)
+    _cleanup_requirements()
 
 
 @session(python="3.10")
 def safety(session_: Session) -> None:
     """Scan dependencies for insecure packages."""
+    _export_requirements(session_)
     poetry_install(session_)
     session_.run("safety", "check", "--full-report", f"--file={requirements}")
+    _cleanup_requirements()
 
 
 @session(python="3.10")
 def mypy(session_: Session) -> None:
     """Type-check using mypy."""
     args = session_.posargs or ["strawberry_mage"]
+    _export_requirements(session_)
     poetry_install(session_)
     session_.run("mypy", *args)
     if not session_.posargs:
         session_.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
+    _cleanup_requirements()
 
 
 @session(name="tests", python=python_versions)
 def tests(session_: Session) -> None:
     """Run the test suite."""
+    _export_requirements(session_)
     poetry_install(session_)
     session_.run("python", "-m", "pytest", "--cov", "--cov-append", "--cov-report=")
+    _cleanup_requirements()
