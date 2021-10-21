@@ -2,24 +2,19 @@ import dataclasses
 from enum import Enum
 from functools import partial
 from inspect import isclass, iscoroutinefunction
-from typing import List, Type, Any, Union, Dict, Callable, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
-from sqlalchemy import select, delete, and_, or_, Table, inspect, not_
+from sqlalchemy import Table, and_, delete, inspect, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager, selectinload, RelationshipProperty
+from sqlalchemy.orm import RelationshipProperty, contains_eager, selectinload
 from sqlalchemy.orm.util import AliasedClass, with_polymorphic
-from sqlalchemy.sql import Join, ColumnElement
+from sqlalchemy.sql import ColumnElement, Join
 from sqlalchemy.sql.expression import desc, func
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry.arguments import is_unset
 
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_mage.core.strawberry_types import (
-    DeleteResult,
-    OrderingDirection,
-    QueryMany,
-    PrimaryKeyField,
-)
+from strawberry_mage.core.strawberry_types import (DeleteResult, OrderingDirection, PrimaryKeyField, QueryMany)
 from strawberry_mage.core.type_creator import strip_typename
 from strawberry_mage.core.types import IEntityModel
 
@@ -241,7 +236,9 @@ async def update_(
 
 
 async def delete_(
-    session: AsyncSession, model: Union[Type[IEntityModel], Type[_SQLAlchemyModel]], data: List[Any]
+    session: AsyncSession,
+    model: Union[Type[IEntityModel], Type[_SQLAlchemyModel]],
+    data: List[Any],
 ):
     pk_q = _build_multiple_pk_query(model, model, data)
     statement = delete(model).where(pk_q)

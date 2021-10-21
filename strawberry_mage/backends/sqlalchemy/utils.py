@@ -8,12 +8,12 @@ from strawberry_mage.core.types import SqlAlchemyModel
 
 
 def make_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
-        remote_pk="id",
-        optional=False,
-        back_populates=None,
-        foreign_kwargs=None,
-        rel_kwargs=None,
+    remote: Union[str, Type[SqlAlchemyModel]],
+    remote_pk="id",
+    optional=False,
+    back_populates=None,
+    foreign_kwargs=None,
+    rel_kwargs=None,
 ) -> Tuple[Column, relationship]:
     if not isinstance(remote, str):
         remote = str(remote.__tablename__)
@@ -35,14 +35,14 @@ def make_fk(
 
 
 def make_composite_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
-        remote_keys: Tuple[str, ...],
-        model_name: str,
-        rel_name: str,
-        optional=False,
-        back_populates=None,
-        foreign_kwargs=None,
-        rel_kwargs=None,
+    remote: Union[str, Type[SqlAlchemyModel]],
+    remote_keys: Tuple[str, ...],
+    model_name: str,
+    rel_name: str,
+    optional=False,
+    back_populates=None,
+    foreign_kwargs=None,
+    rel_kwargs=None,
 ) -> Tuple[List[Tuple[str, Column]], relationship, ForeignKeyConstraint]:
     if not isinstance(remote, str):
         remote = remote.__tablename__

@@ -3,20 +3,22 @@ from pathlib import Path
 from textwrap import dedent
 
 import nox
-from nox import Session
-from nox import session
+from nox import Session, session
 
 package = "strawberry_graphql_mage"
 python_versions = ["3.10", "3.9", "3.8"]
 nox.needs_version = ">= 2021.10.1"
 nox.options.sessions = (
+    "export_requirements",
     "pre-commit",
     "safety",
     "mypy",
     "tests",
-    "coverage",
+    "cleanup_requirements",
 )
 nox.options.reuse_existing_virtualenvs = True
+
+requirements = Path("requirements.txt")
 
 
 def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
@@ -45,7 +47,7 @@ def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
         text = hook.read_text()
         bindir = repr(session_.bin)[1:-1]  # strip quotes
         if not (
-                Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
+            Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
         ):
             continue
 
@@ -68,7 +70,8 @@ def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
         hook.write_text("\n".join(lines))
 
 
-def poetry_install(session_: Session, requirements: Path):
+@session(name="export_requirements", python="3.10")
+def export_requirements(session_: Session):
     session_.run(
         "poetry",
         "export",
@@ -77,6 +80,14 @@ def poetry_install(session_: Session, requirements: Path):
         "--without-hashes",
         external=True,
     )
+
+
+@session(name="cleanup_requirements", python="3.10")
+def cleanup_requirements(session_: Session):
+    requirements.unlink()
+
+
+def poetry_install(session_: Session):
     session_.install(f"-r{requirements}")
 
 
@@ -84,7 +95,7 @@ def poetry_install(session_: Session, requirements: Path):
 def pre_commit(session_: Session) -> None:
     """Lint using pre-commit."""
     args = session_.posargs or ["run", "--all-files", "--show-diff-on-failure"]
-    session_.install("pre-commit", )
+    session_.install("pre-commit")
     session_.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session_)
@@ -93,48 +104,22 @@ def pre_commit(session_: Session) -> None:
 @session(python="3.10")
 def safety(session_: Session) -> None:
     """Scan dependencies for insecure packages."""
-    requirements = Path("requirements.txt")
-    poetry_install(session_, requirements)
+    poetry_install(session_)
     session_.run("safety", "check", "--full-report", f"--file={requirements}")
-    requirements.unlink()
 
 
 @session(python="3.10")
 def mypy(session_: Session) -> None:
     """Type-check using mypy."""
     args = session_.posargs or ["strawberry_mage"]
-    requirements = Path("requirements.txt")
-    poetry_install(session_, requirements)
+    poetry_install(session_)
     session_.run("mypy", *args)
     if not session_.posargs:
         session_.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
-    requirements.unlink()
 
 
 @session(name="tests", python=python_versions)
 def tests(session_: Session) -> None:
     """Run the test suite."""
-    requirements = Path("requirements.txt")
-    poetry_install(session_, requirements)
-    try:
-        session_.run("python", "-m", "pytest", "--cov")
-    finally:
-        if session_.interactive:
-            session_.notify("coverage")
-    requirements.unlink()
-
-
-@session(python="3.10")
-def coverage(session_: Session) -> None:
-    """Produce the coverage report."""
-    # Do not use session.posargs unless this is the only session.
-    nsessions = len(session_._runner.manifest)
-    has_args = session_.posargs and nsessions == 1
-    args = session_.posargs if has_args else ["report", "-i"]
-
-    session_.install("coverage[toml]")
-
-    if not has_args and any(Path().glob(".coverage.*")):
-        session_.run("coverage", "combine")
-
-    session_.run("coverage", *args)
+    poetry_install(session_)
+    session_.run("python", "-m", "pytest", "--cov", "--cov-append", "--cov-report=")

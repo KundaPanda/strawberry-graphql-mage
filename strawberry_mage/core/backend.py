@@ -53,7 +53,7 @@ class DummyDataBackend(DataBackendBase):
         }
 
     def get_attributes(
-            self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
+        self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
     ) -> List[Any]:
         return [
             k
@@ -75,7 +75,7 @@ class DummyDataBackend(DataBackendBase):
             return model.mro()[1].__name__
 
     def get_children_class_names(
-            self, model: Type["IEntityModel"]
+        self, model: Type["IEntityModel"]
     ) -> Optional[List[str]]:
         if model.__subclasses__():
             return get_subclasses(model).union({model.__name__})
@@ -87,13 +87,13 @@ class DummyDataBackend(DataBackendBase):
         return base_type.implementation
 
     async def resolve(
-            self,
-            model: Type[IEntityModel],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            *args,
-            **kwargs
+        self,
+        model: Type[IEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        **kwargs
     ) -> Any:
         if operation.value % 2 == 0:
             return []

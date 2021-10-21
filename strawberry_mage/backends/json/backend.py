@@ -63,10 +63,10 @@ class JSONBackend(PythonBackend):
         return mappings
 
     def add_dataset(
-            self,
-            dataset: Iterable[dict],
-            model: Optional[Type[PythonEntityModel]] = None,
-            model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+        self,
+        dataset: Iterable[dict],
+        model: Optional[Type[PythonEntityModel]] = None,
+        model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
     ):
         if not model and not model_mapper:
             raise Exception(
@@ -80,13 +80,13 @@ class JSONBackend(PythonBackend):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
     async def resolve(
-            self,
-            model: Type[PythonEntityModel],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            *args,
-            dataset: Optional[Iterable] = None,
-            **kwargs
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        dataset: Optional[Iterable] = None,
+        **kwargs
     ) -> Any:
         return await super().resolve(model, operation, info, data, dataset)

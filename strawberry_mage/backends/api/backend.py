@@ -12,14 +12,14 @@ from strawberry_mage.core.types import GraphQLOperation
 
 class APIBackend(JSONBackend):
     async def resolve(
-            self,
-            model: Type[PythonEntityModel],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            dataset: Optional[Iterable] = None,
-            *args,
-            **kwargs
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        dataset: Optional[Iterable] = None,
+        *args,
+        **kwargs
     ) -> Any:
 
         if isinstance(dataset, list):
@@ -56,6 +56,8 @@ class APIBackend(JSONBackend):
                     types["primary_key_input"](dataset["id"])
                 )
                 operation = GraphQLOperation.QUERY_ONE
-            return await super().resolve(model, operation, info, data, dataset=[dataset])
+            return await super().resolve(
+                model, operation, info, data, dataset=[dataset]
+            )
         if isinstance(dataset, int):
             return model.get_strawberry_type().delete_one.type(affected_rows=dataset)

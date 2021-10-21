@@ -34,14 +34,14 @@ class PythonBackend(DummyDataBackend):
             pass
 
     def __create_entity(
-            self,
-            mappings: Dict[PythonEntityModel, _SQLAlchemyModel],
-            original: PythonEntityModel,
+        self,
+        mappings: Dict[PythonEntityModel, _SQLAlchemyModel],
+        original: PythonEntityModel,
     ):
         return original.sqla_model(**self.__extract_attributes(mappings, original))
 
     def __extract_attributes(
-            self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel
+        self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel
     ):
         results: Dict[str, Any] = {}
         for a in entry.get_attributes():
@@ -77,7 +77,7 @@ class PythonBackend(DummyDataBackend):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
     def get_attributes(
-            self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
+        self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
     ) -> List[str]:
         all_ = super().get_attributes(model, operation)
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
@@ -105,14 +105,14 @@ class PythonBackend(DummyDataBackend):
         return base_type.implementation
 
     async def resolve(
-            self,
-            model: Type[PythonEntityModel],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            dataset: Optional[Iterable[PythonEntityModel]] = None,
-            *args,
-            **kwargs
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        dataset: Optional[Iterable[PythonEntityModel]] = None,
+        *args,
+        **kwargs
     ) -> Any:
         if self._dataset_lock is None:
             self._dataset_lock = Lock()

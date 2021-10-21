@@ -66,7 +66,7 @@ class IDataBackend(abc.ABC):
 
     @abc.abstractmethod
     def get_attributes(
-            self, model: Type["IEntityModel"], operation: Optional[GraphQLOperation] = None
+        self, model: Type["IEntityModel"], operation: Optional[GraphQLOperation] = None
     ) -> List[str]:
         raise NotImplementedError
 
@@ -88,7 +88,7 @@ class IDataBackend(abc.ABC):
 
     @abc.abstractmethod
     def get_children_class_names(
-            self, model: Type["IEntityModel"]
+        self, model: Type["IEntityModel"]
     ) -> Optional[List[str]]:
         raise NotImplementedError
 
@@ -98,13 +98,13 @@ class IDataBackend(abc.ABC):
 
     @abc.abstractmethod
     async def resolve(
-            self,
-            model: Type["IEntityModel"],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            *args,
-            **kwargs
+        self,
+        model: Type["IEntityModel"],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        **kwargs
     ) -> Any:
         raise NotImplementedError
 

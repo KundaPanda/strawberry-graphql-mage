@@ -37,7 +37,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @staticmethod
     def _remove_polymorphic_cols(
-            model: Type[Union[IEntityModel, _SQLAlchemyModel]], cols: List[str]
+        model: Type[Union[IEntityModel, _SQLAlchemyModel]], cols: List[str]
     ) -> List[str]:
         inspection: Mapper = inspect(model)
         if inspection.polymorphic_on is None:
@@ -46,7 +46,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @staticmethod
     def _remove_pk_cols(
-            model: Type[Union[IEntityModel, _SQLAlchemyModel]], cols: List[str]
+        model: Type[Union[IEntityModel, _SQLAlchemyModel]], cols: List[str]
     ):
         return [c for c in cols if c not in model.get_primary_key()]
 
@@ -61,9 +61,9 @@ class SQLAlchemyBackend(DataBackendBase):
         return all((c.nullable for c in col.local_columns))
 
     def get_attributes(
-            self,
-            model: Type[Union[IEntityModel, _SQLAlchemyModel]],
-            operation: Optional[GraphQLOperation] = None,
+        self,
+        model: Type[Union[IEntityModel, _SQLAlchemyModel]],
+        operation: Optional[GraphQLOperation] = None,
     ) -> List[str]:
         inspection = inspect(model)
         all_ = [
@@ -89,7 +89,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @lru_cache
     def _get_attribute_type(
-            self, attr: Union[ColumnProperty, RelationshipProperty]
+        self, attr: Union[ColumnProperty, RelationshipProperty]
     ) -> Type:
         python_type = (
             attr.expression.type.python_type
@@ -109,7 +109,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @lru_cache
     def get_attribute_type(
-            self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], attr: str
+        self, model: Type[Union[IEntityModel, _SQLAlchemyModel]], attr: str
     ) -> Type:
         inspection = inspect(model)
         col: Union[ColumnProperty, RelationshipProperty] = getattr(
@@ -122,7 +122,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @lru_cache
     def get_attribute_types(
-            self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
+        self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
     ) -> Dict[str, Type]:
         return {
             attr: self.get_attribute_type(model, attr)
@@ -130,7 +130,7 @@ class SQLAlchemyBackend(DataBackendBase):
         }
 
     def get_primary_key(
-            self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
+        self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
     ) -> Tuple:
         return tuple(a.key for a in inspect(model).primary_key)
 
@@ -145,18 +145,18 @@ class SQLAlchemyBackend(DataBackendBase):
         return None
 
     def get_children_class_names(
-            self, model: Type[Union["IEntityModel", _SQLAlchemyModel]]
+        self, model: Type[Union["IEntityModel", _SQLAlchemyModel]]
     ) -> Optional[List[str]]:
         inspection = inspect(model)
         if (
-                inspection.polymorphic_on is not None
-                and inspection.polymorphic_on.table == model.__table__
+            inspection.polymorphic_on is not None
+            and inspection.polymorphic_on.table == model.__table__
         ):
             return [m.class_.__name__ for m in inspection.polymorphic_map.values()]
         return None
 
     def get_operations(
-            self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
+        self, model: Type[Union[IEntityModel, _SQLAlchemyModel]]
     ) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
@@ -164,12 +164,12 @@ class SQLAlchemyBackend(DataBackendBase):
         return base_type.implementation
 
     async def resolve(
-            self,
-            model: Type[Union[IEntityModel, _SQLAlchemyModel]],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            session_factory: Optional[sessionmaker] = None,
+        self,
+        model: Type[Union[IEntityModel, _SQLAlchemyModel]],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        session_factory: Optional[sessionmaker] = None,
     ) -> Any:
         async with (session_factory if session_factory else self._session)() as s:
             for field in info.selected_fields:

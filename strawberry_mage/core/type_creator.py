@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import sys
 from inspect import isclass
-from typing import Any, Dict, ForwardRef, List, Optional, Type, Union
+from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
@@ -178,7 +178,7 @@ def create_enum_type(attr: enum.EnumMeta):
     return enum_type, enum_filter_type, enum_ordering_type
 
 
-def create_entity_type(model: Type[IEntityModel]) -> tuple[type, Union[type, Any]]:
+def create_entity_type(model: Type[IEntityModel]) -> Tuple[type, Union[type, Any]]:
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
