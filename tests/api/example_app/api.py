@@ -46,9 +46,7 @@ class Mutation:
 
     @strawberry.field
     def update(self, pk: int, weapons: List[int]) -> TestEntity:
-        return TestEntity(
-            id=pk, weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons]
-        )
+        return TestEntity(id=pk, weapons=[TestWeapon(id=id_, damage=10) for id_ in weapons])
 
     @strawberry.field
     def delete(self, pk: int) -> int:

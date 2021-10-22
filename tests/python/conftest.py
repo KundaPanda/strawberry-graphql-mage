@@ -34,12 +34,8 @@ async def dataset():
         Archer(submits_to=king1, weapons=[weapons[1]], draw_strength=30),
         Archer(weapons=weapons[3:4], draw_strength=16),
         Archer(draw_strength=40, submits_to=king1),
-        Mage(
-            weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR
-        ),
-        Mage(
-            weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE
-        ),
+        Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
+        Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
     ]
     data = [*weapons, king1, king2, *entities]
     schema_manager.backend.add_dataset(data)
@@ -54,8 +50,6 @@ def schema():
 
 @pytest.fixture(scope="function")
 def operations():
-    with open(
-        Path(__file__).parent / "graphql_operations" / "operations.graphql", "r"
-    ) as f:
+    with open(Path(__file__).parent / "graphql_operations" / "operations.graphql", "r") as f:
         data = f.read()
     return data

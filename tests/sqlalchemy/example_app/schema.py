@@ -24,9 +24,7 @@ class Entity(Base):
     id = Column(Integer, primary_key=True)
     weapons = relationship(Weapon, back_populates="owner")
     entity_class = Column(String, nullable=False)
-    submits_to_id, submits_to = make_fk(
-        "King", optional=True, back_populates="subjects"
-    )
+    submits_to_id, submits_to = make_fk("King", optional=True, back_populates="subjects")
 
     __mapper_args__ = {"polymorphic_on": entity_class, "polymorphic_identity": "entity"}
 
@@ -55,9 +53,7 @@ class Archer(Entity):
 class King(Entity):
     id = Column(Integer, ForeignKey("entity.id"), primary_key=True)
     name = Column(String)
-    subjects = relationship(
-        "Entity", back_populates="submits_to", foreign_keys="Entity.submits_to_id"
-    )
+    subjects = relationship("Entity", back_populates="submits_to", foreign_keys="Entity.submits_to_id")
 
     __mapper_args__ = {
         "polymorphic_identity": "king",
@@ -65,9 +61,7 @@ class King(Entity):
     }
 
 
-schema = SchemaManager(
-    Weapon, Entity, Mage, Archer, King, backend=Base.__backend__
-).get_schema()
+schema = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=Base.__backend__).get_schema()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

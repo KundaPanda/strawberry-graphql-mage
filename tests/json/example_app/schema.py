@@ -55,7 +55,5 @@ class King(Entity):
     }
 
 
-schema_manager = SchemaManager(
-    Weapon, Entity, Mage, Archer, King, backend=JSONBackend()
-)
+schema_manager = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=JSONBackend())
 schema = schema_manager.get_schema()

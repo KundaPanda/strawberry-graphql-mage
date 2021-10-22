@@ -75,6 +75,15 @@ jobs:
           key: ${{ steps.pre-commit-cache.outputs.result }}-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ steps.pre-commit-cache.outputs.result }}-
+      - name: Setup node.js
+        uses: actions/setup-node@v2
+        if: matrix.session == 'pyright'
+        with:
+          node-version: '14'
+      - name: Install pyright
+        if: matrix.session == 'pyright'
+        run: |
+          npm install -g pyright
       - name: Run Nox
         run: |
           nox --force-color --python=${{ matrix.python-version }}

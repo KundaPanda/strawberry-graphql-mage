@@ -21,7 +21,7 @@ from strawberry_mage.core.strawberry_types import (
     QueryMany,
 )
 from strawberry_mage.core.type_creator import strip_typename
-from strawberry_mage.core.types import IEntityModel
+from strawberry_mage.core.types import IEntityModel, IsDataclass
 
 SelectablesType = Dict[str, Union[Join, Type[_SQLAlchemyModel]]]
 
@@ -35,17 +35,14 @@ def _build_pk_query(
     attribute_getter = data.get if isinstance(data, dict) else partial(getattr, data)
     column_getter = (
         partial(getattr, selectable)
-        if (isclass(selectable) and issubclass(selectable, IEntityModel))
-        or isinstance(selectable, AliasedClass)
+        if (isclass(selectable) and issubclass(selectable, IEntityModel)) or isinstance(selectable, AliasedClass)
         else partial(getattr, selectable.c)
     )
     conditions = [column_getter(key) == attribute_getter(key) for key in pk]
     return and_(*conditions)
 
 
-def _build_multiple_pk_query(
-    model: Type[Union[_SQLAlchemyModel, IEntityModel]], selectable, data: List[Any]
-):
+def _build_multiple_pk_query(model: Type[Union[_SQLAlchemyModel, IEntityModel]], selectable, data: List[Any]):
     if not data:
         return
     return or_(
@@ -58,15 +55,11 @@ def _build_multiple_pk_query(
     )
 
 
-def _get_model_pk_values(
-    model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: dataclasses.dataclass
-):
+def _get_model_pk_values(model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: IsDataclass):
     return tuple(getattr(data, key) for key in model.get_primary_key())
 
 
-def _get_dict_pk_values(
-    model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: Dict[str, Any]
-):
+def _get_dict_pk_values(model: Type[Union[_SQLAlchemyModel, IEntityModel]], data: Dict[str, Any]):
     return tuple(data.get(key) for key in model.get_primary_key())
 
 
@@ -77,7 +70,7 @@ def _create_pk_class(data: Dict[str, Any]):
 async def _set_instance_attrs(
     model: Type[Union[_SQLAlchemyModel, IEntityModel]],
     instance: object,
-    input_object: dataclasses.dataclass,
+    input_object: IsDataclass,
     session: AsyncSession,
 ):
     for prop in input_object.__dataclass_fields__:
@@ -87,10 +80,10 @@ async def _set_instance_attrs(
         prop_type = strip_typename(model.get_attribute_type(prop))
         if isinstance(prop_type, str):
             related_model = model.get_schema_manager().get_model_for_name(prop_type)
+            if related_model is None:
+                raise Exception(f"Unable to resolve related type for {prop_type} on {model}")
             if isinstance(value, list):
-                expr = select(related_model).where(
-                    _build_multiple_pk_query(related_model, related_model, value)
-                )
+                expr = select(related_model).where(_build_multiple_pk_query(related_model, related_model, value))
                 setattr(instance, prop, (await session.execute(expr)).scalars().all())
             elif isinstance(value, Enum):
                 setattr(instance, prop, value.name)
@@ -98,9 +91,7 @@ async def _set_instance_attrs(
                 setattr(
                     instance,
                     prop,
-                    await session.get(
-                        related_model, dataclasses.asdict(value.primary_key_)
-                    ),
+                    await session.get(related_model, dataclasses.asdict(value.primary_key_)),
                 )
         else:
             setattr(instance, prop, value)
@@ -119,18 +110,13 @@ async def _apply_nested(
     select_from = selectables[path]
     attr_getter = (
         partial(getattr, select_from)
-        if (
-            isinstance(select_from, AliasedClass)
-            or isinstance(select_from, _SQLAlchemyModel)
-        )
+        if (isinstance(select_from, AliasedClass) or isinstance(select_from, _SQLAlchemyModel))
         else partial(getattr, select_from.c)
     )
     prop = attr_getter(attribute)
     if nested_path not in selectables:
         related_type_name = strip_typename(model.get_attribute_type(attribute))
-        related_model_raw = model.get_schema_manager().get_model_for_name(
-            related_type_name
-        )
+        related_model_raw = model.get_schema_manager().get_model_for_name(related_type_name)
         related_model = with_polymorphic(related_model_raw, "*", aliased=True)
         selectables[nested_path] = related_model
         ex = prop.expression
@@ -139,18 +125,14 @@ async def _apply_nested(
             if inspect(select_from).local_table == ex.left.table
             else ex.right == getattr(related_model, ex.left.key)
         )
-        selectables["__selection__"] = selectables["__selection__"].join(
-            related_model, join_expression, isouter=True
-        )
+        selectables["__selection__"] = selectables["__selection__"].join(related_model, join_expression, isouter=True)
     eager_options = (
         contains_eager(prop.of_type(selectables[nested_path]))
         if eager_options is None
         else eager_options.contains_eager(prop.of_type(selectables[nested_path]))
     )
     if iscoroutinefunction(op):
-        return await op(
-            selectables[nested_path], nested_path, input_, selectables, eager_options
-        )
+        return await op(selectables[nested_path], nested_path, input_, selectables, eager_options)
     return op(selectables[nested_path], nested_path, input_, selectables, eager_options)
 
 
@@ -168,10 +150,7 @@ async def create_(
         models.append(instance)
     session.add_all(models)
     await session.flush(models)
-    primary_keys = [
-        {key: getattr(instance, key) for key in model.get_primary_key()}
-        for instance in models
-    ]
+    primary_keys = [{key: getattr(instance, key) for key in model.get_primary_key()} for instance in models]
     await session.commit()
 
     data = [_create_pk_class(instance) for instance in primary_keys]
@@ -181,9 +160,7 @@ async def create_(
     pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, "", selection, selectables)
-    ordering = await create_ordering(
-        model, "", add_default_ordering(model, []), selectables
-    )
+    ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
     expression = selectables["__selection__"].filter(pk_filter).order_by(*ordering)
     if eager_options != (None,):
@@ -193,7 +170,7 @@ async def create_(
 
 async def update_(
     session: AsyncSession,
-    model: Type[_SQLAlchemyModel],
+    model: Type[Union[_SQLAlchemyModel, IEntityModel]],
     data: List[Any],
     selection: Dict[str, Dict],
 ):
@@ -202,13 +179,7 @@ async def update_(
         (
             await session.execute(
                 select(model)
-                .options(
-                    *[
-                        selectinload(a.key)
-                        for a in inspect(model).attrs
-                        if isinstance(a, RelationshipProperty)
-                    ]
-                )
+                .options(*[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
                 .where(pk_filter)
             )
         )
@@ -230,9 +201,7 @@ async def update_(
     pk_filter = _build_multiple_pk_query(model, polymorphic_model, data)
 
     eager_options = await create_selection_joins(model, "", selection, selectables)
-    ordering = await create_ordering(
-        model, "", add_default_ordering(model, []), selectables
-    )
+    ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
     expression = selectables["__selection__"].filter(pk_filter).order_by(*ordering)
     if eager_options != (None,):
@@ -255,7 +224,7 @@ async def delete_(
 async def retrieve_(
     session: AsyncSession,
     model: Union[Type[IEntityModel], Type[_SQLAlchemyModel]],
-    data: Union[PrimaryKeyField, dataclasses.dataclass],
+    data: PrimaryKeyField,
     selection: Dict[str, Dict],
 ):
     polymorphic_model = with_polymorphic(model, "*", aliased=True)
@@ -271,7 +240,7 @@ async def retrieve_(
     return (await session.execute(expression)).unique().scalar()
 
 
-def add_default_ordering(model: Type[_SQLAlchemyModel], ordering: List[Dict]):
+def add_default_ordering(model: Type[Union[_SQLAlchemyModel, IEntityModel]], ordering: List[Dict]):
     return ordering + [{k: OrderingDirection.DESC for k in model.get_primary_key()}]
 
 
@@ -340,20 +309,13 @@ async def create_ordering(
                 select_from = selectables[path]
                 col = (
                     getattr(select_from, attribute)
-                    if (
-                        isinstance(select_from, AliasedClass)
-                        or isinstance(select_from, _SQLAlchemyModel)
-                    )
+                    if (isinstance(select_from, AliasedClass) or isinstance(select_from, _SQLAlchemyModel))
                     else getattr(select_from.c, attribute)
                 )
-                result_ordering.append(
-                    desc(col) if value == OrderingDirection.DESC else col
-                )
+                result_ordering.append(desc(col) if value == OrderingDirection.DESC else col)
             else:
                 result_ordering.extend(
-                    await _apply_nested(
-                        model, path, [value], create_ordering, attribute, selectables
-                    )
+                    await _apply_nested(model, path, [value], create_ordering, attribute, selectables)
                 )
     return result_ordering
 
@@ -374,7 +336,7 @@ FILTER_OPS = {
 
 
 def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> ColOps:
-    op = FILTER_OPS.get(op_name)(column, value)
+    op = FILTER_OPS[op_name](column, value)
     if negate:
         op = not_(op)
     return op
@@ -384,10 +346,7 @@ def get_attr(selectables, path, attribute):
     select_from = selectables[path]
     return (
         getattr(select_from, attribute)
-        if (
-            isinstance(select_from, AliasedClass)
-            or isinstance(select_from, _SQLAlchemyModel)
-        )
+        if (isinstance(select_from, AliasedClass) or isinstance(select_from, _SQLAlchemyModel))
         else getattr(select_from.c, attribute)
     )
 
@@ -405,14 +364,10 @@ async def create_object_filters(
             if is_unset(value):
                 continue
             if attribute == "AND_":
-                nested_filters = await create_object_filters(
-                    model, path, value, selectables
-                )
+                nested_filters = await create_object_filters(model, path, value, selectables)
                 result_filters.append(and_(*nested_filters))
             elif attribute == "OR_":
-                nested_filters = await create_object_filters(
-                    model, path, value, selectables
-                )
+                nested_filters = await create_object_filters(model, path, value, selectables)
                 result_filters.append(or_(*nested_filters))
             elif isinstance(value, dict) and "AND_" in value:
                 # Nested filter
@@ -435,9 +390,7 @@ async def create_object_filters(
                         continue
                     else:
                         attr = get_attr(selectables, path, attribute)
-                        result_filters.append(
-                            create_filter_op(attr, operation, filter_value, negate)
-                        )
+                        result_filters.append(create_filter_op(attr, operation, filter_value, negate))
     return result_filters
 
 
@@ -460,11 +413,11 @@ async def list_(
 
     filters, ordering = None, None
     if not is_unset(data):
-        if not is_unset(data.filters):
+        if not is_unset(data.filters) and data.filters:
             raw_filter = [dataclasses.asdict(f) for f in data.filters]
             filters = await create_object_filters(model, "", raw_filter, selectables)
 
-        if not is_unset(data.ordering):
+        if not is_unset(data.ordering) and data.ordering:
             raw_ordering = [dataclasses.asdict(o) for o in data.ordering]
             ordering = add_default_ordering(model, raw_ordering)
             ordering = cleanup_ordering(ordering)
@@ -482,9 +435,9 @@ async def list_(
         if ordering:
             expression = expression.order_by(*ordering)
 
-        if not is_unset(data.page_size):
+        if not is_unset(data.page_size) and data.page_size:
             expression = expression.limit(data.page_size)
-            if not is_unset(data.page_number):
+            if not is_unset(data.page_number) and data.page_number:
                 expression = expression.offset((data.page_number - 1) * data.page_size)
 
     return (await session.execute(expression)).unique().scalars().all()

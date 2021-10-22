@@ -41,9 +41,7 @@ async def test_nested_select(schema: Schema, operations, session):
         else:
             assert selected.get("submitsTo") == archer.submits_to
         if archer.weapons:
-            assert [
-                {"damage": w.damage, "id": w.id} for w in archer.weapons
-            ] == selected["weapons"]
+            assert [{"damage": w.damage, "id": w.id} for w in archer.weapons] == selected["weapons"]
         else:
             assert selected.get("weapons") == archer.weapons
 

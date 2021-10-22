@@ -28,9 +28,7 @@ def make_fk(
         nullable=optional,
         **foreign_kwargs,
     )
-    rel = relationship(
-        remote, back_populates=back_populates, foreign_keys=[fk], **rel_kwargs
-    )
+    rel = relationship(remote, back_populates=back_populates, foreign_keys=[fk], **rel_kwargs)
     return fk, rel
 
 
@@ -56,9 +54,7 @@ def make_composite_fk(
         foreign_keys.append(
             (
                 key,
-                Column(
-                    f"{rel_name}_{key}", Integer, nullable=optional, **foreign_kwargs
-                ),
+                Column(f"{rel_name}_{key}", Integer, nullable=optional, **foreign_kwargs),
             )
         )
     rel = relationship(

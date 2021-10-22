@@ -53,7 +53,5 @@ class King(Entity):
     }
 
 
-schema_manager = SchemaManager(
-    Weapon, Entity, Mage, Archer, King, backend=PythonBackend()
-)
+schema_manager = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=PythonBackend())
 schema = schema_manager.get_schema()

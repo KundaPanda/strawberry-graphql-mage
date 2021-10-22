@@ -48,9 +48,7 @@ async def main():
             await asyncio.sleep(0.1)
         engine = engines.get_nowait()
         asyncio.create_task(cleanup_engine(engine, engines))
-    await asyncio.gather(
-        *[t for t in asyncio.all_tasks() if t.get_coro().__name__ != main.__name__]
-    )
+    await asyncio.gather(*[t for t in asyncio.all_tasks() if t.get_coro().__name__ != main.__name__])
     end = default_timer()
     print(f"{iterations} iterations took {end - start} seconds")
     print(f"One iteration took {(end - start) / iterations * 1000} milliseconds")
@@ -86,12 +84,8 @@ def app(debug=False):
         Archer(submits_to=king1, weapons=[weapons[1]], draw_strength=30),
         Archer(weapons=weapons[3:4], draw_strength=16),
         Archer(draw_strength=40, submits_to=king1),
-        Mage(
-            weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR
-        ),
-        Mage(
-            weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE
-        ),
+        Mage(weapons=[weapons[-2]], submits_to=king1, power_source=Mage.MageTypeEnum.AIR),
+        Mage(weapons=[weapons[-1]], submits_to=king2, power_source=Mage.MageTypeEnum.FIRE),
     ]
     data = [*weapons, king1, king2, *entities]
     schema_manager.backend.add_dataset(data)

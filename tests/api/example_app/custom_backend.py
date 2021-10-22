@@ -65,23 +65,13 @@ class CustomBackend(APIBackend):
             GraphQLOperation.DELETE_ONE: "delete",
             GraphQLOperation.DELETE_MANY: "delete",
         }.get(operation)
-        root = (
-            "query"
-            if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY}
-            else "mutation"
-        )
+        root = "query" if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY} else "mutation"
         field = info.selected_fields[0]
         data = field.arguments.get("data", {})
         results = []
         if isinstance(data, list):
             for entry in data:
-                results.append(
-                    (
-                        await graphql_app.execute(
-                            self._build_graphql_input(root, op, entry)
-                        )
-                    ).data[op]
-                )
+                results.append((await graphql_app.execute(self._build_graphql_input(root, op, entry))).data[op])
             if operation == GraphQLOperation.DELETE_MANY:
                 return sum(results)
             return results

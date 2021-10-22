@@ -27,13 +27,7 @@ async def test_simple_create(schema: Schema, session: AsyncSession, operations):
     assert await session.get(King, result.data["createKing"]["id"]) is not None
     assert len(result.data["createWeapons"]) == 2
     weapon_ids = (
-        (
-            await session.execute(
-                select(Weapon.id).where(Weapon.id.in_(ids)).order_by(Weapon.id)
-            )
-        )
-        .scalars()
-        .all()
+        (await session.execute(select(Weapon.id).where(Weapon.id.in_(ids)).order_by(Weapon.id))).scalars().all()
     )
     assert weapon_ids == ids
 
@@ -57,26 +51,14 @@ async def test_simple_update(schema: Schema, session: AsyncSession, operations):
 
     results = sorted(result.data["updateWeapons"], key=lambda e: e["id"])
     entity = (
-        await session.execute(
-            select(Entity)
-            .where(Entity.id == 1)
-            .options(selectinload(Entity.weapons))
-            .limit(1)
-        )
+        await session.execute(select(Entity).where(Entity.id == 1).options(selectinload(Entity.weapons)).limit(1))
     ).scalar()
     assert [w.id for w in entity.weapons] == [6]
     assert result.data["updateEntity"]["weapons"] == [{"id": 6}]
     assert len(result.data["updateWeapons"]) == 2
     assert (await session.get(Weapon, 2)).damage == 123 == results[0]["damage"]
     assert (
-        (
-            await session.execute(
-                select(Weapon)
-                .where(Weapon.id == 3)
-                .options(selectinload("owner"))
-                .limit(1)
-            )
-        )
+        (await session.execute(select(Weapon).where(Weapon.id == 3).options(selectinload("owner")).limit(1)))
         .scalar()
         .owner.id
         == 4

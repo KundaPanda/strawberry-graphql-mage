@@ -1,30 +1,24 @@
 from functools import lru_cache
-from typing import Dict
+from typing import Dict, Optional, Type
 
 import strawberry
+from frozendict import frozendict
 from graphql import GraphQLInterfaceType
-from inflection import underscore, pluralize
+from inflection import pluralize, underscore
 from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
 from strawberry_mage.core.type_creator import GeneratedType
-from strawberry_mage.core.types import (
-    GraphQLOperation,
-    IEntityModel,
-    ISchemaManager,
-    IDataBackend,
-)
+from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel, ISchemaManager
 
 
 class SchemaManager(ISchemaManager):
-    _models: Dict[str, IEntityModel]
+    _models: Dict[str, Type[IEntityModel]]
 
     def __init__(self, *models, backend: IDataBackend):
         if len(models) == 0:
             raise IndexError("Need at least one model for the GraphQL schema.")
-        self._models = {
-            GeneratedType.ENTITY.get_typename(m.__name__): m for m in models
-        }
+        self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
         self._backend = backend
         for model in self._models.values():
             model.__backend__ = self._backend
@@ -36,7 +30,7 @@ class SchemaManager(ISchemaManager):
         return self._backend
 
     @staticmethod
-    def _add_operation(type_object, operation: GraphQLOperation, model: IEntityModel):
+    def _add_operation(type_object, operation: GraphQLOperation, model: Type[IEntityModel]):
         if operation in model.get_operations():
             name = model.__name__
 
@@ -53,10 +47,10 @@ class SchemaManager(ISchemaManager):
             )
             return
 
-    def get_models(self):
-        return self._models[:]
+    def get_models(self) -> frozendict:
+        return frozendict(self._models)
 
-    def get_model_for_name(self, name: str):
+    def get_model_for_name(self, name: str) -> Optional[Type[IEntityModel]]:
         return self._models.get(name, None)
 
     @lru_cache
@@ -108,14 +102,10 @@ class SchemaManager(ISchemaManager):
                 )
             ) is not None:
                 return self._backend.get_polymorphic_type(base_type)
-            return self._backend.get_polymorphic_type(
-                schema.schema_converter.type_map[obj.__class__.__name__]
-            )
+            return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__])
 
         for entry in schema.schema_converter.type_map.values():
-            if isinstance(entry, ConcreteType) and isinstance(
-                entry.implementation, GraphQLInterfaceType
-            ):
+            if isinstance(entry, ConcreteType) and isinstance(entry.implementation, GraphQLInterfaceType):
                 setattr(entry.implementation, "resolve_type", resolve_interface_type)
 
         return schema

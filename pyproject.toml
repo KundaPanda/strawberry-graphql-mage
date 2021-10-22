@@ -40,9 +40,7 @@ yappi = "^1.3.3"
 nox = "^2021.10.1"
 pre-commit = "^2.15.0"
 safety = "^1.10.3"
-mypy = "^0.910"
 poetry = "^1.1.11"
-SQLAlchemy = {extras = ["mypy"], version = "^1.4.26"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -60,6 +58,12 @@ include = [
     "strawberry_mage/*"
 ]
 parallel = true
+
+[tool.pyright]
+include = ["strawberry_mage"]
+
+[tool.black]
+line-length = 120
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

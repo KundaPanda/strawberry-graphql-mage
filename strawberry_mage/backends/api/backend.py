@@ -2,6 +2,7 @@ import dataclasses
 from typing import Any, Iterable, Optional, Type
 
 from strawberry.arguments import UNSET
+from strawberry.type import StrawberryType
 from strawberry.types import Info
 
 from strawberry_mage.backends.json.backend import JSONBackend
@@ -24,40 +25,35 @@ class APIBackend(JSONBackend):
 
         if isinstance(dataset, list):
             if operation == GraphQLOperation.DELETE_MANY:
-                return model.get_strawberry_type().delete_one.type(
-                    affected_rows=len(dataset)
-                )
+                delete_type = model.get_strawberry_type().delete_many
+                assert delete_type is not None  # for pyright
+                assert not isinstance(delete_type.type, StrawberryType)  # for pyright
+                return delete_type.type(affected_rows=len(dataset))
             if operation in {
                 GraphQLOperation.UPDATE_MANY,
                 GraphQLOperation.CREATE_MANY,
             }:
                 types = model.get_strawberry_type().graphql_input_types
-                filter_type = dataclasses.make_dataclass(
-                    "FilterStub", {"id": IntegerFilter}
-                )
+                filter_type = dataclasses.make_dataclass("FilterStub", {"id": IntegerFilter})
                 data = types["query_many_input"](
                     page_size=UNSET,
-                    filters=[
-                        filter_type(
-                            id=IntegerFilter(in_=[entry["id"] for entry in dataset])
-                        )
-                    ],
+                    filters=[filter_type(id=IntegerFilter(in_=[entry["id"] for entry in dataset]))],
                 )
                 operation = GraphQLOperation.QUERY_MANY
             return await super().resolve(model, operation, info, data, dataset=dataset)
         if isinstance(dataset, dict):
             if operation == GraphQLOperation.DELETE_ONE:
-                return model.get_strawberry_type().delete_one.type(
-                    affected_rows=dataset.get("affected_rows", 1)
-                )
+                delete_type = model.get_strawberry_type().delete_one
+                assert delete_type is not None  # for pyright
+                assert not isinstance(delete_type.type, StrawberryType)  # for pyright
+                return delete_type.type(affected_rows=dataset.get("affected_rows", 1))
             if operation in {GraphQLOperation.UPDATE_ONE, GraphQLOperation.CREATE_ONE}:
                 types = model.get_strawberry_type().graphql_input_types
-                data = types["query_one_input"](
-                    types["primary_key_input"](dataset["id"])
-                )
+                data = types["query_one_input"](types["primary_key_input"](dataset["id"]))
                 operation = GraphQLOperation.QUERY_ONE
-            return await super().resolve(
-                model, operation, info, data, dataset=[dataset]
-            )
+            return await super().resolve(model, operation, info, data, dataset=[dataset])
         if isinstance(dataset, int):
-            return model.get_strawberry_type().delete_one.type(affected_rows=dataset)
+            delete_type = model.get_strawberry_type().delete_one
+            assert delete_type is not None  # for pyright
+            assert not isinstance(delete_type.type, StrawberryType)  # for pyright
+            return delete_type.type(affected_rows=dataset)

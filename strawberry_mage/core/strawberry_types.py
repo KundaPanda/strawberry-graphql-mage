@@ -1,14 +1,15 @@
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from decimal import Decimal
 from functools import cached_property
-from typing import Callable, List, Optional, Type
+from typing import List, Optional, Type
 from uuid import UUID
 
 import strawberry
 from strawberry import ID
 from strawberry.arguments import UNSET
+from strawberry.field import StrawberryField
 
 ROOT_NS = "strawberry_mage.core.types_generated"
 
@@ -49,15 +50,15 @@ class StrawberryModelType:
     base_entity: Type[EntityType]
     filter: Type["ObjectFilter"]
     ordering: Type["ObjectOrdering"]
-    input_types: Optional[StrawberryModelInputTypes] = None
-    query_one: Optional[Callable] = None
-    query_many: Optional[Callable] = None
-    create_one: Optional[Callable] = None
-    create_many: Optional[Callable] = None
-    update_one: Optional[Callable] = None
-    update_many: Optional[Callable] = None
-    delete_one: Optional[Callable] = None
-    delete_many: Optional[Callable] = None
+    input_types: Optional[StrawberryField] = field(default=None)
+    query_one: Optional[StrawberryField] = field(default=None)
+    query_many: Optional[StrawberryField] = field(default=None)
+    create_one: Optional[StrawberryField] = field(default=None)
+    create_many: Optional[StrawberryField] = field(default=None)
+    update_one: Optional[StrawberryField] = field(default=None)
+    update_many: Optional[StrawberryField] = field(default=None)
+    delete_one: Optional[StrawberryField] = field(default=None)
+    delete_many: Optional[StrawberryField] = field(default=None)
 
     @cached_property
     def graphql_input_types(self):
@@ -163,15 +164,17 @@ class ObjectOrdering:
     pass
 
 
-@strawberry.enum
 class OrderingDirection(enum.Enum):
     ASC = "ASC"
     DESC = "DESC"
 
 
+OrderingDirectionEnum = strawberry.enum(OrderingDirection)  # type: ignore
+
+
 @strawberry.input
 class ScalarOrdering:
-    direction: OrderingDirection = OrderingDirection.ASC
+    direction: OrderingDirectionEnum = OrderingDirection.ASC  # type: ignore
 
 
 @dataclass

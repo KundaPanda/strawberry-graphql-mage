@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from textwrap import dedent
 
@@ -11,7 +10,7 @@ nox.needs_version = ">= 2021.10.1"
 nox.options.sessions = (
     "pre-commit",
     "safety",
-    "mypy",
+    "pyright",
     "tests",
 )
 nox.options.reuse_existing_virtualenvs = True
@@ -44,9 +43,7 @@ def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
 
         text = hook.read_text()
         bindir = repr(session_.bin)[1:-1]  # strip quotes
-        if not (
-            Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
-        ):
+        if not (Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text):
             continue
 
         lines = text.splitlines()
@@ -110,14 +107,13 @@ def safety(session_: Session) -> None:
 
 
 @session(python="3.10")
-def mypy(session_: Session) -> None:
+def pyright(session_: Session) -> None:
     """Type-check using mypy."""
-    args = session_.posargs or ["strawberry_mage"]
     _export_requirements(session_)
     poetry_install(session_)
-    session_.run("mypy", *args)
+    session_.run("pyright", external=True)
     if not session_.posargs:
-        session_.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
+        session_.run("pyright", "noxfile.py", external=True)
     _cleanup_requirements()
 
 

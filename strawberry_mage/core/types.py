@@ -3,7 +3,7 @@ import dataclasses
 import enum
 import sys
 from functools import lru_cache
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Protocol, Set, Tuple, Type, TypeVar, Union
 
 from sqlalchemy.orm import registry
 from sqlalchemy.orm.decl_api import DeclarativeMeta
@@ -39,9 +39,17 @@ class SqlAlchemyModel(metaclass=DeclarativeMeta):
     registry = registry()
 
 
+class IsDataclass(Protocol):
+    # Dataclass argument type hint
+    __dataclass_fields__: Dict
+
+
 class Order(enum.Enum):
     ASC = "ASC"
     DESC = "DESC"
+
+
+TEntity = TypeVar("TEntity", bound="IEntityModel")
 
 
 class GraphQLOperation(enum.Enum):
@@ -55,9 +63,9 @@ class GraphQLOperation(enum.Enum):
     DELETE_MANY = 8
 
 
-class IDataBackend(abc.ABC):
+class IDataBackend(abc.ABC, Generic[TEntity]):
     @abc.abstractmethod
-    def register_model(self, model: Type["IEntityModel"]):
+    def register_model(self, model: Type[TEntity]):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -65,51 +73,48 @@ class IDataBackend(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_attributes(
-        self, model: Type["IEntityModel"], operation: Optional[GraphQLOperation] = None
-    ) -> List[str]:
+    def get_attributes(self, model: Type[TEntity], operation: Optional[GraphQLOperation] = None) -> List[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_attribute_types(self, model: Type["IEntityModel"]) -> Dict[str, Type]:
+    def get_attribute_types(self, model: Type[TEntity]) -> Dict[str, Type]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_attribute_type(self, model: Type["IEntityModel"], attr: str) -> Type:
+    def get_attribute_type(self, model: Type[TEntity], attr: str) -> Type:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_primary_key(self, model: Type["IEntityModel"]) -> Tuple:
+    def get_primary_key(self, model: Type[TEntity]) -> Tuple:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_parent_class_name(self, model: Type["IEntityModel"]) -> Optional[str]:
+    def get_parent_class_name(self, model: Type[TEntity]) -> Optional[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_children_class_names(
-        self, model: Type["IEntityModel"]
-    ) -> Optional[List[str]]:
+    def get_children_class_names(self, model: Type[TEntity]) -> Optional[List[str]]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_operations(self, model: Type["IEntityModel"]) -> Set[GraphQLOperation]:
+    def get_operations(self, model: Type[TEntity]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
     @abc.abstractmethod
     async def resolve(
         self,
-        model: Type["IEntityModel"],
+        model: Type[TEntity],
         operation: GraphQLOperation,
         info: Info,
         data: Any,
         *args,
+        dataset: Optional[Iterable[Any]] = None,
         **kwargs
     ) -> Any:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def pre_setup(self, models: Iterable[Type["IEntityModel"]]) -> None:
+    def pre_setup(self, models: Iterable[Type[TEntity]]) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -142,9 +147,9 @@ class ISchemaManager(abc.ABC):
 
 @dataclasses.dataclass
 class IEntityModel(abc.ABC):
-    __backend__: IDataBackend
-    __primary_key__: Any
-    _strawberry_type: StrawberryModelType
+    __backend__: IDataBackend = dataclasses.field(init=False)
+    __primary_key__: Any = dataclasses.field(init=False)
+    _strawberry_type: StrawberryModelType = dataclasses.field(init=False)
 
     @classmethod
     @abc.abstractmethod

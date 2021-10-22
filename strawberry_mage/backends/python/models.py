@@ -9,17 +9,7 @@ if TYPE_CHECKING:
     from strawberry_mage.backends.python.backend import PythonBackend
 
 
-class PyModelMeta(type(EntityModel), type):
-    def __init__(cls, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        cls._sqla_model = None
-
-    @property
-    def sqla_model(cls) -> Type[_SQLAlchemyModel]:
-        return cls._sqla_model
-
-
-class PythonEntityModel(EntityModel, metaclass=PyModelMeta):
+class PythonEntityModel(EntityModel):
     __backrefs__: Dict[str, str] = {}
     __backend__: PythonBackend
     _sqla_model: Type[_SQLAlchemyModel]

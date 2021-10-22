@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import Type
 
 from inflection import underscore
 from sqlalchemy import inspect
@@ -6,16 +7,15 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, declared_attr
 
 from strawberry_mage.core.models import EntityModel
-from strawberry_mage.core.types import IEntityModel
 
 _Base = declarative_base()
 
 
-class _BaseMeta(type(IEntityModel), type(_Base)):
+class _BaseMeta(type(EntityModel), type(_Base)):
     pass
 
 
-class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
+class _SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
     __abstract__ = True
 
     @declared_attr
@@ -31,7 +31,7 @@ class _SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
         return all(c.autoincrement for c in inspect(self).primary_key)
 
 
-def create_base_entity(engine: Engine):
+def create_base_entity(engine: Engine) -> Type[_SQLAlchemyModel]:
     from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
 
     new_base = declarative_base()

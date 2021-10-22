@@ -10,17 +10,21 @@ from strawberry_mage.core.types import GraphQLOperation
 
 
 class JSONBackend(PythonBackend):
-    dataset: List[_SQLAlchemyModel] = []
-    _model: Type[PythonEntityModel] = None
-    _model_mapper: Callable[[dict], Type[PythonEntityModel]] = None
+    dataset: List[_SQLAlchemyModel]
+    _model: Optional[Type[PythonEntityModel]]
+    _model_mapper: Optional[Callable[[dict], Type[PythonEntityModel]]]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dataset = []
 
     def __create_entity(self, mappings: Dict[str, _SQLAlchemyModel], original: dict):
+        if self._model is None and self._model_mapper is None:
+            raise AttributeError("Model or model_mapper need to be set for a JSONBackend")
         data = self.__extract_attributes(mappings, original)
-        model = self._model if self._model else self._model_mapper(original)
+        model = self._model if self._model else self._model_mapper(original)  # type: ignore
         attrs = set(model.get_attributes())
-        return model.get_sqla_model()(
-            **{k: data[k] for k in set(data.keys()).intersection(attrs)}
-        )
+        return model.get_sqla_model()(**{k: data[k] for k in set(data.keys()).intersection(attrs)})
 
     def __extract_attributes(self, mappings: Dict[str, _SQLAlchemyModel], entry: dict):
         results: Dict[str, Any] = {}
@@ -46,7 +50,9 @@ class JSONBackend(PythonBackend):
         return results
 
     def _get_entry_key(self, entry: dict):
-        model = self._model if self._model else self._model_mapper(entry)
+        if self._model is None and self._model_mapper is None:
+            raise AttributeError("Model or model_mapper need to be set for a JSONBackend")
+        model = self._model if self._model else self._model_mapper(entry)  # type: ignore
         return json.dumps(
             {
                 "__model__": model.__name__,
@@ -69,9 +75,7 @@ class JSONBackend(PythonBackend):
         model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
     ):
         if not model and not model_mapper:
-            raise Exception(
-                'Either "model" or "model_mapper" need to be specified when using JSONBackend'
-            )
+            raise Exception('Either "model" or "model_mapper" need to be specified when using JSONBackend')
         self._model = model
         self._model_mapper = model_mapper
         self.dataset = list(self.__build_dataset(dataset).values())
@@ -89,4 +93,4 @@ class JSONBackend(PythonBackend):
         dataset: Optional[Iterable] = None,
         **kwargs
     ) -> Any:
-        return await super().resolve(model, operation, info, data, dataset)
+        return await super().resolve(model, operation, info, data, dataset=dataset)

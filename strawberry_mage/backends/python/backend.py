@@ -12,21 +12,19 @@ from strawberry.types import Info
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
-from strawberry_mage.core.backend import DummyDataBackend
+from strawberry_mage.core.backend import DataBackendBase
 from strawberry_mage.core.schema import SchemaManager
 from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
-class PythonBackend(DummyDataBackend):
+class PythonBackend(DataBackendBase[PythonEntityModel]):
     dataset: List[_SQLAlchemyModel] = []
-    _dataset_lock: Lock = None
+    _dataset_lock: Optional[Lock] = None
     _models: Iterable[Type[PythonEntityModel]]
     _sqla_manager: SchemaManager
 
     def __init__(self, engines_count=20):
-        self.converter = SQLAlchemyModelConverter(
-            create_async_engine("sqlite+aiosqlite:///")
-        )
+        self.converter = SQLAlchemyModelConverter(create_async_engine("sqlite+aiosqlite:///"))
         self.engines = Queue(maxsize=engines_count)
 
     def __del__(self):
@@ -40,9 +38,7 @@ class PythonBackend(DummyDataBackend):
     ):
         return original.sqla_model(**self.__extract_attributes(mappings, original))
 
-    def __extract_attributes(
-        self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel
-    ):
+    def __extract_attributes(self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel):
         results: Dict[str, Any] = {}
         for a in entry.get_attributes():
             attr = getattr(entry, a, MISSING)
@@ -76,9 +72,7 @@ class PythonBackend(DummyDataBackend):
     def _remove_pks(self, model, attrs):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
-    def get_attributes(
-        self, model: Type[IEntityModel], operation: Optional[GraphQLOperation] = None
-    ) -> List[str]:
+    def get_attributes(self, model: Type[PythonEntityModel], operation: Optional[GraphQLOperation] = None) -> List[str]:
         all_ = super().get_attributes(model, operation)
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
             return all_
@@ -110,8 +104,8 @@ class PythonBackend(DummyDataBackend):
         operation: GraphQLOperation,
         info: Info,
         data: Any,
-        dataset: Optional[Iterable[PythonEntityModel]] = None,
         *args,
+        dataset: Optional[Iterable[PythonEntityModel]] = None,
         **kwargs
     ) -> Any:
         if self._dataset_lock is None:
@@ -121,17 +115,15 @@ class PythonBackend(DummyDataBackend):
         engine: AsyncEngine = await self.engines.get()
         if dataset:
             self.add_dataset(dataset)
-        session_factory = sessionmaker(
-            engine, expire_on_commit=False, class_=AsyncSession
-        )
+        session_factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         async with session_factory() as session:
             async with self._dataset_lock:
                 session.add_all(self.dataset)
                 await session.commit()
                 for instance in self.dataset:
                     make_transient(instance)
-        res = await model.sqla_model.__backend__.resolve(
-            model.sqla_model, operation, info, data, session_factory
+        res = await model.get_sqla_model().__backend__.resolve(
+            model.get_sqla_model(), operation, info, data, session_factory
         )
         async with engine.begin() as conn:
             await conn.run_sync(self.converter.base.metadata.drop_all)
@@ -144,7 +136,7 @@ class PythonBackend(DummyDataBackend):
 
     def post_setup(self) -> None:
         self._sqla_manager = SchemaManager(
-            *[m.sqla_model for m in self._models],
+            *[m.get_sqla_model() for m in self._models],
             backend=self.converter.base.__backend__,
         )
         for i in range(self.engines.maxsize):
