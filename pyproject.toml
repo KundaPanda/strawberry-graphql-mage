@@ -41,6 +41,7 @@ nox = "^2021.10.1"
 pre-commit = "^2.15.0"
 safety = "^1.10.3"
 poetry = "^1.1.11"
+pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -64,6 +65,9 @@ include = ["strawberry_mage"]
 
 [tool.black]
 line-length = 120
+
+[tool.pydocstyle]
+convention = "pep257"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
