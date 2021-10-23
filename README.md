@@ -12,7 +12,7 @@ Feel free to use it and create issues though.
 
 Contributions are welcome as well.
 
-## TO-DO:
+## TO-DO list
 
 - [x] Generating a basic GraphQL schema
 - [x] Queries
