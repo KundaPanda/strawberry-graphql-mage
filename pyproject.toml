@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "strawberry-graphql-mage"
-version = "0.0.1a0"
+version = "0.0.1-alpha.1"
 description = "An automated, modular, backend-agnostic GraphQL schema generator"
 license = "MIT"
 authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
