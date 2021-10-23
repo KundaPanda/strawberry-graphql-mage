@@ -11,6 +11,7 @@ nox.options.sessions = (
     "pre-commit",
     "safety",
     "pyright",
+    "markdownlint",
     "tests",
 )
 nox.options.reuse_existing_virtualenvs = True
@@ -115,6 +116,12 @@ def pyright(session_: Session) -> None:
     if not session_.posargs:
         session_.run("pyright", "noxfile.py", external=True)
     _cleanup_requirements()
+
+
+@session(python="3.10")
+def markdownlint(session_: Session) -> None:
+    """Check markdown files."""
+    session_.run("markdownlint", "**/*.md", external=True)
 
 
 @session(name="tests", python=python_versions)
