@@ -1,8 +1,12 @@
+"""
+Module for creating strawberry types for entity models
+"""
+
 import dataclasses
 import enum
 import sys
 from inspect import isclass
-from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union, cast
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
@@ -40,6 +44,9 @@ SCALARS = list(DEFAULT_SCALAR_REGISTRY.keys())
 
 
 class GeneratedType(enum.Enum):
+    """
+    Type of a generated entity
+    """
     ENTITY = ""
     PRIMARY_KEY_INPUT = "PrimaryKey"
     PRIMARY_KEY_FIELD = "PrimaryKeyField"
@@ -57,13 +64,25 @@ class GeneratedType(enum.Enum):
     POLYMORPHIC_BASE = "_"
 
     def get_typename(self: "GeneratedType", name: str):
+        """
+        Convert a name to a GeneratedType name based on the enum value
+
+        :param name: name to convert
+        :return: converted name
+        """
         return name + self.value
 
     @staticmethod
     def get_original(name: str):
-        for t in GeneratedType:
-            if t != GeneratedType.ENTITY and name.endswith(t.value):
-                return name.rstrip(t.value)
+        """
+        Attempt to get the original entity name from a GeneratedType name
+
+        :param name: a name
+        :return: the original one or name if not matched
+        """
+        for type_ in GeneratedType:
+            if type_ != GeneratedType.ENTITY and name.endswith(type_.value):
+                return name.rstrip(type_.value)
         return name
 
 
@@ -84,6 +103,12 @@ def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = Generate
 
 
 def strip_typename(type_: Union[str, Type]) -> Union[str, Type]:
+    """
+    Return cleaned up typename of a class for a type annotation
+
+    :param type_: type annotation to clean
+    :return: name of the resulting type (to use as ForwardRef)
+    """
     while hasattr(type_, "__args__"):
         type_ = getattr(type_, "__args__")[0]
     if isinstance(type_, str):
@@ -101,9 +126,15 @@ def _apply_type_rename(name: str, target_type: GeneratedType):
     return name
 
 
-def defer_annotation(
-    annotation, target_type: GeneratedType = GeneratedType.ENTITY
-) -> Union[Type, ModuleBoundStrawberryAnnotation]:
+def defer_annotation(annotation, target_type: GeneratedType = GeneratedType.ENTITY) \
+        -> Union[Type, ModuleBoundStrawberryAnnotation]:
+    """
+    Defer the resolution of an annotation (using ForwardRef-s)
+
+    :param annotation: annotation to defer
+    :param target_type: type to create the annotation for
+    :return:
+    """
     if annotation is NoneType:
         return annotation
     if isinstance(annotation, ForwardRef):
@@ -130,6 +161,12 @@ def defer_annotation(
 
 
 def create_enum_type(attr: Type[enum.Enum]):
+    """
+    Create strawberry enum from a python enum
+
+    :param attr: enum class
+    :return: strawberry enum, enum filtering and enum ordering
+    """
     enum_type = strawberry.enum(attr)  # type: ignore
     enum_filter_type = strawberry.input(
         type(
@@ -164,12 +201,18 @@ def create_enum_type(attr: Type[enum.Enum]):
 
 
 def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Type[EntityType]]:
+    """
+    Create an entity type
+
+    :param model: class to create entity type for
+    :return: entity type
+    """
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
         attr = attrs[name]
         if isclass(attr) and isinstance(attr, type(enum.Enum)):
-            enum_type, _, _ = create_enum_type(attr)
+            enum_type, _, _ = create_enum_type(cast(Type[enum.Enum], attr))
             attrs[name] = enum_type
 
     children = model.get_children_class_names()
@@ -199,7 +242,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
         raise TypeError(f"Invalid parent type {parent_cls}")
 
     python_base_entity = type(base_name, (parent_cls,), _create_fields(attrs))
-    base_entity = strawberry.type(python_base_entity)
+    base_entity = cast(Type[EntityType], strawberry.type(python_base_entity))
 
     setattr(sys.modules[ROOT_NS], base_entity.__name__, base_entity)
     base_entity.__module__ = ROOT_NS
@@ -207,10 +250,16 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
     if entity is None:
         entity = base_entity
 
-    return base_entity, entity
+    return base_entity, cast(Type[EntityType], entity)
 
 
 def create_input_types(model: Type[IEntityModel]) -> Type:
+    """
+    Create all input types of an entity
+
+    :param model: class to use
+    :return: all input types
+    """
     fields = _create_fields(
         {
             "primary_key_input": create_primary_key_input(model),
@@ -234,6 +283,12 @@ def create_input_types(model: Type[IEntityModel]) -> Type:
 
 
 def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
+    """
+    Create input type for ordering entities
+
+    :param model: class to order
+    :return: ordering input type
+    """
     python_type = type(
         GeneratedType.ORDERING.get_typename(model.__name__),
         (ObjectOrdering,),
@@ -253,6 +308,12 @@ def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
 
 
 def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
+    """
+    Create input type for filtering entities
+
+    :param model: class to filter
+    :return: filter input type
+    """
     python_type = type(
         GeneratedType.FILTER.get_typename(model.__name__),
         (ObjectFilter,),
@@ -276,6 +337,12 @@ def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
 
 
 def create_primary_key_input(model: Type[IEntityModel]) -> type:
+    """
+    Create input type for a primary key of an entity
+
+    :param model: class of which primary key should be used
+    :return: primary key input type
+    """
     input_type = strawberry.input(
         type(
             GeneratedType.PRIMARY_KEY_INPUT.get_typename(model.__name__),
@@ -290,6 +357,13 @@ def create_primary_key_input(model: Type[IEntityModel]) -> type:
 
 
 def create_primary_key_field(model: Type[IEntityModel]) -> Type:
+    """
+    Create input field for a primary key of an entity
+
+    this effectively wraps the primary_key_input
+    :param model: class of which primary key should be used
+    :return: primary key field
+    """
     pk_field = strawberry.input(
         type(
             GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__),
@@ -310,6 +384,12 @@ def create_primary_key_field(model: Type[IEntityModel]) -> Type:
 
 
 def create_query_one_input(model: Type[IEntityModel]) -> type:
+    """
+    Create input type for retrieving an entity
+
+    :param model: class to be queried
+    :return: query-one type
+    """
     query_one = strawberry.input(
         type(
             GeneratedType.QUERY_ONE.get_typename(model.__name__),
@@ -325,6 +405,12 @@ def create_query_one_input(model: Type[IEntityModel]) -> type:
 
 
 def create_query_many_input(model: Type[IEntityModel]) -> type:
+    """
+    Create input type for querying list of entities
+
+    :param model: class to be queried
+    :return: query-many type
+    """
     query_many = strawberry.input(
         type(
             GeneratedType.QUERY_MANY.get_typename(model.__name__),
@@ -349,6 +435,12 @@ def create_query_many_input(model: Type[IEntityModel]) -> type:
 
 
 def create_create_one_input(model: Type[IEntityModel]) -> type:
+    """
+    Create input type for creating one entity
+
+    :param model: class to be created
+    :return: input type
+    """
     fields = {f: model.get_attribute_type(f) for f in model.get_attributes(GraphQLOperation.CREATE_ONE)}
     create_one = strawberry.input(
         type(
@@ -365,6 +457,12 @@ def create_create_one_input(model: Type[IEntityModel]) -> type:
 
 
 def create_update_one_input(model: Type[IEntityModel]) -> type:
+    """
+    Create input type for updating one entity
+
+    :param model: class to be update d
+    :return: input type
+    """
     update_one = strawberry.input(
         type(
             GeneratedType.UPDATE_ONE.get_typename(model.__name__),
@@ -389,6 +487,12 @@ def create_update_one_input(model: Type[IEntityModel]) -> type:
 
 
 def get_ordering_type(type_: Any):
+    """
+    Convert type to ordering type
+
+    :param type_: type to convert
+    :return: ordering type
+    """
     if type_ is NoneType:
         raise AttributeError("Should not be NoneType")
     if type_ in SCALARS:
@@ -405,6 +509,12 @@ def get_ordering_type(type_: Any):
 
 
 def get_filter_type(type_: Any):
+    """
+    Convert type to filtering type
+
+    :param type_: type to convert
+    :return: filtering type
+    """
     if type_ is NoneType:
         return type_
     if type_ in SCALARS:

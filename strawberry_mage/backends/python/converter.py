@@ -23,7 +23,7 @@ from sqlalchemy.sql.type_api import TypeEngine
 from strawberry.utils.typing import is_list, is_optional
 
 from strawberry_mage.backends.python.models import PythonEntityModel
-from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel, create_base_entity
+from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel, create_base_entity
 from strawberry_mage.backends.sqlalchemy.utils import make_composite_fk
 from strawberry_mage.core.types import IEntityModel
 
@@ -72,7 +72,7 @@ class SQLAlchemyModelConverter:
     def _get_related_entity(entity: Type[PythonEntityModel], name: str) -> Type[PythonEntityModel]:
         return getattr(sys.modules[entity.__module__], name)
 
-    def convert(self, entity: Type[PythonEntityModel]) -> Type[_SQLAlchemyModel]:
+    def convert(self, entity: Type[PythonEntityModel]) -> Type[SQLAlchemyModel]:
         attrs = {}
         parent_name = entity.get_parent_class_name()
         if parent_name == entity.__name__:
@@ -145,6 +145,6 @@ class SQLAlchemyModelConverter:
             attrs["entity_polymorphic_type_"] = Column(String)
 
         if parent:
-            parent_model: Type[_SQLAlchemyModel] = parent.get_sqla_model()  # type: ignore
+            parent_model: Type[SQLAlchemyModel] = parent.get_sqla_model()  # type: ignore
             return type(entity.__name__, (parent_model,), attrs)
         return type(entity.__name__, (self.base,), attrs)

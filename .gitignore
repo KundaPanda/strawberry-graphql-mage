@@ -3,6 +3,7 @@
 requirements.txt
 
 .idea/dataSources.xml
+.idea/pylint.xml
 
 **/*.tmp
 

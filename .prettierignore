@@ -12,7 +12,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -23,7 +22,6 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -111,8 +109,6 @@ celerybeat.pid
 # Environments
 .env
 .venv
-env/
-venv/
 ENV/
 env.bak/
 venv.bak/

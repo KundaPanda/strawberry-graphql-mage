@@ -42,6 +42,7 @@ pre-commit = "^2.15.0"
 safety = "^1.10.3"
 poetry = "^1.1.11"
 pydocstyle = {extras = ["toml"], version = "^6.1.1"}
+pylint = "^2.11.1"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -68,6 +69,18 @@ line-length = 120
 
 [tool.pydocstyle]
 convention = "pep257"
+
+[tool.pylint.master]
+ignore = [
+    "tests",
+]
+
+[tool.pylint.messages_control]
+max-line-length = 120
+disable = [
+    "too-few-public-methods",
+    "too-many-return-statements",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

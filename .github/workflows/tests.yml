@@ -88,7 +88,7 @@ jobs:
       - name: Install markdownlint
         if: matrix.session == 'markdownlint'
         run: |
-          npm install -g markdownlint
+          npm install -g markdownlint markdownlint-cli
       - name: Run Nox
         run: |
           nox --force-color --python=${{ matrix.python-version }}

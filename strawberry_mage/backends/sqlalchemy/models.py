@@ -1,5 +1,9 @@
+"""
+Entity Models for use with SQLAlchemy Mage backend
+"""
+
 from functools import cached_property
-from typing import Type
+from typing import Type, cast
 
 from inflection import underscore
 from sqlalchemy import inspect
@@ -15,7 +19,13 @@ class _BaseMeta(type(EntityModel), type(_Base)):
     pass
 
 
-class _SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
+class SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
+    """
+    DO NOT USE DIRECTLY
+
+    Use the create_base_entity function which creates a new base class each time it is run. This makes the sqlalchemy
+    metadata isolated and does not interfere with other schema definitions.
+    """
     __abstract__ = True
 
     @declared_attr
@@ -31,15 +41,19 @@ class _SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
         return all(c.autoincrement for c in inspect(self).primary_key)
 
 
-def create_base_entity(engine: Engine) -> Type[_SQLAlchemyModel]:
-    from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
+def create_base_entity(engine: Engine) -> Type[SQLAlchemyModel]:
+    """
+    Create a SQLAlchemy entity base class with independent metadata
+
+    :param engine: sqlalchemy engine to use for the SQLAlchemy backend
+    :return: SQLAlchemyModel
+    """
+    from strawberry_mage.backends.sqlalchemy.backend import \
+        SQLAlchemyBackend  # pylint: disable=Late import, is not cyclic
 
     new_base = declarative_base()
-    return type(
+    return cast(Type[SQLAlchemyBackend], type(
         "SQLAlchemyModel",
-        (
-            new_base,
-            _SQLAlchemyModel,
-        ),
+        (new_base, SQLAlchemyModel,),
         {"__backend__": SQLAlchemyBackend(engine), "__abstract__": True},
-    )
+    ))

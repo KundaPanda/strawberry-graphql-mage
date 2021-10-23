@@ -5,12 +5,12 @@ from strawberry.types import Info
 
 from strawberry_mage.backends.python.backend import PythonBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
-from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 from strawberry_mage.core.types import GraphQLOperation
 
 
 class JSONBackend(PythonBackend):
-    dataset: List[_SQLAlchemyModel]
+    dataset: List[SQLAlchemyModel]
     _model: Optional[Type[PythonEntityModel]]
     _model_mapper: Optional[Callable[[dict], Type[PythonEntityModel]]]
 
@@ -18,7 +18,7 @@ class JSONBackend(PythonBackend):
         super().__init__(*args, **kwargs)
         self.dataset = []
 
-    def __create_entity(self, mappings: Dict[str, _SQLAlchemyModel], original: dict):
+    def __create_entity(self, mappings: Dict[str, SQLAlchemyModel], original: dict):
         if self._model is None and self._model_mapper is None:
             raise AttributeError("Model or model_mapper need to be set for a JSONBackend")
         data = self.__extract_attributes(mappings, original)
@@ -26,7 +26,7 @@ class JSONBackend(PythonBackend):
         attrs = set(model.get_attributes())
         return model.get_sqla_model()(**{k: data[k] for k in set(data.keys()).intersection(attrs)})
 
-    def __extract_attributes(self, mappings: Dict[str, _SQLAlchemyModel], entry: dict):
+    def __extract_attributes(self, mappings: Dict[str, SQLAlchemyModel], entry: dict):
         results: Dict[str, Any] = {}
         for a, attr in entry.items():
             if attr and isinstance(attr, dict):
@@ -61,7 +61,7 @@ class JSONBackend(PythonBackend):
         )
 
     def __build_dataset(self, dataset: Iterable[dict]):
-        mappings: Dict[str, _SQLAlchemyModel] = {}
+        mappings: Dict[str, SQLAlchemyModel] = {}
         for entry in dataset:
             key = self._get_entry_key(entry)
             entity = self.__create_entity(mappings, entry)
@@ -69,10 +69,10 @@ class JSONBackend(PythonBackend):
         return mappings
 
     def add_dataset(
-        self,
-        dataset: Iterable[dict],
-        model: Optional[Type[PythonEntityModel]] = None,
-        model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+            self,
+            dataset: Iterable[dict],
+            model: Optional[Type[PythonEntityModel]] = None,
+            model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
     ):
         if not model and not model_mapper:
             raise Exception('Either "model" or "model_mapper" need to be specified when using JSONBackend')
@@ -83,14 +83,6 @@ class JSONBackend(PythonBackend):
     def _remove_pks(self, model, attrs):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
-    async def resolve(
-        self,
-        model: Type[PythonEntityModel],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
-        *args,
-        dataset: Optional[Iterable] = None,
-        **kwargs
-    ) -> Any:
-        return await super().resolve(model, operation, info, data, dataset=dataset)
+    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any, *args,
+                      dataset: Optional[Iterable] = None, **kwargs) -> Any:
+        return await super().resolve(model, operation, info, data, *args, dataset=dataset, **kwargs)

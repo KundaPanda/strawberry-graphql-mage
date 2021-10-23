@@ -11,14 +11,14 @@ from strawberry.types import Info
 
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.backends.python.models import PythonEntityModel
-from strawberry_mage.backends.sqlalchemy.models import _SQLAlchemyModel
+from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 from strawberry_mage.core.backend import DataBackendBase
 from strawberry_mage.core.schema import SchemaManager
 from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
 class PythonBackend(DataBackendBase[PythonEntityModel]):
-    dataset: List[_SQLAlchemyModel] = []
+    dataset: List[SQLAlchemyModel] = []
     _dataset_lock: Optional[Lock] = None
     _models: Iterable[Type[PythonEntityModel]]
     _sqla_manager: SchemaManager
@@ -33,12 +33,12 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
 
     def __create_entity(
         self,
-        mappings: Dict[PythonEntityModel, _SQLAlchemyModel],
+        mappings: Dict[PythonEntityModel, SQLAlchemyModel],
         original: PythonEntityModel,
     ):
         return original.sqla_model(**self.__extract_attributes(mappings, original))
 
-    def __extract_attributes(self, mappings: Dict[PythonEntityModel, _SQLAlchemyModel], entry: IEntityModel):
+    def __extract_attributes(self, mappings: Dict[PythonEntityModel, SQLAlchemyModel], entry: IEntityModel):
         results: Dict[str, Any] = {}
         for a in entry.get_attributes():
             attr = getattr(entry, a, MISSING)
@@ -61,7 +61,7 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
         return results
 
     def __build_dataset(self, dataset: Iterable[PythonEntityModel]):
-        mappings: Dict[PythonEntityModel, _SQLAlchemyModel] = {}
+        mappings: Dict[PythonEntityModel, SQLAlchemyModel] = {}
         for entry in dataset:
             mappings[entry] = self.__create_entity(mappings, entry)
         return mappings
@@ -123,7 +123,7 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
                 for instance in self.dataset:
                     make_transient(instance)
         res = await model.get_sqla_model().__backend__.resolve(
-            model.get_sqla_model(), operation, info, data, session_factory
+            model.get_sqla_model(), operation, info, data, session_factory, *args, **kwargs
         )
         async with engine.begin() as conn:
             await conn.run_sync(self.converter.base.metadata.drop_all)

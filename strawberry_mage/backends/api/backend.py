@@ -1,3 +1,7 @@
+"""
+Backend for relaying calls to other JSON APIs
+"""
+
 import dataclasses
 from typing import Any, Iterable, Optional, Type
 
@@ -12,16 +16,12 @@ from strawberry_mage.core.types import GraphQLOperation
 
 
 class APIBackend(JSONBackend):
-    async def resolve(
-        self,
-        model: Type[PythonEntityModel],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
-        dataset: Optional[Iterable] = None,
-        *args,
-        **kwargs
-    ) -> Any:
+    """
+    Backend for relaying calls to other JSON APIs
+    """
+
+    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any, *args,
+                      dataset: Optional[Iterable] = None, **kwargs) -> Any:
 
         if isinstance(dataset, list):
             if operation == GraphQLOperation.DELETE_MANY:
@@ -40,7 +40,7 @@ class APIBackend(JSONBackend):
                     filters=[filter_type(id=IntegerFilter(in_=[entry["id"] for entry in dataset]))],
                 )
                 operation = GraphQLOperation.QUERY_MANY
-            return await super().resolve(model, operation, info, data, dataset=dataset)
+            return await super().resolve(model, operation, info, data, *args, dataset=dataset, **kwargs)
         if isinstance(dataset, dict):
             if operation == GraphQLOperation.DELETE_ONE:
                 delete_type = model.get_strawberry_type().delete_one
@@ -51,7 +51,7 @@ class APIBackend(JSONBackend):
                 types = model.get_strawberry_type().graphql_input_types
                 data = types["query_one_input"](types["primary_key_input"](dataset["id"]))
                 operation = GraphQLOperation.QUERY_ONE
-            return await super().resolve(model, operation, info, data, dataset=[dataset])
+            return await super().resolve(model, operation, info, data, *args, dataset=[dataset], **kwargs)
         if isinstance(dataset, int):
             delete_type = model.get_strawberry_type().delete_one
             assert delete_type is not None  # for pyright

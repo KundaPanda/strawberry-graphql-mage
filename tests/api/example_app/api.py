@@ -1,3 +1,8 @@
+"""
+A custom API used to proxy requests to
+"""
+# pylint: skip-file
+
 from typing import List
 
 import strawberry
@@ -34,6 +39,7 @@ class Query:
 create_ids = [100]
 
 
+# noinspection Pylint
 @strawberry.type
 class Mutation:
     @strawberry.field

@@ -86,8 +86,8 @@ class EntityModel(IEntityModel):
         return cls.__backend__.get_children_class_names(cls)
 
     @classmethod
-    async def resolve(cls, operation: GraphQLOperation, info: Info, data: Any):
-        return await cls.__backend__.resolve(cls, operation, info, data)
+    async def resolve(cls, operation: GraphQLOperation, info: Info, data: Any, *args, **kwargs):
+        return await cls.__backend__.resolve(cls, operation, info, data, *args, **kwargs)
 
     @classmethod
     def pre_setup(cls, manager):

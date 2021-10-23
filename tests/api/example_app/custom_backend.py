@@ -1,12 +1,12 @@
 import json
-from typing import Set, Type, Any, Iterable, Optional, Callable, Union, Dict, List
+from typing import Any, Callable, Dict, Iterable, Optional, Set, Type
 
 from strawberry.types import Info
 
 from strawberry_mage.backends.api.backend import APIBackend
-from tests.api.example_app.api import graphql_app
 from strawberry_mage.backends.python.models import PythonEntityModel
 from strawberry_mage.core.types import GraphQLOperation, IEntityModel
+from tests.api.example_app.api import graphql_app
 
 
 class CustomBackend(APIBackend):
@@ -49,11 +49,11 @@ class CustomBackend(APIBackend):
         return query_string
 
     async def api_resolve(
-        self,
-        model: Type[PythonEntityModel],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
+            self,
+            model: Type[PythonEntityModel],
+            operation: GraphQLOperation,
+            info: Info,
+            data: Any,
     ):
         op = {
             GraphQLOperation.QUERY_ONE: "retrieve",
@@ -80,10 +80,10 @@ class CustomBackend(APIBackend):
         return result.data[op]
 
     def add_dataset(
-        self,
-        dataset: Iterable[dict],
-        model: Optional[Type[PythonEntityModel]] = None,
-        model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+            self,
+            dataset: Iterable[dict],
+            model: Optional[Type[PythonEntityModel]] = None,
+            model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
     ):
         from tests.api.example_app.schema import Entity, Weapon
 
@@ -107,12 +107,13 @@ class CustomBackend(APIBackend):
         }
 
     async def resolve(
-        self,
-        model: Type[PythonEntityModel],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
-        dataset: Optional[Union[List[dict], Dict[str, Any]]] = None,
+            self,
+            model: Type[PythonEntityModel],
+            operation: GraphQLOperation,
+            info: Info,
+            data: Any,
+            *args,
+            **kwargs
     ) -> Any:
         api_dataset = await self.api_resolve(model, operation, info, data)
-        return await super().resolve(model, operation, info, data, api_dataset)
+        return await super().resolve(model, operation, info, data, dataset=api_dataset)

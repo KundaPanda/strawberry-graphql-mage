@@ -26,10 +26,7 @@ class DataBackendBase(Generic[TEntity], IDataBackend[TEntity]):
                 selection[underscore(subfield.name)] = self._build_selection(subfield, manager)
         return selection
 
-    def register_model(self, model: Type[TEntity]):
-        model.__backend__ = self
-
-    def get_strawberry_field_type(self, type_: Any) -> Union[Type, str]:
+    def get_strawberry_field_type(self, type_: StrawberryAnnotation) -> Union[Type, str]:
         res = defer_annotation(type_)
         return res.annotation if isinstance(res, StrawberryAnnotation) else res
 
@@ -68,16 +65,8 @@ class DataBackendBase(Generic[TEntity], IDataBackend[TEntity]):
     def get_polymorphic_type(self, base_type: ConcreteType):
         return base_type.implementation
 
-    async def resolve(
-        self,
-        model: Type[TEntity],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
-        *args,
-        dataset: Iterable[Any],
-        **kwargs
-    ) -> Any:
+    async def resolve(self, model: Type[TEntity], operation: GraphQLOperation, info: Info, data: Any, *args,
+                      dataset: Iterable[Any], **kwargs) -> Any:
         if operation.value % 2 == 0:
             return []
         return None

@@ -21,6 +21,7 @@ requirements = Path("requirements.txt")
 
 def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
     """Activate virtualenv in hooks installed by pre-commit.
+
     This function patches git hooks installed by pre-commit to activate the
     session's virtual environment. This allows pre-commit to locate hooks in
     that environment when invoked from git.
@@ -34,17 +35,17 @@ def activate_virtualenv_in_precommit_hooks(session_: Session) -> None:
     if virtualenv is None:
         return
 
-    hookdir = Path(".git") / "hooks"
-    if not hookdir.is_dir():
+    hook_dir = Path(".git") / "hooks"
+    if not hook_dir.is_dir():
         return
 
-    for hook in hookdir.iterdir():
+    for hook in hook_dir.iterdir():
         if hook.name.endswith(".sample") or not hook.is_file():
             continue
 
         text = hook.read_text()
-        bindir = repr(session_.bin)[1:-1]  # strip quotes
-        if not (Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text):
+        bin_dir = repr(session_.bin)[1:-1]  # strip quotes
+        if not (Path("A") == Path("a") and bin_dir.lower() in text.lower() or bin_dir in text):
             continue
 
         lines = text.splitlines()
@@ -139,8 +140,9 @@ def tests(session_: Session) -> None:
 def coverage(session_: Session) -> None:
     """Produce the coverage report."""
     # Do not use session.posargs unless this is the only session.
-    nsessions = len(session_._runner.manifest)
-    has_args = session_.posargs and nsessions == 1
+    # noinspection PyProtectedMember
+    session_count = len(session_._runner.manifest)
+    has_args = session_.posargs and session_count == 1
     args = session_.posargs if has_args else ["report", "-i"]
 
     session_.install("coverage[toml]")
