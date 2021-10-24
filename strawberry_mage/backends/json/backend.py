@@ -79,6 +79,8 @@ class JSONBackend(PythonBackend):
         dataset: Iterable[dict],
         model: Optional[Type[PythonEntityModel]] = None,
         model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+        *args,
+        **kwargs
     ):
         """
         Add a dataset to be used for every resolve request.
