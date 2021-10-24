@@ -1,3 +1,5 @@
+"""Utilities for creating sqlalchemy models."""
+
 from typing import List, Tuple, Type, Union
 
 from inflection import underscore
@@ -8,13 +10,24 @@ from strawberry_mage.backends.sqlalchemy.types import SqlAlchemyModel
 
 
 def make_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
-        remote_pk="id",
-        optional=False,
-        back_populates=None,
-        foreign_kwargs=None,
-        rel_kwargs=None,
+    remote: Union[str, Type[SqlAlchemyModel]],
+    remote_pk="id",
+    optional=False,
+    back_populates=None,
+    foreign_kwargs=None,
+    rel_kwargs=None,
 ) -> Tuple[Column, relationship]:
+    """
+    Create a foreign key for remote model on one column.
+
+    :param remote: the model which the foreign key points to
+    :param remote_pk: the name of the remote attribute used for foreign key
+    :param optional: is optional
+    :param back_populates: relationship backpopulates argument
+    :param foreign_kwargs: kwargs passed to ForeignKey
+    :param rel_kwargs: kwargs passed to relationship
+    :return: tuple [created foreign key, relationship]
+    """
     if not isinstance(remote, str):
         remote = str(remote.__tablename__)
     if foreign_kwargs is None:
@@ -33,15 +46,28 @@ def make_fk(
 
 
 def make_composite_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
-        remote_keys: Tuple[str, ...],
-        model_name: str,
-        rel_name: str,
-        optional=False,
-        back_populates=None,
-        foreign_kwargs=None,
-        rel_kwargs=None,
+    remote: Union[str, Type[SqlAlchemyModel]],
+    remote_keys: Tuple[str, ...],
+    model_name: str,
+    rel_name: str,
+    optional=False,
+    back_populates=None,
+    foreign_kwargs=None,
+    rel_kwargs=None,
 ) -> Tuple[List[Tuple[str, Column]], relationship, ForeignKeyConstraint]:
+    """
+    Create a composite foreign key for remote model.
+
+    :param remote: the model which the foreign keys point to
+    :param remote_keys: tuple of remote attributes used as foreign keys
+    :param model_name: name of the model which will hold the foreign keys
+    :param rel_name: name of the relation on the model
+    :param optional: is optional
+    :param back_populates: relationship backpopulates argument
+    :param foreign_kwargs: kwargs passed to ForeignKey
+    :param rel_kwargs: kwargs passed to relationship
+    :return: tuple [created foreign keys, relationship, foreign key constraint]
+    """
     if not isinstance(remote, str):
         remote = remote.__tablename__
     if foreign_kwargs is None:

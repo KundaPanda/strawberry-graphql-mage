@@ -1,21 +1,34 @@
+"""Manager class for all entity models and for creating strawberry schema."""
+
 from functools import lru_cache
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, TypeVar
 
 import strawberry
 from frozendict import frozendict
 from graphql import GraphQLInterfaceType
 from inflection import pluralize, underscore
+from overrides import overrides
 from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
 from strawberry_mage.core.type_creator import GeneratedType
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel, ISchemaManager
 
+TEntity = TypeVar("TEntity", bound=IEntityModel)
 
-class SchemaManager(ISchemaManager):
+
+class SchemaManager(ISchemaManager[TEntity]):
+    """Manager class for all entity models and for creating strawberry schema."""
+
     _models: Dict[str, Type[IEntityModel]]
 
-    def __init__(self, *models, backend: IDataBackend):
+    def __init__(self, *models: Type[TEntity], backend: IDataBackend[TEntity]):
+        """
+        Create a new schema manager.
+
+        :param models: models which should be managed
+        :param backend: data backend to use
+        """
         if len(models) == 0:
             raise IndexError("Need at least one model for the GraphQL schema.")
         self._models = {GeneratedType.ENTITY.get_typename(m.__name__): m for m in models}
@@ -26,6 +39,7 @@ class SchemaManager(ISchemaManager):
         self._backend.pre_setup(models)
 
     @property
+    @overrides
     def backend(self):
         return self._backend
 
@@ -47,9 +61,11 @@ class SchemaManager(ISchemaManager):
             )
             return
 
+    @overrides
     def get_models(self) -> frozendict:
         return frozendict(self._models)
 
+    @overrides
     def get_model_for_name(self, name: str) -> Optional[Type[IEntityModel]]:
         return self._models.get(name, None)
 
@@ -62,7 +78,8 @@ class SchemaManager(ISchemaManager):
                 types.append(entity.base_entity)
         return types
 
-    def get_schema(self):
+    @overrides
+    def get_schema(self) -> Schema:
         for model in self._models.values():
             model.post_setup()
         self._backend.post_setup()
@@ -95,7 +112,7 @@ class SchemaManager(ISchemaManager):
             types=self._collect_types(),
         )
 
-        def resolve_interface_type(obj, info, type_):
+        def resolve_interface_type(obj, *_, **__):
             if (
                 base_type := schema.schema_converter.type_map.get(
                     GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)

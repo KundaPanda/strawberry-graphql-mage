@@ -1,9 +1,12 @@
+"""Strawberry-GraphQL-Mage data backend that uses python objects as data."""
+
 import asyncio
 from asyncio import Lock, Queue
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import MISSING
 from typing import Any, Dict, Iterable, List, Optional, Set, Type
 
+from overrides import overrides
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import make_transient, sessionmaker
 from strawberry.schema.types import ConcreteType
@@ -18,16 +21,24 @@ from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
 class PythonBackend(DataBackendBase[PythonEntityModel]):
+    """Strawberry-GraphQL-Mage data backend that uses python objects as data."""
+
     dataset: List[SQLAlchemyModel] = []
     _dataset_lock: Optional[Lock] = None
     _models: Iterable[Type[PythonEntityModel]]
     _sqla_manager: SchemaManager
 
     def __init__(self, engines_count=20):
+        """
+        Create a new python backend with n sqlalchemy engines.
+
+        :param engines_count: number of sqlalchemy engines to use for sqlite connections
+        """
         self.converter = SQLAlchemyModelConverter(create_async_engine("sqlite+aiosqlite:///"))
         self.engines = Queue(maxsize=engines_count)
 
     def __del__(self):
+        """Cleanup all SQLAlchemy engines."""
         while self.engines.get_nowait():
             pass
 
@@ -67,11 +78,20 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
         return mappings
 
     def add_dataset(self, dataset: Iterable[PythonEntityModel], *args, **kwargs):
+        """
+        Add a dataset to be used for every resolve request.
+
+        :param dataset: dataset to use
+        :param args: args
+        :param kwargs: kwargs
+        :return: None
+        """
         self.dataset = list(self.__build_dataset(dataset).values())
 
     def _remove_pks(self, model, attrs):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
+    @overrides
     def get_attributes(self, model: Type[PythonEntityModel], operation: Optional[GraphQLOperation] = None) -> List[str]:
         all_ = super().get_attributes(model, operation)
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
@@ -86,18 +106,22 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
             return all_
         return []
 
+    @overrides
     def get_parent_class_name(self, model: Type[IEntityModel]):
         if model.mro()[1].__name__ != "PythonEntityModel":
             return model.mro()[1].__name__
         elif model.__subclasses__():
             return model.__name__
 
+    @overrides
     def get_operations(self, model: Type[IEntityModel]) -> Set[GraphQLOperation]:
         return {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY}
 
+    @overrides
     def get_polymorphic_type(self, base_type: ConcreteType):
         return base_type.implementation
 
+    @overrides
     async def resolve(
         self,
         model: Type[PythonEntityModel],
@@ -131,9 +155,11 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
         await self.engines.put(engine)
         return res
 
+    @overrides
     def pre_setup(self, models: Iterable[Type[PythonEntityModel]]) -> None:
         self._models = models
 
+    @overrides
     def post_setup(self) -> None:
         self._sqla_manager = SchemaManager(
             *[m.get_sqla_model() for m in self._models],

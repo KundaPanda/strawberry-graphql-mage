@@ -1,3 +1,5 @@
+"""SQLAlchemy operations for resolving graphql queries."""
+
 import dataclasses
 from enum import Enum
 from functools import partial
@@ -27,9 +29,9 @@ SelectablesType = Dict[str, Union[Join, Type[SQLAlchemyModel]]]
 
 
 def _build_pk_query(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        selectable: Union[Table, Type[SQLAlchemyModel]],
-        data: Any,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    selectable: Union[Table, Type[SQLAlchemyModel]],
+    data: Any,
 ):
     primary_key = model.get_primary_key()
     attribute_getter = data.get if isinstance(data, dict) else partial(getattr, data)
@@ -68,10 +70,10 @@ def _create_pk_class(data: Dict[str, Any]):
 
 
 async def _set_instance_attrs(
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        instance: object,
-        input_object: IsDataclass,
-        session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    instance: object,
+    input_object: IsDataclass,
+    session: AsyncSession,
 ):
     for prop in input_object.__dataclass_fields__:
         value = getattr(input_object, prop)
@@ -98,19 +100,31 @@ async def _set_instance_attrs(
 
 
 async def _apply_nested(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        input_: Any,
-        op: Callable,
-        attribute: str,
-        selectables: SelectablesType,
-        eager_options: Any = None,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    input_: Any,
+    op: Callable,
+    attribute: str,
+    selectables: SelectablesType,
+    eager_options: Any = None,
 ):
+    """
+    Recursively call an operation whilst updating the selectables.
+
+    :param model: model used for operation
+    :param path: current path in operation
+    :param input_: the input
+    :param op: operation to execute
+    :param attribute: attribute which is used on the model to retrieve the relationship property
+    :param selectables: selectables which will be modified and used
+    :param eager_options: eager options for select statement
+    :return: what op returns
+    """
     nested_path = f"{path}.{attribute}"
     select_from = selectables[path]
-    attr_getter = (
+    attr_getter: Callable[[str], RelationshipProperty] = (
         partial(getattr, select_from)
-        if (isinstance(select_from, AliasedClass) or isinstance(select_from, SQLAlchemyModel))
+        if (isinstance(select_from, (AliasedClass, SQLAlchemyModel)))
         else partial(getattr, select_from.c)
     )
     prop = attr_getter(attribute)
@@ -137,11 +151,20 @@ async def _apply_nested(
 
 
 async def create_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: List[Any],
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: List[Any],
+    selection: Dict[str, Dict],
 ):
+    """
+    Resolve the create-many operation.
+
+    :param session: sqlalchemy session
+    :param model: which model to use
+    :param data: graphql input
+    :param selection: selected fields
+    :return: list of created models
+    """
     # TODO: create related models as well maybe?
     models = []
     for create_type in data:
@@ -169,23 +192,31 @@ async def create_(
 
 
 async def update_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: List[Any],
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: List[Any],
+    selection: Dict[str, Dict],
 ):
+    """
+    Resolve the update-many operation.
+
+    :param session: sqlalchemy session
+    :param model: which model to use
+    :param data: graphql input
+    :param selection: selected fields
+    :return: list of update model instances
+    """
     pk_filter = _build_multiple_pk_query(model, model, data)
     instances = (
         (
             await session.execute(
                 select(model)
-                    .options(
-                    *[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
-                    .where(pk_filter)
+                .options(*[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
+                .where(pk_filter)
             )
         )
-            .scalars()
-            .all()
+        .scalars()
+        .all()
     )
     entities = {_get_model_pk_values(model, en): en for en in instances}
     if len(entities) != len(data):
@@ -211,23 +242,40 @@ async def update_(
 
 
 async def delete_(
-        session: AsyncSession,
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        data: List[Any],
+    session: AsyncSession,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    data: List[Any],
 ):
+    """
+    Resolve the delete-many operation.
+
+    :param session: sqlalchemy session
+    :param model: which model to use
+    :param data: graphql input
+    :return: number of affected rows
+    """
     pk_q = _build_multiple_pk_query(model, model, data)
     statement = delete(model).where(pk_q)
-    r = await session.execute(statement)
+    result = await session.execute(statement)
     await session.commit()
-    return DeleteResult(affected_rows=r.rowcount)
+    return DeleteResult(affected_rows=result.rowcount)
 
 
 async def retrieve_(
-        session: AsyncSession,
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        data: PrimaryKeyField,
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    data: PrimaryKeyField,
+    selection: Dict[str, Dict],
 ):
+    """
+    Resolve the query-one operation.
+
+    :param session: sqlalchemy session
+    :param model: which model to use
+    :param data: graphql input
+    :param selection: selected fields
+    :return: model instance
+    """
     polymorphic_model = with_polymorphic(model, "*", aliased=True)
     model_query = select(polymorphic_model)
     selectables: SelectablesType = {"": polymorphic_model, "__selection__": model_query}
@@ -242,10 +290,23 @@ async def retrieve_(
 
 
 def add_default_ordering(model: Type[Union[SQLAlchemyModel, IEntityModel]], ordering: List[Dict]):
+    """
+    Add a default ordering PRIMARY_KEY: DESC to ordering.
+
+    :param model: model used for query
+    :param ordering: ordering input
+    :return: resulting ordering with default at the end
+    """
     return ordering + [{k: OrderingDirection.DESC for k in model.get_primary_key()}]
 
 
 def cleanup_ordering(ordering: List[Dict]):
+    """
+    Remove unset values from ordering input.
+
+    :param ordering: ordering input
+    :return: modified ordering without unset fields
+    """
     result_ordering = []
     for ordering_entry in ordering:
         for field, value in ordering_entry.items():
@@ -257,12 +318,22 @@ def cleanup_ordering(ordering: List[Dict]):
 
 
 async def create_selection_joins(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        selection: Dict[Union[str, Type], Dict],
-        selectables: SelectablesType,
-        eager_options: Any = None,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    selection: Dict[Union[str, Type], Dict],
+    selectables: SelectablesType,
+    eager_options: Any = None,
 ) -> Tuple:
+    """
+    Create sqlalchemy joins for loading attributes based on graphql field selections.
+
+    :param model: model used for query
+    :param path: current path in ordering building
+    :param selection: input from graphql field selections
+    :param selectables: selectables used for creating ordering expressions
+    :param eager_options: sqlalchemy eager options used for recursive calls
+    :return: tuple of all sqlalchemy eager options when using select
+    """
     eager_options_created = []
     for attr, sub_selection in selection.items():
         if isclass(attr) and issubclass(attr, SQLAlchemyModel):
@@ -295,12 +366,22 @@ async def create_selection_joins(
 
 
 async def create_ordering(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        ordering: List[Dict],
-        selectables: SelectablesType,
-        *_,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    ordering: List[Dict],
+    selectables: SelectablesType,
+    *_,
 ) -> List[ColumnElement]:
+    """
+    Create sqlalchemy expressions for ordering.
+
+    :param model: model used for query
+    :param path: current path in ordering building
+    :param ordering: input from graphql query
+    :param selectables: selectables used for creating ordering expressions
+    :param _:
+    :return: list of column expressions, selectables are modified based on needs
+    """
     result_ordering = []
     for entry in ordering:
         for attribute, value in entry.items():
@@ -338,7 +419,7 @@ FILTER_OPS = {
 
 def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> ColOps:
     """
-    Create a sqlalchemy filter operation
+    Create a sqlalchemy filter operation.
 
     :param column: column to filter
     :param op_name: name of the operation from the graphql query
@@ -354,7 +435,7 @@ def create_filter_op(column: Any, op_name: str, value: Any, negate: bool) -> Col
 
 def get_attr(selectables, path, attribute):
     """
-    Get attribute from selectables given path and attribute name
+    Get attribute from selectables given path and attribute name.
 
     :param selectables: selectables
     :param path: current path in resolution
@@ -370,14 +451,14 @@ def get_attr(selectables, path, attribute):
 
 
 async def create_object_filters(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        filters: List[Dict],
-        selectables: SelectablesType,
-        *_,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    filters: List[Dict],
+    selectables: SelectablesType,
+    *_,
 ) -> List[ColOps]:
     """
-    Create object filters for a model based on filters input
+    Create object filters for a model based on filters input.
 
     modifies selectables based on needs
     :param model: model which is used for filtering against
@@ -424,13 +505,13 @@ async def create_object_filters(
 
 
 async def list_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: QueryMany,
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: QueryMany,
+    selection: Dict[str, Dict],
 ):
     """
-    Resolve the query-many operation
+    Resolve the query-many operation.
 
     :param session: sqlalchemy session
     :param model: which model to list

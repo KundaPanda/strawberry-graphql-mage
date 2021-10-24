@@ -1,3 +1,5 @@
+"""Class for converting python entity models to SQLAlchemy models."""
+
 import enum
 import sys
 from decimal import Decimal
@@ -34,7 +36,14 @@ else:
 
 
 class SQLAlchemyModelConverter:
+    """Class for converting python entity models to SQLAlchemy models."""
+
     def __init__(self, engine: Engine):
+        """
+        Create a new converter instance.
+
+        :param engine: engine to use for SQLAlchemy backend creation .
+        """
         self.base = create_base_entity(engine)
 
     TYPE_MAP: Dict[Type, Type[TypeEngine]] = {
@@ -73,6 +82,12 @@ class SQLAlchemyModelConverter:
         return getattr(sys.modules[entity.__module__], name)
 
     def convert(self, entity: Type[PythonEntityModel]) -> Type[SQLAlchemyModel]:
+        """
+        Convert a python entity model to a SQLAlchemy entity model.
+
+        :param entity: model to convert
+        :return: converted model
+        """
         attrs = {}
         parent_name = entity.get_parent_class_name()
         if parent_name == entity.__name__:

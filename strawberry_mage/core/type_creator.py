@@ -1,6 +1,4 @@
-"""
-Module for creating strawberry types for entity models
-"""
+"""Module for creating strawberry types for entity models."""
 
 import dataclasses
 import enum
@@ -44,9 +42,8 @@ SCALARS = list(DEFAULT_SCALAR_REGISTRY.keys())
 
 
 class GeneratedType(enum.Enum):
-    """
-    Type of a generated entity
-    """
+    """Type of a generated entity."""
+
     ENTITY = ""
     PRIMARY_KEY_INPUT = "PrimaryKey"
     PRIMARY_KEY_FIELD = "PrimaryKeyField"
@@ -65,7 +62,7 @@ class GeneratedType(enum.Enum):
 
     def get_typename(self: "GeneratedType", name: str):
         """
-        Convert a name to a GeneratedType name based on the enum value
+        Convert a name to a GeneratedType name based on the enum value.
 
         :param name: name to convert
         :return: converted name
@@ -75,7 +72,7 @@ class GeneratedType(enum.Enum):
     @staticmethod
     def get_original(name: str):
         """
-        Attempt to get the original entity name from a GeneratedType name
+        Attempt to get the original entity name from a GeneratedType name.
 
         :param name: a name
         :return: the original one or name if not matched
@@ -104,7 +101,7 @@ def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = Generate
 
 def strip_typename(type_: Union[str, Type]) -> Union[str, Type]:
     """
-    Return cleaned up typename of a class for a type annotation
+    Return cleaned up typename of a class for a type annotation.
 
     :param type_: type annotation to clean
     :return: name of the resulting type (to use as ForwardRef)
@@ -126,10 +123,11 @@ def _apply_type_rename(name: str, target_type: GeneratedType):
     return name
 
 
-def defer_annotation(annotation, target_type: GeneratedType = GeneratedType.ENTITY) \
-        -> Union[Type, ModuleBoundStrawberryAnnotation]:
+def defer_annotation(
+    annotation, target_type: GeneratedType = GeneratedType.ENTITY
+) -> Union[Type, ModuleBoundStrawberryAnnotation]:
     """
-    Defer the resolution of an annotation (using ForwardRef-s)
+    Defer the resolution of an annotation (using ForwardRef-s).
 
     :param annotation: annotation to defer
     :param target_type: type to create the annotation for
@@ -162,7 +160,7 @@ def defer_annotation(annotation, target_type: GeneratedType = GeneratedType.ENTI
 
 def create_enum_type(attr: Type[enum.Enum]):
     """
-    Create strawberry enum from a python enum
+    Create strawberry enum from a python enum.
 
     :param attr: enum class
     :return: strawberry enum, enum filtering and enum ordering
@@ -202,7 +200,7 @@ def create_enum_type(attr: Type[enum.Enum]):
 
 def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Type[EntityType]]:
     """
-    Create an entity type
+    Create an entity type.
 
     :param model: class to create entity type for
     :return: entity type
@@ -255,7 +253,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
 
 def create_input_types(model: Type[IEntityModel]) -> Type:
     """
-    Create all input types of an entity
+    Create all input types of an entity.
 
     :param model: class to use
     :return: all input types
@@ -284,7 +282,7 @@ def create_input_types(model: Type[IEntityModel]) -> Type:
 
 def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
     """
-    Create input type for ordering entities
+    Create input type for ordering entities.
 
     :param model: class to order
     :return: ordering input type
@@ -309,7 +307,7 @@ def create_ordering_input(model: Type[IEntityModel]) -> Type[ObjectOrdering]:
 
 def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
     """
-    Create input type for filtering entities
+    Create input type for filtering entities.
 
     :param model: class to filter
     :return: filter input type
@@ -338,7 +336,7 @@ def create_filter_input(model: Type[IEntityModel]) -> Type[ObjectFilter]:
 
 def create_primary_key_input(model: Type[IEntityModel]) -> type:
     """
-    Create input type for a primary key of an entity
+    Create input type for a primary key of an entity.
 
     :param model: class of which primary key should be used
     :return: primary key input type
@@ -358,7 +356,7 @@ def create_primary_key_input(model: Type[IEntityModel]) -> type:
 
 def create_primary_key_field(model: Type[IEntityModel]) -> Type:
     """
-    Create input field for a primary key of an entity
+    Create input field for a primary key of an entity.
 
     this effectively wraps the primary_key_input
     :param model: class of which primary key should be used
@@ -385,7 +383,7 @@ def create_primary_key_field(model: Type[IEntityModel]) -> Type:
 
 def create_query_one_input(model: Type[IEntityModel]) -> type:
     """
-    Create input type for retrieving an entity
+    Create input type for retrieving an entity.
 
     :param model: class to be queried
     :return: query-one type
@@ -406,7 +404,7 @@ def create_query_one_input(model: Type[IEntityModel]) -> type:
 
 def create_query_many_input(model: Type[IEntityModel]) -> type:
     """
-    Create input type for querying list of entities
+    Create input type for querying list of entities.
 
     :param model: class to be queried
     :return: query-many type
@@ -436,7 +434,7 @@ def create_query_many_input(model: Type[IEntityModel]) -> type:
 
 def create_create_one_input(model: Type[IEntityModel]) -> type:
     """
-    Create input type for creating one entity
+    Create input type for creating one entity.
 
     :param model: class to be created
     :return: input type
@@ -458,7 +456,7 @@ def create_create_one_input(model: Type[IEntityModel]) -> type:
 
 def create_update_one_input(model: Type[IEntityModel]) -> type:
     """
-    Create input type for updating one entity
+    Create input type for updating one entity.
 
     :param model: class to be update d
     :return: input type
@@ -488,7 +486,7 @@ def create_update_one_input(model: Type[IEntityModel]) -> type:
 
 def get_ordering_type(type_: Any):
     """
-    Convert type to ordering type
+    Convert type to ordering type.
 
     :param type_: type to convert
     :return: ordering type
@@ -510,7 +508,7 @@ def get_ordering_type(type_: Any):
 
 def get_filter_type(type_: Any):
     """
-    Convert type to filtering type
+    Convert type to filtering type.
 
     :param type_: type to convert
     :return: filtering type

@@ -1,10 +1,9 @@
-"""
-Backend for relaying calls to other JSON APIs
-"""
+"""Backend for relaying calls to other JSON APIs."""
 
 import dataclasses
 from typing import Any, Iterable, Optional, Type
 
+from overrides import overrides
 from strawberry.arguments import UNSET
 from strawberry.type import StrawberryType
 from strawberry.types import Info
@@ -16,12 +15,19 @@ from strawberry_mage.core.types import GraphQLOperation
 
 
 class APIBackend(JSONBackend):
-    """
-    Backend for relaying calls to other JSON APIs
-    """
+    """Backend for relaying calls to other JSON APIs."""
 
-    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any, *args,
-                      dataset: Optional[Iterable] = None, **kwargs) -> Any:
+    @overrides
+    async def resolve(
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        dataset: Optional[Iterable] = None,
+        **kwargs
+    ) -> Any:
 
         if isinstance(dataset, list):
             if operation == GraphQLOperation.DELETE_MANY:

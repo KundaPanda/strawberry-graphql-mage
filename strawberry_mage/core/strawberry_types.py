@@ -1,3 +1,5 @@
+"""Strawberry object types."""
+
 import enum
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
@@ -16,41 +18,32 @@ ROOT_NS = "strawberry_mage.core.types_generated"
 
 @dataclass
 class EntityType:
-    """
-    An Entity
-    """
-    pass
+    """An Entity."""
 
 
 @strawberry.type
 class DeleteResult:
-    """
-    Result of the delete operation
-    """
+    """Result of the delete operation."""
+
     affected_rows: int
 
 
 @dataclass
 class PrimaryKeyInput:
-    """
-    Data input of a primary key
-    """
-    pass
+    """Data input of a primary key."""
 
 
 @dataclass
 class PrimaryKeyField:
-    """
-    Field for primary key input
-    """
+    """Field for primary key input."""
+
     primary_key_: PrimaryKeyInput
 
 
 @dataclass
 class StrawberryModelInputTypes:
-    """
-    Collection of per-entity input types
-    """
+    """Collection of per-entity input types."""
+
     primary_key_input: PrimaryKeyInput
     primary_key_field: PrimaryKeyField
     query_one_input: "QueryOne"
@@ -61,9 +54,8 @@ class StrawberryModelInputTypes:
 
 @dataclass
 class StrawberryModelType:
-    """
-    All strawberry types for an EntityModel
-    """
+    """All strawberry types for an EntityModel."""
+
     entity: Type[EntityType]
     base_entity: Type[EntityType]
     filter: Type["ObjectFilter"]
@@ -81,7 +73,8 @@ class StrawberryModelType:
     @cached_property
     def graphql_input_types(self):
         """
-        Get input types as strawberry fields
+        Get input types as strawberry fields.
+
         :return: strawberry fields for input types
         """
         return self.input_types.__annotations__
@@ -89,26 +82,23 @@ class StrawberryModelType:
 
 @dataclass
 class ObjectFilter:
-    """
-    Generic filter base for any object
-    """
-    AND_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=Custom input field name
-    OR_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=Custom input field name
+    """Generic filter base for any object."""
+
+    AND_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=invalid-name
+    OR_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=invalid-name
 
 
 @dataclass
 class ScalarFilter:
-    """
-    Base filter for all strawberry scalar types
-    """
-    NOT_: Optional[bool] = False  # pylint: disable=Custom input field name
+    """Base filter for all strawberry scalar types."""
+
+    NOT_: Optional[bool] = False  # pylint: disable=invalid-name
 
 
 @strawberry.input
 class IntegerFilter(ScalarFilter):
-    """
-    Filter for integer scalar fields
-    """
+    """Filter for integer scalar fields."""
+
     exact: Optional[int] = UNSET
     lt: Optional[int] = UNSET
     lte: Optional[int] = UNSET
@@ -119,9 +109,8 @@ class IntegerFilter(ScalarFilter):
 
 @strawberry.input
 class FloatFilter(ScalarFilter):
-    """
-    Filter for float scalar fields
-    """
+    """Filter for float scalar fields."""
+
     exact: Optional[float] = UNSET
     lt: Optional[float] = UNSET
     lte: Optional[float] = UNSET
@@ -132,9 +121,8 @@ class FloatFilter(ScalarFilter):
 
 @strawberry.input
 class NumericFilter(ScalarFilter):
-    """
-    Filter for decimal/numeric scalar fields
-    """
+    """Filter for decimal/numeric scalar fields."""
+
     exact: Optional[Decimal] = UNSET
     lt: Optional[Decimal] = UNSET
     lte: Optional[Decimal] = UNSET
@@ -145,17 +133,15 @@ class NumericFilter(ScalarFilter):
 
 @strawberry.input
 class BooleanFilter(ScalarFilter):
-    """
-    Filter for boolean scalar fields
-    """
+    """Filter for boolean scalar fields."""
+
     exact: Optional[bool] = UNSET
 
 
 @strawberry.input
 class StringFilter(ScalarFilter):
-    """
-    Filter for string scalar fields
-    """
+    """Filter for string scalar fields."""
+
     exact: Optional[str] = UNSET
     iexact: Optional[str] = UNSET
     contains: Optional[str] = UNSET
@@ -167,9 +153,8 @@ class StringFilter(ScalarFilter):
 
 @strawberry.input
 class BytesFilter(ScalarFilter):
-    """
-    Filter for bytes scalar fields
-    """
+    """Filter for bytes scalar fields."""
+
     exact: Optional[bytes] = UNSET
     contains: Optional[bytes] = UNSET
     in_: Optional[List[bytes]] = UNSET
@@ -177,9 +162,8 @@ class BytesFilter(ScalarFilter):
 
 @strawberry.input
 class DateTimeFilter(ScalarFilter):
-    """
-    Filter for datetime scalar fields
-    """
+    """Filter for datetime scalar fields."""
+
     exact: Optional[datetime] = UNSET
     lt: Optional[datetime] = UNSET
     lte: Optional[datetime] = UNSET
@@ -190,9 +174,8 @@ class DateTimeFilter(ScalarFilter):
 
 @strawberry.input
 class DateFilter(ScalarFilter):
-    """
-    Filter for date scalar fields
-    """
+    """Filter for date scalar fields."""
+
     exact: Optional[date] = UNSET
     lt: Optional[date] = UNSET
     lte: Optional[date] = UNSET
@@ -203,9 +186,8 @@ class DateFilter(ScalarFilter):
 
 @strawberry.input
 class TimeFilter(ScalarFilter):
-    """
-    Filter for time scalar fields
-    """
+    """Filter for time scalar fields."""
+
     exact: Optional[time] = UNSET
     lt: Optional[time] = UNSET
     lte: Optional[time] = UNSET
@@ -216,16 +198,12 @@ class TimeFilter(ScalarFilter):
 
 @dataclass
 class ObjectOrdering:
-    """
-    Object ordering base input
-    """
-    pass
+    """Object ordering base input."""
 
 
 class OrderingDirection(enum.Enum):
-    """
-    Ordering direction enum - ASC / DESC
-    """
+    """Ordering direction enum - ASC / DESC."""
+
     ASC = "ASC"
     DESC = "DESC"
 
@@ -235,25 +213,22 @@ OrderingDirectionEnum = strawberry.enum(OrderingDirection)  # type: ignore
 
 @strawberry.input
 class ScalarOrdering:
-    """
-    Ordering input for a scalar field
-    """
+    """Ordering input for a scalar field."""
+
     direction: OrderingDirectionEnum = OrderingDirection.ASC  # type: ignore
 
 
 @dataclass
 class QueryOne:
-    """
-    Input type for querying one entity
-    """
+    """Input type for querying one entity."""
+
     primary_key_: PrimaryKeyInput
 
 
 @strawberry.input
 class QueryMany:
-    """
-    Input type for querying multiple entities
-    """
+    """Input type for querying multiple entities."""
+
     ordering: Optional[List[Optional[ObjectOrdering]]] = UNSET
     filters: Optional[List[Optional[ObjectFilter]]] = UNSET
     page_size: Optional[int] = 30

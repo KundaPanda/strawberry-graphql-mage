@@ -1,3 +1,5 @@
+"""Strawberry resolvers for crud fields."""
+
 from functools import cached_property
 from typing import List, Optional, Type
 
@@ -16,8 +18,15 @@ from strawberry_mage.core.types import (
 
 
 class ModuleBoundStrawberryResolver(StrawberryResolver):
+    """A StrawberryResolver with lazy evaluation of arguments."""
+
     @cached_property
     def arguments(self) -> List[StrawberryArgument]:
+        """
+        Get the arguments for a resolver.
+
+        :return: list of StrawberryArguments
+        """
         args: List[StrawberryArgument] = super().arguments  # type: ignore
         return [
             StrawberryArgument(
@@ -33,6 +42,12 @@ class ModuleBoundStrawberryResolver(StrawberryResolver):
 
 
 def resolver_query_one(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for retrieving one entity.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.QUERY_ONE.get_typename(model.__name__)  # type: ignore
 
@@ -43,6 +58,12 @@ def resolver_query_one(model: Type[IEntityModel]):
 
 
 def resolver_query_many(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for listing entities.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = List[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.QUERY_MANY.get_typename(model.__name__)  # type: ignore
 
@@ -53,6 +74,12 @@ def resolver_query_many(model: Type[IEntityModel]):
 
 
 def resolver_create_one(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for creating one entity.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.CREATE_ONE.get_typename(model.__name__)  # type: ignore
 
@@ -63,6 +90,12 @@ def resolver_create_one(model: Type[IEntityModel]):
 
 
 def resolver_create_many(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for creating many entities.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = List[Optional[model.get_strawberry_type().entity]]  # type: ignore
     data_type = List[GeneratedType.CREATE_ONE.get_typename(model.__name__)]  # type: ignore
 
@@ -73,6 +106,12 @@ def resolver_create_many(model: Type[IEntityModel]):
 
 
 def resolver_update_one(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for updating one entity.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.UPDATE_ONE.get_typename(model.__name__)  # type: ignore
 
@@ -83,6 +122,12 @@ def resolver_update_one(model: Type[IEntityModel]):
 
 
 def resolver_update_many(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for updating multiple entities.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     return_type = List[Optional[model.get_strawberry_type().entity]]  # type: ignore
     data_type = List[GeneratedType.UPDATE_ONE.get_typename(model.__name__)]  # type: ignore
 
@@ -93,6 +138,12 @@ def resolver_update_many(model: Type[IEntityModel]):
 
 
 def resolver_delete_one(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for deleting one entity.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     data_type = GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__)  # type: ignore
 
     async def delete_one(info: Info, data: data_type) -> DeleteResult:
@@ -102,6 +153,12 @@ def resolver_delete_one(model: Type[IEntityModel]):
 
 
 def resolver_delete_many(model: Type[IEntityModel]):
+    """
+    Create strawberry field resolver for deleting many entities.
+
+    :param model: entity model to use for the resolver
+    :return: strawberry field resolver
+    """
     data_type = List[GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__)]  # type: ignore
 
     async def delete_many(info: Info, data: data_type) -> DeleteResult:

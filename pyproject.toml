@@ -31,6 +31,7 @@ uvicorn = { extras = ["standard"], version = "^0.15.0" }
 SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
+overrides = "^6.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -43,6 +44,7 @@ safety = "^1.10.3"
 poetry = "^1.1.11"
 pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 pylint = "^2.11.1"
+toml = "^0.10.2"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -69,6 +71,7 @@ line-length = 120
 
 [tool.pydocstyle]
 convention = "pep257"
+ignore_decorators = "overrides"
 
 [tool.pylint.master]
 ignore = [

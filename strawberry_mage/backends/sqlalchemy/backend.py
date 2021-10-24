@@ -1,6 +1,9 @@
+"""Strawberry-GraphQL-Mage data backend that uses SQLAlchemy mapper objects to load data from a database."""
+
 from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
+from overrides import overrides
 from sqlalchemy import Integer, String, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,9 +31,16 @@ from strawberry_mage.core.types import GraphQLOperation, IEntityModel
 
 
 class SQLAlchemyBackend(DataBackendBase):
+    """Strawberry-GraphQL-Mage data backend that uses SQLAlchemy mapper objects to load data from a database."""
+
     _TYPE_MAP = {Integer: int, String: str}
 
     def __init__(self, engine: Engine):
+        """
+        Create a new backend with a given database engine.
+
+        :param engine: engine to use
+        """
         self._session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     @staticmethod
@@ -52,10 +62,11 @@ class SQLAlchemyBackend(DataBackendBase):
             return True
         return all((c.nullable for c in col.local_columns))
 
+    @overrides
     def get_attributes(
-            self,
-            model: Type[Union[IEntityModel, SQLAlchemyModel]],
-            operation: Optional[GraphQLOperation] = None,
+        self,
+        model: Type[Union[IEntityModel, SQLAlchemyModel]],
+        operation: Optional[GraphQLOperation] = None,
     ) -> List[str]:
         inspection = inspect(model)
         all_ = [a.key for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs)]
@@ -63,8 +74,12 @@ class SQLAlchemyBackend(DataBackendBase):
             return all_
         all_ = self._remove_polymorphic_cols(model, all_)
         all_ = self._remove_pk_cols(model, all_)
-        if operation in {GraphQLOperation.CREATE_ONE, GraphQLOperation.CREATE_MANY, GraphQLOperation.UPDATE_ONE,
-                         GraphQLOperation.UPDATE_MANY, }:
+        if operation in {
+            GraphQLOperation.CREATE_ONE,
+            GraphQLOperation.CREATE_MANY,
+            GraphQLOperation.UPDATE_ONE,
+            GraphQLOperation.UPDATE_MANY,
+        }:
             return all_
         return []
 
@@ -85,6 +100,7 @@ class SQLAlchemyBackend(DataBackendBase):
         return python_type
 
     @lru_cache
+    @overrides
     def get_attribute_type(self, model: Type[Union[IEntityModel, SQLAlchemyModel]], attr: str) -> Type:
         inspection = inspect(model)
         col: Union[ColumnProperty, RelationshipProperty] = getattr(
@@ -94,12 +110,15 @@ class SQLAlchemyBackend(DataBackendBase):
         return self._get_attribute_type(col)
 
     @lru_cache
+    @overrides
     def get_attribute_types(self, model: Type[Union[IEntityModel, SQLAlchemyModel]]) -> Dict[str, Type]:
         return {attr: self.get_attribute_type(model, attr) for attr in self.get_attributes(model)}
 
+    @overrides
     def get_primary_key(self, model: Type[Union[IEntityModel, SQLAlchemyModel]]) -> Tuple:
         return tuple(a.key for a in inspect(model).primary_key)
 
+    @overrides
     def get_parent_class_name(self, model: Type["IEntityModel"]) -> Optional[str]:
         inspection = inspect(model)
         if inspection.polymorphic_on is not None:
@@ -110,20 +129,32 @@ class SQLAlchemyBackend(DataBackendBase):
             ][0]
         return None
 
-    def get_children_class_names(self, model: Type[SQLAlchemyModel]) -> Optional[List[str]]:
+    @overrides
+    def get_children_class_names(self, model: Type[SQLAlchemyModel]) -> Optional[Set[str]]:
         inspection = inspect(model)
         if inspection.polymorphic_on is not None and inspection.polymorphic_on.table == model.__table__:
-            return [m.class_.__name__ for m in inspection.polymorphic_map.values()]
+            return {m.class_.__name__ for m in inspection.polymorphic_map.values()}
         return None
 
+    @overrides
     def get_operations(self, model: Type[Union[IEntityModel, SQLAlchemyModel]]) -> Set[GraphQLOperation]:
         return {GraphQLOperation(i) for i in range(1, 9)}
 
+    @overrides
     def get_polymorphic_type(self, base_type: ConcreteType):
         return base_type.implementation
 
-    async def resolve(self, model: Type[Union[IEntityModel, SQLAlchemyModel]], operation: GraphQLOperation, info: Info,
-                      data: Any, session_factory: Optional[sessionmaker] = None, *args, **kwargs) -> Any:
+    @overrides
+    async def resolve(
+        self,
+        model: Type[Union[IEntityModel, SQLAlchemyModel]],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        session_factory: Optional[sessionmaker] = None,
+        *args,
+        **kwargs
+    ) -> Any:
         async with (session_factory if session_factory else self._session)() as session:
             for field in info.selected_fields:  # type: ignore
                 selection = self._build_selection(field, model.get_schema_manager())
@@ -144,8 +175,10 @@ class SQLAlchemyBackend(DataBackendBase):
                 if operation == GraphQLOperation.DELETE_MANY:
                     return await delete_(session, model, data)
 
+    @overrides
     def pre_setup(self, models: Iterable[Type["IEntityModel"]]) -> None:
         pass
 
+    @overrides
     def post_setup(self) -> None:
         pass

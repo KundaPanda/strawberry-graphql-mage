@@ -1,6 +1,9 @@
+"""Strawberry-GraphQL-Mage data backend that uses JSON dict objects as data."""
+
 import json
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
+from overrides import overrides
 from strawberry.types import Info
 
 from strawberry_mage.backends.python.backend import PythonBackend
@@ -10,11 +13,14 @@ from strawberry_mage.core.types import GraphQLOperation
 
 
 class JSONBackend(PythonBackend):
+    """Strawberry-GraphQL-Mage data backend that uses JSON dict objects as data."""
+
     dataset: List[SQLAlchemyModel]
     _model: Optional[Type[PythonEntityModel]]
     _model_mapper: Optional[Callable[[dict], Type[PythonEntityModel]]]
 
     def __init__(self, *args, **kwargs):
+        """Create a new JSONBackend."""
         super().__init__(*args, **kwargs)
         self.dataset = []
 
@@ -69,11 +75,20 @@ class JSONBackend(PythonBackend):
         return mappings
 
     def add_dataset(
-            self,
-            dataset: Iterable[dict],
-            model: Optional[Type[PythonEntityModel]] = None,
-            model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
+        self,
+        dataset: Iterable[dict],
+        model: Optional[Type[PythonEntityModel]] = None,
+        model_mapper: Callable[[dict], Type[PythonEntityModel]] = None,
     ):
+        """
+        Add a dataset to be used for every resolve request.
+
+        model or model_mapper need to be specified
+        :param dataset: dataset to use
+        :param model: all dictionaries in dataset represent this model
+        :param model_mapper: callable which maps a dictionary in the dataset to a model
+        :return: None
+        """
         if not model and not model_mapper:
             raise Exception('Either "model" or "model_mapper" need to be specified when using JSONBackend')
         self._model = model
@@ -83,6 +98,15 @@ class JSONBackend(PythonBackend):
     def _remove_pks(self, model, attrs):
         return [a for a in attrs if a not in self.get_primary_key(model)]
 
-    async def resolve(self, model: Type[PythonEntityModel], operation: GraphQLOperation, info: Info, data: Any, *args,
-                      dataset: Optional[Iterable] = None, **kwargs) -> Any:
+    @overrides
+    async def resolve(
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        dataset: Optional[Iterable] = None,
+        **kwargs
+    ) -> Any:
         return await super().resolve(model, operation, info, data, *args, dataset=dataset, **kwargs)
