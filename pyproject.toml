@@ -26,8 +26,6 @@ packages = [
 python = "^3.8"
 strawberry-graphql = "^0.84.0"
 inflection = "^0.5.1"
-starlette = "^0.16.0"
-uvicorn = { extras = ["standard"], version = "^0.15.0" }
 SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
@@ -45,6 +43,8 @@ poetry = "^1.1.11"
 pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 pylint = "^2.11.1"
 toml = "^0.10.2"
+uvicorn = { extras = ["standard"], version = "^0.15.0" }
+starlette = "^0.16.0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
