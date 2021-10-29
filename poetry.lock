@@ -959,7 +959,7 @@ full = ["itsdangerous", "jinja2", "python-multipart", "pyyaml", "requests", "gra
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.84.4"
+version = "0.85.1"
 description = "A library for creating GraphQL APIs"
 category = "main"
 optional = false
@@ -1143,7 +1143,7 @@ test = ["gevent (>=20.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ade681fe6c0d471dc8f6c7ca3b37d386fc979760e1c48f4765e202d3b8ccdf6f"
+content-hash = "d84cb50c6244a16412d2ae39dfb21008dd6011dd9bbb711ce0182d3236a29211"
 
 [metadata.files]
 aiosqlite = [
@@ -1708,6 +1708,8 @@ sqlalchemy = [
     {file = "SQLAlchemy-1.4.26-cp27-cp27mu-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:c757ba1279b85b3460e72e8b92239dae6f8b060a75fb24b3d9be984dd78cfa55"},
     {file = "SQLAlchemy-1.4.26-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:c24c01dcd03426a5fe5ee7af735906bec6084977b9027a3605d11d949a565c01"},
     {file = "SQLAlchemy-1.4.26-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c46f013ff31b80cbe36410281675e1fb4eaf3e25c284fd8a69981c73f6fa4cb4"},
+    {file = "SQLAlchemy-1.4.26-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:fb2aa74a6e3c2cebea38dd21633671841fbe70ea486053cba33d68e3e22ccc0a"},
+    {file = "SQLAlchemy-1.4.26-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ad7e403fc1e3cb76e802872694e30d6ca6129b9bc6ad4e7caa48ca35f8a144f8"},
     {file = "SQLAlchemy-1.4.26-cp310-cp310-win32.whl", hash = "sha256:7ef421c3887b39c6f352e5022a53ac18de8387de331130481cb956b2d029cad6"},
     {file = "SQLAlchemy-1.4.26-cp310-cp310-win_amd64.whl", hash = "sha256:908fad32c53b17aad12d722379150c3c5317c422437e44032256a77df1746292"},
     {file = "SQLAlchemy-1.4.26-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:1ef37c9ec2015ce2f0dc1084514e197f2f199d3dc3514190db7620b78e6004c8"},
@@ -1741,8 +1743,8 @@ starlette = [
     {file = "starlette-0.16.0.tar.gz", hash = "sha256:e1904b5d0007aee24bdd3c43994be9b3b729f4f58e740200de1d623f8c3a8870"},
 ]
 strawberry-graphql = [
-    {file = "strawberry-graphql-0.84.4.tar.gz", hash = "sha256:828778ca405909cd2372f3d55c051c33a9a8d1fe88afb62491cd1dcd247266e1"},
-    {file = "strawberry_graphql-0.84.4-py3-none-any.whl", hash = "sha256:30b928f38922f304825e6f99520203ac9ec16adec2fe4b08b094dbc7734a12e7"},
+    {file = "strawberry-graphql-0.85.1.tar.gz", hash = "sha256:2707bed7ca8b784093b05ab345f4143453467acf21ee86a768a8dfb65d12d9ab"},
+    {file = "strawberry_graphql-0.85.1-py3-none-any.whl", hash = "sha256:e92e4fb43beaa130cd3475b41d26fa913b7469cc624d5e53dba136c87fde7f43"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
