@@ -1,16 +1,15 @@
 import enum
 
-from sqlalchemy import Column, Integer, ForeignKey, String, Enum, Float
+from sqlalchemy import Column, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import relationship
 
+from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
 from strawberry_mage.backends.sqlalchemy.models import create_base_entity
 from strawberry_mage.backends.sqlalchemy.utils import make_fk
 from strawberry_mage.core.schema import SchemaManager
 
-engine = create_async_engine("sqlite+aiosqlite:///")
-
-Base = create_base_entity(engine)
+Base = create_base_entity()
 
 
 class Weapon(Base):
@@ -61,7 +60,8 @@ class King(Entity):
     }
 
 
-schema = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=Base.__backend__).get_schema()
+engine = create_async_engine("sqlite+aiosqlite:///")
+schema = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=SQLAlchemyBackend(engine)).get_schema()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

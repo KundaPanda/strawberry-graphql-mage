@@ -14,6 +14,7 @@ from strawberry.types import Info
 
 from strawberry_mage.backends.python.converter import SQLAlchemyModelConverter
 from strawberry_mage.backends.python.models import PythonEntityModel
+from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
 from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 from strawberry_mage.core.backend import DataBackendBase
 from strawberry_mage.core.schema import SchemaManager
@@ -34,7 +35,7 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
 
         :param engines_count: number of sqlalchemy engines to use for sqlite connections
         """
-        self.converter = SQLAlchemyModelConverter(create_async_engine("sqlite+aiosqlite:///"))
+        self.converter = SQLAlchemyModelConverter()
         self.engines = Queue(maxsize=engines_count)
 
     def __del__(self):
@@ -163,14 +164,14 @@ class PythonBackend(DataBackendBase[PythonEntityModel]):
     def post_setup(self) -> None:
         self._sqla_manager = SchemaManager(
             *[m.get_sqla_model() for m in self._models],
-            backend=self.converter.base.__backend__,
+            backend=SQLAlchemyBackend(create_async_engine("sqlite+aiosqlite://"))
         )
-        for i in range(self.engines.maxsize):
-            e = create_async_engine("sqlite+aiosqlite://")
-            self.engines.put_nowait(e)
+        for _ in range(self.engines.maxsize):
+            engine = create_async_engine("sqlite+aiosqlite://")
+            self.engines.put_nowait(engine)
 
             async def set_up():
-                async with e.begin() as conn:
+                async with engine.begin() as conn:
                     await conn.run_sync(self.converter.base.metadata.create_all)
 
             pool = ThreadPoolExecutor()

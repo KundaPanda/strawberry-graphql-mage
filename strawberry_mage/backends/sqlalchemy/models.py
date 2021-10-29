@@ -5,7 +5,6 @@ from typing import Type, cast
 
 from inflection import underscore
 from sqlalchemy import inspect
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, declared_attr
 
 from strawberry_mage.core.models import EntityModel
@@ -43,16 +42,12 @@ class SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
         return all(c.autoincrement for c in inspect(self).primary_key)
 
 
-def create_base_entity(engine: Engine) -> Type[SQLAlchemyModel]:
+def create_base_entity() -> Type[SQLAlchemyModel]:
     """
     Create a SQLAlchemy entity base class with independent metadata.
 
-    :param engine: sqlalchemy engine to use for the SQLAlchemy backend
     :return: SQLAlchemyModel
     """
-    from strawberry_mage.backends.sqlalchemy.backend import (
-        SQLAlchemyBackend,
-    )  # pylint: disable=Late import, is not cyclic
 
     new_base = declarative_base()
     return cast(
@@ -63,6 +58,6 @@ def create_base_entity(engine: Engine) -> Type[SQLAlchemyModel]:
                 new_base,
                 SQLAlchemyModel,
             ),
-            {"__backend__": SQLAlchemyBackend(engine), "__abstract__": True},
+            {"__abstract__": True},
         ),
     )

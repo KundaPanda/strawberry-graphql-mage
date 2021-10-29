@@ -38,13 +38,9 @@ else:
 class SQLAlchemyModelConverter:
     """Class for converting python entity models to SQLAlchemy models."""
 
-    def __init__(self, engine: Engine):
-        """
-        Create a new converter instance.
-
-        :param engine: engine to use for SQLAlchemy backend creation .
-        """
-        self.base = create_base_entity(engine)
+    def __init__(self):
+        """Create a new converter instance."""
+        self.base = create_base_entity()
 
     TYPE_MAP: Dict[Type, Type[TypeEngine]] = {
         str: String,

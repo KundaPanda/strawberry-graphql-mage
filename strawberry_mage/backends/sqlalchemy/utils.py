@@ -29,20 +29,20 @@ def make_fk(
     :return: tuple [created foreign key, relationship]
     """
     if not isinstance(remote, str):
-        remote = str(remote.__tablename__)
+        remote = remote.__name__
     if foreign_kwargs is None:
         foreign_kwargs = {}
     if rel_kwargs is None:
         rel_kwargs = {}
     remote_table = underscore(remote)
-    fk = Column(
+    foreign_key = Column(
         Integer,
         ForeignKey(f"{remote_table}.{remote_pk}", use_alter=True),
         nullable=optional,
         **foreign_kwargs,
     )
-    rel = relationship(remote, back_populates=back_populates, foreign_keys=[fk], **rel_kwargs)
-    return fk, rel
+    rel = relationship(remote, back_populates=back_populates, foreign_keys=[foreign_key], **rel_kwargs)
+    return foreign_key, rel
 
 
 def make_composite_fk(
@@ -69,7 +69,7 @@ def make_composite_fk(
     :return: tuple [created foreign keys, relationship, foreign key constraint]
     """
     if not isinstance(remote, str):
-        remote = remote.__tablename__
+        remote = remote.__name__
     if foreign_kwargs is None:
         foreign_kwargs = {}
     if rel_kwargs is None:
