@@ -8,7 +8,7 @@ async def test_simple_query(schema: Schema, operations):
 
     assert result.errors is None
 
-    assert len(result.data["entities"]) == 3
+    assert len(result.data["entities"]["results"]) == 3
     assert result.data["entity"] == {
         "id": 1,
         "__typename": "Entity_",
@@ -28,8 +28,8 @@ async def test_simple_create(schema: Schema, operations):
         "weapons": [],
     }
     assert result.data["createEntities"] == [
-        {"id": 102, "__typename": "Entity_", "weapons": []},
         {"id": 103, "__typename": "Entity_", "weapons": [{"id": 1}]},
+        {"id": 102, "__typename": "Entity_", "weapons": []},
     ]
 
 
@@ -45,8 +45,8 @@ async def test_simple_update(schema: Schema, operations):
         "weapons": [{"id": 1}],
     }
     assert result.data["updateEntities"] == [
-        {"id": 1, "__typename": "Entity_", "weapons": []},
         {"id": 2, "__typename": "Entity_", "weapons": [{"id": 1}]},
+        {"id": 1, "__typename": "Entity_", "weapons": []},
     ]
 
 

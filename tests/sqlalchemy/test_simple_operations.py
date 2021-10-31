@@ -13,8 +13,8 @@ async def test_simple_query(schema: Schema, operations):
 
     assert result.errors is None
 
-    assert len(result.data["archers"]) == 3
-    assert len(result.data["weapons"]) == 8
+    assert len(result.data["archers"]["results"]) == 3
+    assert len(result.data["weapons"]["results"]) == 8
 
 
 @pytest.mark.asyncio

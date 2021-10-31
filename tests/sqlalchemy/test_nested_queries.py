@@ -11,6 +11,7 @@ async def test_nested_select(schema: Schema, operations, session):
     result = await schema.execute(operations, operation_name="nestedSelectQuery")
 
     assert result.errors is None
+    data = result.data["archers"]["results"]
 
     archers = (
         (
@@ -25,9 +26,9 @@ async def test_nested_select(schema: Schema, operations, session):
         .scalars()
         .all()
     )
-    assert len(result.data["archers"]) == len(archers)
+    assert len(data) == len(archers)
     for archer in archers:
-        (selected,) = [a for a in result.data["archers"] if a["id"] == archer.id]
+        (selected,) = [a for a in data if a["id"] == archer.id]
         if archer.submits_to:
             assert archer.submits_to.id == selected["submitsTo"]["id"]
             if archer.submits_to.subjects:
@@ -51,6 +52,7 @@ async def test_nested_filter(schema: Schema, operations, session):
     result = await schema.execute(operations, operation_name="nestedFilterQuery")
 
     assert result.errors is None
+    data = result.data["archers"]["results"]
 
     k = aliased(King)
     w = aliased(Weapon)
@@ -69,8 +71,8 @@ async def test_nested_filter(schema: Schema, operations, session):
         .scalars()
         .all()
     )
-    assert len(result.data["archers"]) == len(archers)
-    assert sorted([a.id for a in archers]) == [r["id"] for r in result.data["archers"]]
+    assert len(data) == len(archers)
+    assert sorted([a.id for a in archers]) == [r["id"] for r in data]
 
 
 @pytest.mark.asyncio
@@ -78,6 +80,7 @@ async def test_nested_ordering(schema: Schema, operations, session):
     result = await schema.execute(operations, operation_name="nestedOrderingQuery")
 
     assert result.errors is None
+    data = result.data["archers"]["results"]
 
     k = aliased(King)
     w = aliased(Weapon)
@@ -94,8 +97,8 @@ async def test_nested_ordering(schema: Schema, operations, session):
         .scalars()
         .all()
     )
-    assert len(result.data["archers"]) == len(archers)
-    assert [r["id"] for r in result.data["archers"]] == [a.id for a in archers]
+    assert len(data) == len(archers)
+    assert [r["id"] for r in data] == [a.id for a in archers]
 
 
 @pytest.mark.asyncio
@@ -103,7 +106,8 @@ async def test_polymorphic_fragment(schema: Schema, operations, session):
     result = await schema.execute(operations, operation_name="fragmentQuery")
 
     assert result.errors is None
+    data = result.data["entities"]["results"]
 
     entities = (await session.execute(select(Entity))).unique().scalars().all()
-    assert len(result.data["entities"]) == len(entities)
-    assert [r["id"] for r in result.data["entities"]] == [a.id for a in entities]
+    assert len(data) == len(entities)
+    assert [r["id"] for r in data] == [a.id for a in entities]

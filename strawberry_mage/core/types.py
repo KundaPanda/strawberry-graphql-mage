@@ -177,8 +177,8 @@ class IDataBackend(abc.ABC, Generic[TEntity]):
         :param operation: type of the operation
         :param info: strawberry info
         :param data: incoming data from the query
-        :param args: optional arguments
-        :param kwargs: optional keyword arguments
+        :param args: nullable arguments
+        :param kwargs: nullable keyword arguments
         :return: data to return for the graphql field being resolved
         """
         raise NotImplementedError
@@ -372,8 +372,8 @@ class IEntityModel(abc.ABC):
         :param operation: type of the operation
         :param info: strawberry info
         :param data: incoming data from the query
-        :param args: optional arguments
-        :param kwargs: optional keyword arguments
+        :param args: nullable arguments
+        :param kwargs: nullable keyword arguments
         :return: data to return for the graphql field being resolved
         """
         raise NotImplementedError

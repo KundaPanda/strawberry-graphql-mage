@@ -4,9 +4,9 @@ import dataclasses
 from typing import Any, Iterable, Optional, Type
 
 from overrides import overrides
-from strawberry.arguments import UNSET
 from strawberry.type import StrawberryType
 from strawberry.types import Info
+from strawberry.types.nodes import SelectedField
 
 from strawberry_mage.backends.json.backend import JSONBackend
 from strawberry_mage.backends.python.models import PythonEntityModel
@@ -42,11 +42,22 @@ class APIBackend(JSONBackend):
                 types = model.get_strawberry_type().graphql_input_types
                 filter_type = dataclasses.make_dataclass("FilterStub", {"id": IntegerFilter})
                 data = types["query_many_input"](
-                    page_size=UNSET,
+                    page_size=len(dataset),
                     filters=[filter_type(id=IntegerFilter(in_=[entry["id"] for entry in dataset]))],
                 )
-                operation = GraphQLOperation.QUERY_MANY
-            return await super().resolve(model, operation, info, data, *args, dataset=dataset, **kwargs)
+                info.selected_fields[0].selections = [
+                    SelectedField(
+                        "results",
+                        selections=info.selected_fields[0].selections,
+                        arguments={},
+                        alias=None,
+                        directives={},
+                    )
+                ]
+            result = await super().resolve(
+                model, GraphQLOperation.QUERY_MANY, info, data, *args, dataset=dataset, **kwargs
+            )
+            return result.results if operation != GraphQLOperation.QUERY_MANY else result
         if isinstance(dataset, dict):
             if operation == GraphQLOperation.DELETE_ONE:
                 delete_type = model.get_strawberry_type().delete_one

@@ -1,32 +1,38 @@
 query simpleQuery {
   archers {
-    id
-    entityClass
-    __typename
+    results {
+      id
+      entityClass
+      __typename
+    }
   }
   weapons {
-    id
-    ownerId
-    __typename
-    damage
+    results {
+      id
+      ownerId
+      __typename
+      damage
+    }
   }
 }
 
 query nestedSelectQuery {
   archers {
-    id
-    submitsTo {
+    results {
       id
-      subjects {
+      submitsTo {
         id
-        ... on Archer {
+        subjects {
           id
+          ... on Archer {
+            id
+          }
         }
       }
-    }
-    weapons {
-      id
-      damage
+      weapons {
+        id
+        damage
+      }
     }
   }
 }
@@ -35,8 +41,10 @@ query nestedFilterQuery {
   archers(
     data: { filters: [{ submitsTo: { weapons: { damage: { gt: 10 } } } }] }
   ) {
-    id
-    submitsToId
+    results {
+      id
+      submitsToId
+    }
   }
 }
 
@@ -44,24 +52,28 @@ query nestedOrderingQuery {
   archers(
     data: { ordering: [{ weapons: { damage: DESC } }, { drawStrength: DESC }] }
   ) {
-    id
-    weapons {
-      damage
+    results {
+      id
+      weapons {
+        damage
+      }
+      drawStrength
     }
-    drawStrength
   }
 }
 query fragmentQuery {
   entities {
-    id
-    ... on Archer {
-      drawStrength
-    }
-    ... on Mage {
-      powerSource
-    }
-    ... on Entity_ {
-      __typename
+    results {
+      id
+      ... on Archer {
+        drawStrength
+      }
+      ... on Mage {
+        powerSource
+      }
+      ... on Entity_ {
+        __typename
+      }
     }
   }
 }

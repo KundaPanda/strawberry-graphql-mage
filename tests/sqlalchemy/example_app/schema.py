@@ -14,7 +14,7 @@ Base = create_base_entity()
 
 class Weapon(Base):
     id = Column(Integer, primary_key=True)
-    owner_id, owner = make_fk("Entity", optional=True, back_populates="weapons")
+    owner_id, owner = make_fk("Entity", back_populates="weapons")
     damage = Column(Integer, nullable=False)
     name = Column(String(30), nullable=True)
 
@@ -23,7 +23,7 @@ class Entity(Base):
     id = Column(Integer, primary_key=True)
     weapons = relationship(Weapon, back_populates="owner")
     entity_class = Column(String, nullable=False)
-    submits_to_id, submits_to = make_fk("King", optional=True, back_populates="subjects")
+    submits_to_id, submits_to = make_fk("King", back_populates="subjects")
 
     __mapper_args__ = {"polymorphic_on": entity_class, "polymorphic_identity": "entity"}
 

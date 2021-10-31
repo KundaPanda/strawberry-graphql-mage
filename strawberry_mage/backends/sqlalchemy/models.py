@@ -45,7 +45,6 @@ class SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
 def create_base_entity() -> Type[SQLAlchemyModel]:
     """
     Create a SQLAlchemy entity base class with independent metadata.
-
     :return: SQLAlchemyModel
     """
 

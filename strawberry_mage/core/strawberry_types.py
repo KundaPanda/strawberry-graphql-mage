@@ -28,6 +28,15 @@ class DeleteResult:
     affected_rows: int
 
 
+@strawberry.type
+class QueryManyResult:
+    """Result of the query-many operation."""
+
+    page: int
+    total_pages: int
+    total_records: int
+
+
 @dataclass
 class PrimaryKeyInput:
     """Data input of a primary key."""
@@ -60,6 +69,7 @@ class StrawberryModelType:
     base_entity: Type[EntityType]
     filter: Type["ObjectFilter"]
     ordering: Type["ObjectOrdering"]
+    query_many_output: Type["QueryManyResult"]
     input_types: Optional[StrawberryField] = field(default=None)
     query_one: Optional[StrawberryField] = field(default=None)
     query_many: Optional[StrawberryField] = field(default=None)

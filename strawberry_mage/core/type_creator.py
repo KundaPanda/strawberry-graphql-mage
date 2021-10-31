@@ -21,6 +21,7 @@ from strawberry_mage.core.strawberry_types import (
     OrderingDirection,
     PrimaryKeyInput,
     QueryMany,
+    QueryManyResult,
     QueryOne,
     ROOT_NS,
     SCALAR_FILTERS,
@@ -49,6 +50,7 @@ class GeneratedType(enum.Enum):
     PRIMARY_KEY_FIELD = "PrimaryKeyField"
     QUERY_ONE = "QueryOne"
     QUERY_MANY = "QueryMany"
+    QUERY_MANY_INPUT = "QueryManyInput"
     CREATE_ONE = "CreateOne"
     CREATE_MANY = "CreateMany"
     UPDATE_ONE = "UpdateOne"
@@ -114,7 +116,20 @@ def strip_typename(type_: Union[str, Type]) -> Union[str, Type]:
         return type_.__forward_arg__
     if type_ in SCALARS:
         return type_
-    return type_.__name__
+    return type_
+
+
+def strip_defer_typename(type_: Union[str, Type]) -> Union[str, Type]:
+    """
+    Return cleaned up and defered typename of a class for a type annotation.
+
+    :param type_: type annotation to clean
+    :return: name of the resulting type (to use as ForwardRef)
+    """
+    type_ = strip_typename(type_)
+    if type_ in SCALARS:
+        return type_
+    return type_
 
 
 def _apply_type_rename(name: str, target_type: GeneratedType):
@@ -140,7 +155,9 @@ def defer_annotation(
     if isclass(annotation):
         if issubclass(annotation, ScalarFilter) or annotation in SCALARS:
             return annotation
-        if dataclasses.is_dataclass(annotation):
+        if dataclasses.is_dataclass(annotation) or (
+            issubclass(annotation, enum.Enum) and target_type in {GeneratedType.FILTER, GeneratedType.ORDERING}
+        ):
             return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation.__name__, target_type))
     if isinstance(annotation, str):
         return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation, target_type))
@@ -208,7 +225,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
-        attr = attrs[name]
+        attr = strip_typename(attrs[name])
         if isclass(attr) and isinstance(attr, type(enum.Enum)):
             enum_type, _, _ = create_enum_type(cast(Type[enum.Enum], attr))
             attrs[name] = enum_type
@@ -411,7 +428,7 @@ def create_query_many_input(model: Type[IEntityModel]) -> type:
     """
     query_many = strawberry.input(
         type(
-            GeneratedType.QUERY_MANY.get_typename(model.__name__),
+            GeneratedType.QUERY_MANY_INPUT.get_typename(model.__name__),
             (QueryMany,),
             _create_fields(
                 {
@@ -458,7 +475,7 @@ def create_update_one_input(model: Type[IEntityModel]) -> type:
     """
     Create input type for updating one entity.
 
-    :param model: class to be update d
+    :param model: class to be updated
     :return: input type
     """
     update_one = strawberry.input(
@@ -482,6 +499,26 @@ def create_update_one_input(model: Type[IEntityModel]) -> type:
     update_one.__module__ = ROOT_NS
 
     return update_one
+
+
+def create_query_many_output(model: Type[IEntityModel]) -> Type[QueryManyResult]:
+    """
+    Create query-many output type for listing entities.
+
+    :param model: class to be listed
+    :return: query-many output type
+    """
+    python_type = type(
+        GeneratedType.QUERY_MANY.get_typename(model.__name__),
+        (QueryManyResult,),
+        _create_fields({"results": List[GeneratedType.ENTITY.get_typename(model.__name__)]}),
+    )
+    query_many = strawberry.type(python_type, is_input=False)
+
+    setattr(sys.modules[ROOT_NS], query_many.__name__, query_many)
+    query_many.__module__ = ROOT_NS
+
+    return query_many
 
 
 def get_ordering_type(type_: Any):

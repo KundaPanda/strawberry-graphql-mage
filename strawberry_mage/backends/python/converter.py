@@ -18,7 +18,6 @@ from sqlalchemy import (
     String,
     and_,
 )
-from sqlalchemy.engine import Engine
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.type_api import TypeEngine
@@ -114,8 +113,8 @@ class SQLAlchemyModelConverter:
                         resolved_type.get_primary_key(),
                         entity.__name__,
                         attr,
-                        optional,
-                        back_populates,
+                        nullable=optional,
+                        back_populates=back_populates,
                     )
                     for (name, fk) in fks:
                         attrs[f"{attr}_{name}"] = fk

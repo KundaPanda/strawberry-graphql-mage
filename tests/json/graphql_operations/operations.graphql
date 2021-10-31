@@ -1,11 +1,15 @@
 query simpleQuery {
   archers {
-    id
-    __typename
+    results {
+      id
+      __typename
+    }
   }
   weapons {
-    id
-    __typename
-    damage
+    results {
+      id
+      __typename
+      damage
+    }
   }
 }

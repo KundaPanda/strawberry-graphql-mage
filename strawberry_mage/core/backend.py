@@ -20,15 +20,19 @@ TEntity = TypeVar("TEntity", bound=IEntityModel)
 class DataBackendBase(Generic[TEntity], IDataBackend[TEntity]):
     """A basic data backend with some functionality based on dataclasses."""
 
-    def _build_selection(self, field, manager):
+    def _build_selection(self, field, manager, operation, level=0):
         selection = {}
         for subfield in field.selections:
+            if level == 0 and operation == GraphQLOperation.QUERY_MANY:
+                return self._build_selection(
+                    [f for f in field.selections if f.name == "results"][0], manager, operation, level + 1
+                )
             if subfield.selections:
                 if isinstance(subfield, InlineFragment):
                     model = manager.get_model_for_name(GeneratedType.get_original(subfield.type_condition))
-                    selection[model] = self._build_selection(subfield, manager)
+                    selection[model] = self._build_selection(subfield, manager, operation, level)
                     continue
-                selection[underscore(subfield.name)] = self._build_selection(subfield, manager)
+                selection[underscore(subfield.name)] = self._build_selection(subfield, manager, operation, level + 1)
         return selection
 
     @overrides

@@ -64,8 +64,8 @@ def resolver_query_many(model: Type[IEntityModel]):
     :param model: entity model to use for the resolver
     :return: strawberry field resolver
     """
-    return_type = List[model.get_strawberry_type().entity]  # type: ignore
-    data_type = GeneratedType.QUERY_MANY.get_typename(model.__name__)  # type: ignore
+    return_type = model.get_strawberry_type().query_many_output  # type: ignore
+    data_type = GeneratedType.QUERY_MANY_INPUT.get_typename(model.__name__)  # type: ignore
 
     async def query_many(info: Info, data: Optional[data_type] = UNSET) -> return_type:
         return await model.resolve(GraphQLOperation.QUERY_MANY, info, data)

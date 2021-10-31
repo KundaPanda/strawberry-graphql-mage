@@ -1,9 +1,11 @@
 query simpleQuery {
   entities {
-    id
-    __typename
-    weapons {
+    results {
       id
+      __typename
+      weapons {
+        id
+      }
     }
   }
   entity(data: { primaryKey_: { id: 1 } }) {

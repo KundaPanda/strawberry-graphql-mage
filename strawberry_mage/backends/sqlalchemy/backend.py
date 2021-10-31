@@ -85,9 +85,15 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @lru_cache
     def _get_attribute_type(self, attr: Union[ColumnProperty, RelationshipProperty]) -> Type:
-        python_type = (
-            attr.expression.type.python_type if isinstance(attr, ColumnProperty) else attr.entity.class_.__name__
-        )
+        if isinstance(attr, ColumnProperty):
+            python_type = (
+                attr.expression.type.impl.python_type
+                if hasattr(attr.expression.type, "impl")
+                else attr.expression.type.python_type
+            )
+        else:
+            python_type = attr.entity.class_.__name__
+
         if self._is_nullable(attr):
             python_type = Optional[python_type]
         if isinstance(attr, RelationshipProperty) and attr.direction in {
@@ -157,7 +163,7 @@ class SQLAlchemyBackend(DataBackendBase):
     ) -> Any:
         async with (session_factory if session_factory else self._session)() as session:
             for field in info.selected_fields:  # type: ignore
-                selection = self._build_selection(field, model.get_schema_manager())
+                selection = self._build_selection(field, model.get_schema_manager(), operation)
                 if operation == GraphQLOperation.QUERY_MANY:
                     return await list_(session, model, data, selection)
                 if operation == GraphQLOperation.QUERY_ONE:

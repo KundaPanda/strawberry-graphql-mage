@@ -23,6 +23,7 @@ from strawberry_mage.core.type_creator import (
     create_filter_input,
     create_input_types,
     create_ordering_input,
+    create_query_many_output,
 )
 from strawberry_mage.core.types import (
     GraphQLOperation,
@@ -120,6 +121,7 @@ class EntityModel(IEntityModel):
             entity=entity,
             filter=create_filter_input(cls),
             ordering=create_ordering_input(cls),
+            query_many_output=create_query_many_output(cls),
         )
         cls._strawberry_type.input_types = create_input_types(cls)
         cls._strawberry_type.query_one = resolver_query_one(cls)

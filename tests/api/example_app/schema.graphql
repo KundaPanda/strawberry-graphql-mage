@@ -18,8 +18,22 @@ type Archer implements Entity {
   weapons: [Weapon!]
 }
 
+type ArcherQueryMany {
+  page: Int!
+  results: [Archer!]!
+  totalPages: Int!
+  totalRecords: Int!
+}
+
 type DeleteResult {
   affectedRows: Int!
+}
+
+type EntityQueryMany {
+  page: Int!
+  results: [Entity!]!
+  totalPages: Int!
+  totalRecords: Int!
 }
 
 type Entity_ implements Entity {
@@ -36,11 +50,25 @@ type King implements Entity {
   weapons: [Weapon!]
 }
 
+type KingQueryMany {
+  page: Int!
+  results: [King!]!
+  totalPages: Int!
+  totalRecords: Int!
+}
+
 type Mage implements Entity {
   id: Int!
   powerSource: MageTypeEnum!
   submitsTo: King
   weapons: [Weapon!]
+}
+
+type MageQueryMany {
+  page: Int!
+  results: [Mage!]!
+  totalPages: Int!
+  totalRecords: Int!
 }
 
 type Mutation {
@@ -78,15 +106,15 @@ type Mutation {
 
 type Query {
   archer(data: ArcherQueryOne!): Archer
-  archers(data: ArcherQueryMany): [Archer!]!
-  entities(data: EntityQueryMany): [Entity!]!
+  archers(data: ArcherQueryManyInput): ArcherQueryMany!
+  entities(data: EntityQueryManyInput): EntityQueryMany!
   entity(data: EntityQueryOne!): Entity
   king(data: KingQueryOne!): King
-  kings(data: KingQueryMany): [King!]!
+  kings(data: KingQueryManyInput): KingQueryMany!
   mage(data: MageQueryOne!): Mage
-  mages(data: MageQueryMany): [Mage!]!
+  mages(data: MageQueryManyInput): MageQueryMany!
   weapon(data: WeaponQueryOne!): Weapon
-  weapons(data: WeaponQueryMany): [Weapon!]!
+  weapons(data: WeaponQueryManyInput): WeaponQueryMany!
 }
 
 type Weapon {
@@ -94,6 +122,13 @@ type Weapon {
   id: Int!
   name: String
   owner: Entity
+}
+
+type WeaponQueryMany {
+  page: Int!
+  results: [Weapon!]!
+  totalPages: Int!
+  totalRecords: Int!
 }
 
 enum MageTypeEnum {
@@ -123,7 +158,7 @@ input ArcherFilter {
   id: IntegerFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
-  weapons: [WeaponFilter]
+  weapons: WeaponFilter
 }
 
 input ArcherOrdering {
@@ -132,7 +167,7 @@ input ArcherOrdering {
   id: OrderingDirection
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
-  weapons: [WeaponOrdering]
+  weapons: WeaponOrdering
 }
 
 input ArcherPrimaryKey {
@@ -143,7 +178,7 @@ input ArcherPrimaryKeyField {
   primaryKey_: ArcherPrimaryKey!
 }
 
-input ArcherQueryMany {
+input ArcherQueryManyInput {
   filters: [ArcherFilter]
   ordering: [ArcherOrdering]
   pageNumber: Int = 1
@@ -175,7 +210,7 @@ input EntityFilter {
   id: IntegerFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
-  weapons: [WeaponFilter]
+  weapons: WeaponFilter
 }
 
 input EntityOrdering {
@@ -183,7 +218,7 @@ input EntityOrdering {
   id: OrderingDirection
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
-  weapons: [WeaponOrdering]
+  weapons: WeaponOrdering
 }
 
 input EntityPrimaryKey {
@@ -194,7 +229,7 @@ input EntityPrimaryKeyField {
   primaryKey_: EntityPrimaryKey!
 }
 
-input EntityQueryMany {
+input EntityQueryManyInput {
   filters: [EntityFilter]
   ordering: [EntityOrdering]
   pageNumber: Int = 1
@@ -246,20 +281,20 @@ input KingFilter {
   entityPolymorphicType_: StringFilter
   id: IntegerFilter
   name: StringFilter
-  subjects: [EntityFilter]
+  subjects: EntityFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
-  weapons: [WeaponFilter]
+  weapons: WeaponFilter
 }
 
 input KingOrdering {
   entityPolymorphicType_: OrderingDirection
   id: OrderingDirection
   name: OrderingDirection
-  subjects: [EntityOrdering]
+  subjects: EntityOrdering
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
-  weapons: [WeaponOrdering]
+  weapons: WeaponOrdering
 }
 
 input KingPrimaryKey {
@@ -270,7 +305,7 @@ input KingPrimaryKeyField {
   primaryKey_: KingPrimaryKey!
 }
 
-input KingQueryMany {
+input KingQueryManyInput {
   filters: [KingFilter]
   ordering: [KingOrdering]
   pageNumber: Int = 1
@@ -302,19 +337,19 @@ input MageFilter {
   OR_: [MageFilter]
   entityPolymorphicType_: StringFilter
   id: IntegerFilter
-  powerSource: MageTypeEnum
+  powerSource: MageTypeEnumFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
-  weapons: [WeaponFilter]
+  weapons: WeaponFilter
 }
 
 input MageOrdering {
   entityPolymorphicType_: OrderingDirection
   id: OrderingDirection
-  powerSource: MageTypeEnum
+  powerSource: MageTypeEnumOrdering
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
-  weapons: [WeaponOrdering]
+  weapons: WeaponOrdering
 }
 
 input MagePrimaryKey {
@@ -325,7 +360,7 @@ input MagePrimaryKeyField {
   primaryKey_: MagePrimaryKey!
 }
 
-input MageQueryMany {
+input MageQueryManyInput {
   filters: [MageFilter]
   ordering: [MageOrdering]
   pageNumber: Int = 1
@@ -334,6 +369,17 @@ input MageQueryMany {
 
 input MageQueryOne {
   primaryKey_: MagePrimaryKey!
+}
+
+input MageTypeEnumFilter {
+  exact: MageTypeEnum!
+}
+
+input MageTypeEnumOrdering {
+  AIR: OrderingDirection!
+  EARTH: OrderingDirection!
+  FIRE: OrderingDirection!
+  WATER: OrderingDirection!
 }
 
 input MageUpdateOne {
@@ -388,7 +434,7 @@ input WeaponPrimaryKeyField {
   primaryKey_: WeaponPrimaryKey!
 }
 
-input WeaponQueryMany {
+input WeaponQueryManyInput {
   filters: [WeaponFilter]
   ordering: [WeaponOrdering]
   pageNumber: Int = 1

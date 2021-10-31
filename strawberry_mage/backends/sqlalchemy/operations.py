@@ -1,9 +1,9 @@
 """SQLAlchemy operations for resolving graphql queries."""
-
 import dataclasses
 from enum import Enum
 from functools import partial
 from inspect import isclass, iscoroutinefunction
+from math import ceil
 from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 from sqlalchemy import Table, and_, delete, inspect, not_, or_, select
@@ -22,7 +22,7 @@ from strawberry_mage.core.strawberry_types import (
     PrimaryKeyField,
     QueryMany,
 )
-from strawberry_mage.core.type_creator import strip_typename
+from strawberry_mage.core.type_creator import strip_defer_typename
 from strawberry_mage.core.types import IEntityModel, IsDataclass
 
 SelectablesType = Dict[str, Union[Join, Type[SQLAlchemyModel]]]
@@ -79,7 +79,7 @@ async def _set_instance_attrs(
         value = getattr(input_object, prop)
         if is_unset(value) or prop == "primary_key_":
             continue
-        prop_type = strip_typename(model.get_attribute_type(prop))
+        prop_type = strip_defer_typename(model.get_attribute_type(prop))
         if isinstance(prop_type, str):
             related_model = model.get_schema_manager().get_model_for_name(prop_type)
             if related_model is None:
@@ -129,7 +129,7 @@ async def _apply_nested(
     )
     prop = attr_getter(attribute)
     if nested_path not in selectables:
-        related_type_name = strip_typename(model.get_attribute_type(attribute))
+        related_type_name = strip_defer_typename(model.get_attribute_type(attribute))
         related_model_raw = model.get_schema_manager().get_model_for_name(related_type_name)
         related_model = with_polymorphic(related_model_raw, "*", aliased=True)
         selectables[nested_path] = related_model
@@ -479,28 +479,29 @@ async def create_object_filters(
             elif attribute == "OR_":
                 nested_filters = await create_object_filters(model, path, value, selectables)
                 result_filters.append(or_(*nested_filters))
-            elif isinstance(value, dict) and "AND_" in value:
-                # Nested filter
-                result_filters.extend(
-                    await _apply_nested(
-                        model,
-                        path,
-                        [value],
-                        create_object_filters,
-                        attribute,
-                        selectables,
+            elif isinstance(value, dict):
+                if "AND_" in value:
+                    # Nested filter
+                    result_filters.extend(
+                        await _apply_nested(
+                            model,
+                            path,
+                            [value],
+                            create_object_filters,
+                            attribute,
+                            selectables,
+                        )
                     )
-                )
-                attr = get_attr(selectables, path, attribute)
-                result_filters.append(ColOps.__ne__(attr, None))
-            else:
-                negate = value.pop("NOT_", False)
-                for operation, filter_value in value.items():
-                    if is_unset(filter_value):
-                        continue
-                    else:
-                        attr = get_attr(selectables, path, attribute)
-                        result_filters.append(create_filter_op(attr, operation, filter_value, negate))
+                    attr = get_attr(selectables, path, attribute)
+                    result_filters.append(ColOps.__ne__(attr, None))
+                else:
+                    negate = value.pop("NOT_", False)
+                    for operation, filter_value in value.items():
+                        if is_unset(filter_value):
+                            continue
+                        else:
+                            attr = get_attr(selectables, path, attribute)
+                            result_filters.append(create_filter_op(attr, operation, filter_value, negate))
     return result_filters
 
 
@@ -517,7 +518,7 @@ async def list_(
     :param model: which model to list
     :param data: graphql input
     :param selection: selected fields
-    :return: List[model]
+    :return: QueryManyResult
     """
     polymorphic_model = with_polymorphic(model, "*", aliased=True)
     model_query = select(polymorphic_model)
@@ -526,6 +527,7 @@ async def list_(
     eager_options = await create_selection_joins(model, "", selection, selectables)
 
     expression = selectables["__selection__"]
+    original_expression = expression
 
     if eager_options != (None,):
         expression = expression.options(*eager_options)
@@ -541,6 +543,8 @@ async def list_(
             ordering = add_default_ordering(model, raw_ordering)
             ordering = cleanup_ordering(ordering)
             ordering = await create_ordering(model, "", ordering, selectables)
+        else:
+            ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
         # Expression needs to be created again, selectables may have been modified in filters / ordering builder
         expression = selectables["__selection__"]
@@ -551,12 +555,21 @@ async def list_(
         if filters:
             expression = expression.filter(*filters)
 
-        if ordering:
-            expression = expression.order_by(*ordering)
+        expression = expression.order_by(*ordering)
 
+        original_expression = expression
         if not is_unset(data.page_size) and data.page_size:
             expression = expression.limit(data.page_size)
             if not is_unset(data.page_number) and data.page_number:
                 expression = expression.offset((data.page_number - 1) * data.page_size)
 
-    return (await session.execute(expression)).unique().scalars().all()
+    results_task = session.execute(expression)
+    total_results_task = session.execute(select(func.count()).select_from(original_expression))
+    results = (await results_task).unique().scalars().all()
+    total_results = (await total_results_task).scalar()
+    return model.get_strawberry_type().query_many_output(
+        results=results,
+        page=data.page_number if not is_unset(data) else 1,
+        total_pages=ceil(total_results / data.page_size) if not is_unset(data) else 1,
+        total_records=total_results,
+    )
