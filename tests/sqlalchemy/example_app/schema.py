@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import Column, Enum, Float, ForeignKey, Integer, String, Table
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import relationship
 
@@ -10,6 +10,18 @@ from strawberry_mage.backends.sqlalchemy.utils import make_fk
 from strawberry_mage.core.schema import SchemaManager
 
 Base = create_base_entity()
+
+entity_title_m2m = Table(
+    "entity_title_m2m",
+    Base.metadata,
+    Column("entity_id", Integer, ForeignKey("entity.id"), primary_key=True),
+    Column("title_name", String, ForeignKey("title.name"), primary_key=True),
+)
+
+
+class Title(Base):
+    name = Column(String, primary_key=True)
+    entities = relationship("Entity", secondary=entity_title_m2m, back_populates="titles")
 
 
 class Weapon(Base):
@@ -24,6 +36,7 @@ class Entity(Base):
     weapons = relationship(Weapon, back_populates="owner")
     entity_class = Column(String, nullable=False)
     submits_to_id, submits_to = make_fk("King", back_populates="subjects")
+    titles = relationship(Title, secondary=entity_title_m2m, back_populates="entities")
 
     __mapper_args__ = {"polymorphic_on": entity_class, "polymorphic_identity": "entity"}
 
@@ -60,8 +73,8 @@ class King(Entity):
     }
 
 
-engine = create_async_engine("sqlite+aiosqlite:///")
-schema = SchemaManager(Weapon, Entity, Mage, Archer, King, backend=SQLAlchemyBackend(engine)).get_schema()
+engine = create_async_engine("sqlite+aiosqlite:///", echo=True)
+schema = SchemaManager(Weapon, Entity, Mage, Archer, King, Title, backend=SQLAlchemyBackend(engine)).get_schema()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

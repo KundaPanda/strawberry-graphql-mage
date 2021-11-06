@@ -152,6 +152,8 @@ def defer_annotation(
         return annotation
     if isinstance(annotation, ForwardRef):
         return defer_annotation(annotation.__forward_arg__, target_type)
+    if isinstance(annotation, str):
+        return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation, target_type))
     if isclass(annotation):
         if issubclass(annotation, ScalarFilter) or annotation in SCALARS:
             return annotation
@@ -159,15 +161,13 @@ def defer_annotation(
             issubclass(annotation, enum.Enum) and target_type in {GeneratedType.FILTER, GeneratedType.ORDERING}
         ):
             return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation.__name__, target_type))
-    if isinstance(annotation, str):
-        return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation, target_type))
-    if isinstance(annotation, ModuleBoundStrawberryAnnotation):
-        return defer_annotation(annotation.annotation, target_type)
+        if isinstance(annotation, ModuleBoundStrawberryAnnotation):
+            return defer_annotation(annotation.annotation, target_type)
     if hasattr(annotation, "__args__"):
-        deferred_args = [defer_annotation(arg, target_type) for arg in annotation.__args__]
+        deferred_args = [defer_annotation(arg, target_type) for arg in getattr(annotation, "__args__")]
         # TODO: UGLY
         new_annotation = ModuleBoundStrawberryAnnotation(
-            annotation.__reduce__()[1][0][
+            annotation.__reduce__()[1][0][  # type: ignore
                 (*(a.annotation if isinstance(a, StrawberryAnnotation) else a for a in deferred_args),)
             ]
         )
@@ -511,14 +511,14 @@ def create_query_many_output(model: Type[IEntityModel]) -> Type[QueryManyResult]
     python_type = type(
         GeneratedType.QUERY_MANY.get_typename(model.__name__),
         (QueryManyResult,),
-        _create_fields({"results": List[GeneratedType.ENTITY.get_typename(model.__name__)]}),
+        _create_fields({"results": List[GeneratedType.ENTITY.get_typename(model.__name__)]}),  # type: ignore
     )
     query_many = strawberry.type(python_type, is_input=False)
 
     setattr(sys.modules[ROOT_NS], query_many.__name__, query_many)
     query_many.__module__ = ROOT_NS
 
-    return query_many
+    return cast(Type[QueryManyResult], query_many)
 
 
 def get_ordering_type(type_: Any):

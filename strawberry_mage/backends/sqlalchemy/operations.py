@@ -8,9 +8,11 @@ from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 from sqlalchemy import Table, and_, delete, inspect, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import RelationshipProperty, contains_eager, selectinload
+from sqlalchemy.orm import InstrumentedAttribute, RelationshipProperty, contains_eager, selectinload
+from sqlalchemy.orm.base import MANYTOMANY
 from sqlalchemy.orm.util import AliasedClass, with_polymorphic
 from sqlalchemy.sql import ColumnElement, Join
+from sqlalchemy.sql.elements import BooleanClauseList, ColumnClause
 from sqlalchemy.sql.expression import desc, func
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry.arguments import is_unset
@@ -99,6 +101,43 @@ async def _set_instance_attrs(
             setattr(instance, prop, value)
 
 
+def _create_join(
+    selectables: SelectablesType,
+    related_model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    property_: InstrumentedAttribute,
+    nested_path: str,
+    select_from: Type[SQLAlchemyModel],
+) -> ColumnClause:
+    expression = property_.expression
+    if isinstance(expression, BooleanClauseList):
+        if property_.property.direction == MANYTOMANY and len(expression.clauses) == 2:
+            m2m_path = f"{nested_path}._m2m"
+            if m2m_path not in selectables:
+                selectables[m2m_path] = expression.clauses[0].right.table
+                selectables["__selection__"] = selectables["__selection__"].join(
+                    selectables[m2m_path], expression.clauses[0], isouter=True
+                )
+            # noinspection PyTypeChecker
+            join_expression: ColumnClause = getattr(
+                selectables[m2m_path].c, expression.clauses[1].right.key
+            ) == getattr(inspect(related_model).local_table.c, expression.clauses[1].left.key)
+            selectables["__selection__"] = selectables["__selection__"].join(
+                related_model, join_expression, isouter=True
+            )
+            return join_expression
+        else:
+            raise NotImplementedError("Relationships on multiple clauses are not yet implemented")
+    else:
+        # noinspection PyTypeChecker
+        join_expression: ColumnClause = (
+            expression.left == getattr(related_model, expression.right.key)
+            if inspect(select_from).local_table == expression.left.table
+            else expression.right == getattr(related_model, expression.left.key)
+        )
+        selectables["__selection__"] = selectables["__selection__"].join(related_model, join_expression, isouter=True)
+        return join_expression
+
+
 async def _apply_nested(
     model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
     path: str,
@@ -107,6 +146,7 @@ async def _apply_nested(
     attribute: str,
     selectables: SelectablesType,
     eager_options: Any = None,
+    **kwargs,
 ):
     """
     Recursively call an operation whilst updating the selectables.
@@ -133,21 +173,15 @@ async def _apply_nested(
         related_model_raw = model.get_schema_manager().get_model_for_name(related_type_name)
         related_model = with_polymorphic(related_model_raw, "*", aliased=True)
         selectables[nested_path] = related_model
-        ex = prop.expression
-        join_expression = (
-            ex.left == getattr(related_model, ex.right.key)
-            if inspect(select_from).local_table == ex.left.table
-            else ex.right == getattr(related_model, ex.left.key)
-        )
-        selectables["__selection__"] = selectables["__selection__"].join(related_model, join_expression, isouter=True)
+        _create_join(selectables, related_model, prop, nested_path, select_from)
     eager_options = (
         contains_eager(prop.of_type(selectables[nested_path]))
         if eager_options is None
         else eager_options.contains_eager(prop.of_type(selectables[nested_path]))
     )
     if iscoroutinefunction(op):
-        return await op(selectables[nested_path], nested_path, input_, selectables, eager_options)
-    return op(selectables[nested_path], nested_path, input_, selectables, eager_options)
+        return await op(selectables[nested_path], nested_path, input_, selectables, eager_options, **kwargs)
+    return op(selectables[nested_path], nested_path, input_, selectables, eager_options, **kwargs)
 
 
 async def create_(
@@ -492,8 +526,8 @@ async def create_object_filters(
                             selectables,
                         )
                     )
-                    attr = get_attr(selectables, path, attribute)
-                    result_filters.append(ColOps.__ne__(attr, None))
+                    # attr = get_attr(selectables, path, attribute)
+                    # result_filters.append(ColOps.__ne__(attr, None))
                 else:
                     negate = value.pop("NOT_", False)
                     for operation, filter_value in value.items():
@@ -569,7 +603,7 @@ async def list_(
     total_results = (await total_results_task).scalar()
     return model.get_strawberry_type().query_many_output(
         results=results,
-        page=data.page_number if not is_unset(data) else 1,
+        page=data.page_number if (not is_unset(data) and data.page_number) else 1,
         total_pages=ceil(total_results / data.page_size) if not is_unset(data) else 1,
         total_records=total_results,
     )

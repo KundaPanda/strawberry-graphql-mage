@@ -35,6 +35,7 @@ class QueryManyResult:
     page: int
     total_pages: int
     total_records: int
+    results: List[EntityType]
 
 
 @dataclass
@@ -96,6 +97,7 @@ class ObjectFilter:
 
     AND_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=invalid-name
     OR_: Optional[List[Optional["ObjectFilter"]]]  # pylint: disable=invalid-name
+    ANY_: Optional[bool] = False
 
 
 @dataclass

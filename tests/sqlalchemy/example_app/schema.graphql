@@ -10,6 +10,7 @@ interface Entity {
   id: Int!
   submitsTo: King
   submitsToId: Int
+  titles: [Title!]!
   weapons: [Weapon]!
 }
 
@@ -19,6 +20,7 @@ type Archer implements Entity {
   id: Int!
   submitsTo: King
   submitsToId: Int
+  titles: [Title!]!
   weapons: [Weapon]!
 }
 
@@ -45,6 +47,7 @@ type Entity_ implements Entity {
   id: Int!
   submitsTo: King
   submitsToId: Int
+  titles: [Title!]!
   weapons: [Weapon]!
 }
 
@@ -55,6 +58,7 @@ type King implements Entity {
   subjects: [Entity]!
   submitsTo: King
   submitsToId: Int
+  titles: [Title!]!
   weapons: [Weapon]!
 }
 
@@ -72,6 +76,7 @@ type Mage implements Entity {
   submitsTo: King
   submitsToId: Int
   test: MageTypeEnum!
+  titles: [Title!]!
   weapons: [Weapon]!
 }
 
@@ -91,6 +96,8 @@ type Mutation {
   createKings(data: [KingCreateOne!]!): [King]!
   createMage(data: MageCreateOne!): Mage
   createMages(data: [MageCreateOne!]!): [Mage]!
+  createTitle(data: TitleCreateOne!): Title
+  createTitles(data: [TitleCreateOne!]!): [Title]!
   createWeapon(data: WeaponCreateOne!): Weapon
   createWeapons(data: [WeaponCreateOne!]!): [Weapon]!
   deleteArcher(data: ArcherPrimaryKeyField!): DeleteResult!
@@ -101,6 +108,8 @@ type Mutation {
   deleteKings(data: [KingPrimaryKeyField!]!): DeleteResult!
   deleteMage(data: MagePrimaryKeyField!): DeleteResult!
   deleteMages(data: [MagePrimaryKeyField!]!): DeleteResult!
+  deleteTitle(data: TitlePrimaryKeyField!): DeleteResult!
+  deleteTitles(data: [TitlePrimaryKeyField!]!): DeleteResult!
   deleteWeapon(data: WeaponPrimaryKeyField!): DeleteResult!
   deleteWeapons(data: [WeaponPrimaryKeyField!]!): DeleteResult!
   updateArcher(data: ArcherUpdateOne!): Archer
@@ -111,6 +120,8 @@ type Mutation {
   updateKings(data: [KingUpdateOne!]!): [King]!
   updateMage(data: MageUpdateOne!): Mage
   updateMages(data: [MageUpdateOne!]!): [Mage]!
+  updateTitle(data: TitleUpdateOne!): Title
+  updateTitles(data: [TitleUpdateOne!]!): [Title]!
   updateWeapon(data: WeaponUpdateOne!): Weapon
   updateWeapons(data: [WeaponUpdateOne!]!): [Weapon]!
 }
@@ -124,8 +135,22 @@ type Query {
   kings(data: KingQueryManyInput): KingQueryMany!
   mage(data: MageQueryOne!): Mage
   mages(data: MageQueryManyInput): MageQueryMany!
+  title(data: TitleQueryOne!): Title
+  titles(data: TitleQueryManyInput): TitleQueryMany!
   weapon(data: WeaponQueryOne!): Weapon
   weapons(data: WeaponQueryManyInput): WeaponQueryMany!
+}
+
+type Title {
+  entities: [Entity!]!
+  name: String!
+}
+
+type TitleQueryMany {
+  page: Int!
+  results: [Title!]!
+  totalPages: Int!
+  totalRecords: Int!
 }
 
 type Weapon {
@@ -159,17 +184,20 @@ input ArcherCreateOne {
   drawStrength: Float!
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]!
   weapons: [WeaponPrimaryKeyField]!
 }
 
 input ArcherFilter {
   AND_: [ArcherFilter]
+  ANY_: Boolean = false
   OR_: [ArcherFilter]
   drawStrength: FloatFilter
   entityClass: StringFilter
   id: IntegerFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
+  titles: TitleFilter
   weapons: WeaponFilter
 }
 
@@ -179,6 +207,7 @@ input ArcherOrdering {
   id: OrderingDirection
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
+  titles: TitleOrdering
   weapons: WeaponOrdering
 }
 
@@ -206,22 +235,26 @@ input ArcherUpdateOne {
   primaryKey_: ArcherPrimaryKey!
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]
   weapons: [WeaponPrimaryKeyField]
 }
 
 input EntityCreateOne {
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]!
   weapons: [WeaponPrimaryKeyField]!
 }
 
 input EntityFilter {
   AND_: [EntityFilter]
+  ANY_: Boolean = false
   OR_: [EntityFilter]
   entityClass: StringFilter
   id: IntegerFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
+  titles: TitleFilter
   weapons: WeaponFilter
 }
 
@@ -230,6 +263,7 @@ input EntityOrdering {
   id: OrderingDirection
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
+  titles: TitleOrdering
   weapons: WeaponOrdering
 }
 
@@ -256,6 +290,7 @@ input EntityUpdateOne {
   primaryKey_: EntityPrimaryKey!
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]
   weapons: [WeaponPrimaryKeyField]
 }
 
@@ -284,11 +319,13 @@ input KingCreateOne {
   subjects: [EntityPrimaryKeyField]!
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]!
   weapons: [WeaponPrimaryKeyField]!
 }
 
 input KingFilter {
   AND_: [KingFilter]
+  ANY_: Boolean = false
   OR_: [KingFilter]
   entityClass: StringFilter
   id: IntegerFilter
@@ -296,6 +333,7 @@ input KingFilter {
   subjects: EntityFilter
   submitsTo: KingFilter
   submitsToId: IntegerFilter
+  titles: TitleFilter
   weapons: WeaponFilter
 }
 
@@ -306,6 +344,7 @@ input KingOrdering {
   subjects: EntityOrdering
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
+  titles: TitleOrdering
   weapons: WeaponOrdering
 }
 
@@ -334,6 +373,7 @@ input KingUpdateOne {
   subjects: [EntityPrimaryKeyField]
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
+  titles: [TitlePrimaryKeyField!]
   weapons: [WeaponPrimaryKeyField]
 }
 
@@ -342,11 +382,13 @@ input MageCreateOne {
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
   test: MageTypeEnum
+  titles: [TitlePrimaryKeyField!]!
   weapons: [WeaponPrimaryKeyField]!
 }
 
 input MageFilter {
   AND_: [MageFilter]
+  ANY_: Boolean = false
   OR_: [MageFilter]
   entityClass: StringFilter
   id: IntegerFilter
@@ -354,6 +396,7 @@ input MageFilter {
   submitsTo: KingFilter
   submitsToId: IntegerFilter
   test: MageTypeEnumFilter
+  titles: TitleFilter
   weapons: WeaponFilter
 }
 
@@ -364,6 +407,7 @@ input MageOrdering {
   submitsTo: KingOrdering
   submitsToId: OrderingDirection
   test: MageTypeEnumOrdering
+  titles: TitleOrdering
   weapons: WeaponOrdering
 }
 
@@ -403,6 +447,7 @@ input MageUpdateOne {
   submitsTo: KingPrimaryKeyField
   submitsToId: Int
   test: MageTypeEnum
+  titles: [TitlePrimaryKeyField!]
   weapons: [WeaponPrimaryKeyField]
 }
 
@@ -417,6 +462,47 @@ input StringFilter {
   like: String
 }
 
+input TitleCreateOne {
+  entities: [EntityPrimaryKeyField!]!
+}
+
+input TitleFilter {
+  AND_: [TitleFilter]
+  ANY_: Boolean = false
+  OR_: [TitleFilter]
+  entities: EntityFilter
+  name: StringFilter
+}
+
+input TitleOrdering {
+  entities: EntityOrdering
+  name: OrderingDirection
+}
+
+input TitlePrimaryKey {
+  name: String!
+}
+
+input TitlePrimaryKeyField {
+  primaryKey_: TitlePrimaryKey!
+}
+
+input TitleQueryManyInput {
+  filters: [TitleFilter]
+  ordering: [TitleOrdering]
+  pageNumber: Int = 1
+  pageSize: Int = 30
+}
+
+input TitleQueryOne {
+  primaryKey_: TitlePrimaryKey!
+}
+
+input TitleUpdateOne {
+  entities: [EntityPrimaryKeyField!]
+  primaryKey_: TitlePrimaryKey!
+}
+
 input WeaponCreateOne {
   damage: Int!
   name: String
@@ -426,6 +512,7 @@ input WeaponCreateOne {
 
 input WeaponFilter {
   AND_: [WeaponFilter]
+  ANY_: Boolean = false
   OR_: [WeaponFilter]
   damage: IntegerFilter
   id: IntegerFilter

@@ -1,7 +1,7 @@
 """Backend for relaying calls to other JSON APIs."""
 
 import dataclasses
-from typing import Any, Iterable, Optional, Type
+from typing import Any, Iterable, List, Optional, Type, cast
 
 from overrides import overrides
 from strawberry.type import StrawberryType
@@ -45,10 +45,11 @@ class APIBackend(JSONBackend):
                     page_size=len(dataset),
                     filters=[filter_type(id=IntegerFilter(in_=[entry["id"] for entry in dataset]))],
                 )
-                info.selected_fields[0].selections = [
+                field = cast(List[SelectedField], info.selected_fields)[0]
+                field.selections = [
                     SelectedField(
                         "results",
-                        selections=info.selected_fields[0].selections,
+                        selections=field.selections,
                         arguments={},
                         alias=None,
                         directives={},

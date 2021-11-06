@@ -10,6 +10,7 @@ from tests.sqlalchemy.example_app.schema import (
     Entity,
     King,
     Mage,
+    Title,
     Weapon,
     engine,
     schema as strawberry_schema,
@@ -64,8 +65,14 @@ async def prepare_database(session):
             ),
         ]
         session.add_all(entities)
+        await session.flush()
+        titles = [
+            Title(name="squire", entities=[entities[1], entities[3]]),
+            Title(name="personal guard", entities=[entities[3]]),
+        ]
+        session.add_all(titles)
         await session.commit()
-    data = [*weapons, king1, king2, *entities]
+    data = [*weapons, king1, king2, *entities, *titles]
     yield data
     async with engine.begin() as s:
         await s.run_sync(Base.metadata.drop_all, checkfirst=False)

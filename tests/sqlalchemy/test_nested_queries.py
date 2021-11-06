@@ -1,9 +1,20 @@
 import pytest
-from sqlalchemy import select, desc
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy import desc, select
+from sqlalchemy.orm import aliased, joinedload
 from strawberry import Schema
 
-from tests.sqlalchemy.example_app.schema import Archer, King, Weapon, Entity
+from tests.sqlalchemy.example_app.schema import Archer, Entity, King, Weapon
+
+
+# @pytest.mark.asyncio
+# async def test_asdt(schema: Schema, operations, session):
+#     t = with_polymorphic(Title, '*', aliased=True)
+#     t1 = with_polymorphic(Title, '*', aliased=True)
+#     q = select(Entity)
+#     sq = select(Entity).join(t1, Entity.titles).where(t1.name == 'squire').subquery()
+#     expr = q.join(sq, Entity.id == sq.c.id).join(t, Entity.titles).options(contains_eager(Entity.titles.of_type(t)))
+#     res = (await session.execute(expr)).unique().scalars().all()
+#     print(res)
 
 
 @pytest.mark.asyncio
@@ -27,6 +38,7 @@ async def test_nested_select(schema: Schema, operations, session):
         .all()
     )
     assert len(data) == len(archers)
+    assert any((a["titles"][0].get("name")) == "personal guard" for a in data if a["titles"])
     for archer in archers:
         (selected,) = [a for a in data if a["id"] == archer.id]
         if archer.submits_to:

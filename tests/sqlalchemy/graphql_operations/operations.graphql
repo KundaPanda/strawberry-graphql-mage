@@ -20,6 +20,9 @@ query nestedSelectQuery {
   archers {
     results {
       id
+      titles {
+        name
+      }
       submitsTo {
         id
         subjects {
@@ -39,7 +42,9 @@ query nestedSelectQuery {
 
 query nestedFilterQuery {
   archers(
-    data: { filters: [{ submitsTo: { weapons: { damage: { gt: 10 } } } }] }
+    data: {
+      filters: [{ submitsTo: { weapons: { ANY_: true, damage: { gt: 10 } } } }]
+    }
   ) {
     results {
       id
@@ -79,7 +84,7 @@ query fragmentQuery {
 }
 
 mutation simpleCreate {
-  createKing(data: { weapons: [], subjects: [] }) {
+  createKing(data: { weapons: [], subjects: [], titles: [] }) {
     id
     entityClass
     __typename
