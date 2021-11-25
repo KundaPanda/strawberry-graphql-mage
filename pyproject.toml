@@ -24,7 +24,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-strawberry-graphql = ">=0.84,<0.86"
+strawberry-graphql = ">=0.84,<0.90"
 inflection = "^0.5.1"
 SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
