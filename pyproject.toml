@@ -44,7 +44,7 @@ poetry = "^1.1.11"
 pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 pylint = "^2.11.1"
 toml = "^0.10.2"
-uvicorn = { extras = ["standard"], version = "^0.15.0" }
+uvicorn = { extras = ["standard"], version = "^0.17.5" }
 starlette = "^0.16.0"
 
 [tool.pytest.ini_options]
