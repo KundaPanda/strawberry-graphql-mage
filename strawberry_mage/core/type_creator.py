@@ -263,7 +263,7 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
     base_entity.__module__ = ROOT_NS
 
     def is_type_of(other, *_):
-        return isinstance(other, model)
+        return other.__class__.__name__ == model.__name__
 
     getattr(base_entity, "_type_definition").is_type_of = is_type_of
 

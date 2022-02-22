@@ -104,7 +104,7 @@ def safety(session_: Session) -> None:
     """Scan dependencies for insecure packages."""
     _export_requirements(session_)
     poetry_install(session_)
-    session_.run("safety", "check", "--full-report", f"--file={requirements}", "-i 42194")
+    session_.run("safety", "check", "--full-report", f"--file={requirements}", "--ignore=42194")
     _cleanup_requirements()
 
 
