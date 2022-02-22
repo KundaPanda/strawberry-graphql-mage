@@ -139,7 +139,7 @@ def _apply_type_rename(name: str, target_type: GeneratedType):
 
 
 def defer_annotation(
-    annotation, target_type: GeneratedType = GeneratedType.ENTITY
+        annotation, target_type: GeneratedType = GeneratedType.ENTITY
 ) -> Union[Type, ModuleBoundStrawberryAnnotation]:
     """
     Defer the resolution of an annotation (using ForwardRef-s).
@@ -158,7 +158,7 @@ def defer_annotation(
         if issubclass(annotation, ScalarFilter) or annotation in SCALARS:
             return annotation
         if dataclasses.is_dataclass(annotation) or (
-            issubclass(annotation, enum.Enum) and target_type in {GeneratedType.FILTER, GeneratedType.ORDERING}
+                issubclass(annotation, enum.Enum) and target_type in {GeneratedType.FILTER, GeneratedType.ORDERING}
         ):
             return ModuleBoundStrawberryAnnotation(_apply_type_rename(annotation.__name__, target_type))
         if isinstance(annotation, ModuleBoundStrawberryAnnotation):
@@ -261,6 +261,11 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
 
     setattr(sys.modules[ROOT_NS], base_entity.__name__, base_entity)
     base_entity.__module__ = ROOT_NS
+
+    def is_type_of(other, *_):
+        return isinstance(other, model)
+
+    getattr(base_entity, '_type_definition').is_type_of = is_type_of
 
     if entity is None:
         entity = base_entity
