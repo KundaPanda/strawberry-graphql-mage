@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "strawberry-graphql-mage"
-version = "0.0.1-alpha.2"
+version = "0.0.1-alpha.3"
 description = "An automated, modular, backend-agnostic GraphQL schema generator"
 license = "MIT"
 authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
@@ -24,7 +24,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-strawberry-graphql = ">=0.84,<0.86"
+strawberry-graphql = ">0.80.0,<1.0.0"
 inflection = "^0.5.1"
 SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
