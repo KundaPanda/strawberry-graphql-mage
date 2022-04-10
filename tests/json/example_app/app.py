@@ -8,10 +8,6 @@ Base = declarative_base()
 
 def app(debug=False):
     from tests.json.example_app.schema import (
-        Weapon,
-        Entity,
-        King,
-        Archer,
         Mage,
         schema,
         schema_manager,

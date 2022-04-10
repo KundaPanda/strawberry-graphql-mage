@@ -3,11 +3,7 @@ from pathlib import Path
 import pytest
 
 from tests.json.example_app.schema import (
-    Archer,
-    Entity,
-    King,
     Mage,
-    Weapon,
     schema as strawberry_schema,
     schema_manager,
 )

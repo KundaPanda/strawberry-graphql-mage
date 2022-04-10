@@ -71,7 +71,9 @@ class SQLAlchemyBackend(DataBackendBase):
         inspection = inspect(model)
         all_ = list(a for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs))
         pk_cols = set(inspection.mapper.primary_key)
-        fk_cols = set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
+        fk_cols = (
+            set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
+        )
         all_ = [a.key for a in all_ if not (isinstance(a, ColumnProperty) and any(c in fk_cols for c in a.columns))]
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
             return all_
