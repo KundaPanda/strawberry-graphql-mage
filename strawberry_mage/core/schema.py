@@ -118,8 +118,8 @@ class SchemaManager(ISchemaManager[TEntity]):
                     GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
                 )
             ) is not None:
-                return self._backend.get_polymorphic_type(base_type)
-            return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__])
+                return self._backend.get_polymorphic_type(base_type).name
+            return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__]).name
 
         for entry in schema.schema_converter.type_map.values():
             if isinstance(entry, ConcreteType) and isinstance(entry.implementation, GraphQLInterfaceType):

@@ -1,5 +1,5 @@
 """Strawberry-GraphQL-Mage data backend that uses SQLAlchemy mapper objects to load data from a database."""
-
+import itertools
 from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
@@ -69,7 +69,10 @@ class SQLAlchemyBackend(DataBackendBase):
         operation: Optional[GraphQLOperation] = None,
     ) -> List[str]:
         inspection = inspect(model)
-        all_ = [a.key for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs)]
+        all_ = list(a for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs))
+        pk_cols = set(inspection.mapper.primary_key)
+        fk_cols = set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
+        all_ = [a.key for a in all_ if not (isinstance(a, ColumnProperty) and any(c in fk_cols for c in a.columns))]
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
             return all_
         all_ = self._remove_polymorphic_cols(model, all_)
@@ -100,9 +103,7 @@ class SQLAlchemyBackend(DataBackendBase):
             ONETOMANY,
             MANYTOMANY,
         }:
-            python_type = List[python_type]
-            # if self._is_nullable(attr):
-            #     python_type = Optional[python_type]
+            python_type = Optional[List[python_type]]
         return python_type
 
     @lru_cache

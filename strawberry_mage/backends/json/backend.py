@@ -29,6 +29,8 @@ class JSONBackend(PythonBackend):
             raise AttributeError("Model or model_mapper need to be set for a JSONBackend")
         data = self.__extract_attributes(mappings, original)
         model = self._model if self._model else self._model_mapper(original)  # type: ignore
+        if isinstance(model, str):
+            model, = (m for m in self._models if m.__name__ == model)
         attrs = set(model.get_attributes())
         return model.get_sqla_model()(**{k: data[k] for k in set(data.keys()).intersection(attrs)})
 
@@ -59,6 +61,8 @@ class JSONBackend(PythonBackend):
         if self._model is None and self._model_mapper is None:
             raise AttributeError("Model or model_mapper need to be set for a JSONBackend")
         model = self._model if self._model else self._model_mapper(entry)  # type: ignore
+        if isinstance(model, str):
+            model, = (m for m in self._models if m.__name__ == model)
         return json.dumps(
             {
                 "__model__": model.__name__,

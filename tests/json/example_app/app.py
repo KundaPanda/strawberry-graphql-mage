@@ -66,11 +66,11 @@ def app(debug=False):
 
     def resolve_type(entity: dict):
         return {
-            "weapon": Weapon,
-            "entity": Entity,
-            "king": King,
-            "archer": Archer,
-            "mage": Mage,
+            "weapon": "Weapon",
+            "entity": "Entity",
+            "king": "King",
+            "archer": "Archer",
+            "mage": "Mage",
         }[entity["__type__"]]
 
     data = [*weapons, king1, king2, *entities]

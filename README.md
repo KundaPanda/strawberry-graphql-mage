@@ -19,6 +19,7 @@ Contributions are welcome as well.
 - [x] Mutations
 - [ ] Subscriptions
 - [x] Backend separation + dummy backend
+- [ ] Assess strawberry dataloader for other backends instead of the current implementation with large overhead
 - [ ] SQLAlchemy backend
   - [x] Entity models
   - [x] Implement basic mutations/queries

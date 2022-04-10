@@ -9,7 +9,6 @@ query simpleQuery {
   weapons {
     results {
       id
-      ownerId
       __typename
       damage
     }
@@ -48,7 +47,9 @@ query nestedFilterQuery {
   ) {
     results {
       id
-      submitsToId
+      submitsTo {
+        id
+      }
     }
   }
 }
