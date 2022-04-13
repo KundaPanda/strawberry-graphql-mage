@@ -6,6 +6,7 @@ from inflection import underscore
 from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.elements import ColumnClause
+from sqlalchemy.sql.type_api import TypeEngine
 
 from strawberry_mage.backends.sqlalchemy.types import SqlAlchemyModel
 
@@ -57,7 +58,7 @@ def make_composite_fk(
     remote_keys: Tuple[str, ...],
     model_name: str,
     rel_name: str,
-    remote_key_types: Tuple[Type[ColumnClause], ...] = None,
+    remote_key_types: Tuple[Type[TypeEngine], ...] = None,
     nullable=True,
     back_populates=None,
     backref=None,

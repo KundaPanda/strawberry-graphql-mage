@@ -42,6 +42,9 @@ class SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
         return all(c.autoincrement for c in inspect(self.__class__).primary_key)
 
 
+_SQLAlchemyModel = SQLAlchemyModel
+
+
 def create_base_entity() -> Type[SQLAlchemyModel]:
     """
     Create a SQLAlchemy entity base class with independent metadata.
@@ -49,14 +52,11 @@ def create_base_entity() -> Type[SQLAlchemyModel]:
     :return: SQLAlchemyModel
     """
     new_base = declarative_base()
-    return cast(
-        Type[SQLAlchemyModel],
-        type(
-            "SQLAlchemyModel",
-            (
-                new_base,
-                SQLAlchemyModel,
-            ),
-            {"__abstract__": True},
-        ),
-    )
+
+    class ModelMeta(type(_SQLAlchemyModel), type(new_base)):
+        pass
+
+    class SQLAlchemyModel(new_base, _SQLAlchemyModel, metaclass=ModelMeta):
+        __abstract__ = True
+
+    return cast(Type[_SQLAlchemyModel], SQLAlchemyModel)

@@ -4,7 +4,7 @@ import enum
 import sys
 from decimal import Decimal
 from inspect import isclass
-from typing import Dict, ForwardRef, Tuple, Type, Union
+from typing import Dict, ForwardRef, Tuple, Type, Union, cast
 
 from inflection import underscore
 from sqlalchemy import (
@@ -50,7 +50,7 @@ class SQLAlchemyModelConverter:
 
     def _get_sqla_type(
         self, entity: Type[IEntityModel], attr: str
-    ) -> Tuple[Union[enum.Enum, str, TypeEngine], bool, bool]:
+    ) -> Tuple[Union[Type[enum.Enum], str, Type[TypeEngine]], bool, bool]:
         python_type = entity.get_attribute_type(attr)
         optional = is_optional(python_type)
         if optional and len(getattr(python_type, "__args__")) == 2:
@@ -156,5 +156,5 @@ class SQLAlchemyModelConverter:
 
         if parent:
             parent_model: Type[SQLAlchemyModel] = parent.get_sqla_model()  # type: ignore
-            return type(entity.__name__, (parent_model,), attrs)
-        return type(entity.__name__, (self.base,), attrs)
+            return cast(Type[SQLAlchemyModel], type(entity.__name__, (parent_model,), attrs))
+        return cast(Type[SQLAlchemyModel], type(entity.__name__, (self.base,), attrs))
