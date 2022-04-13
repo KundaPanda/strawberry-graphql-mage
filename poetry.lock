@@ -994,7 +994,7 @@ full = ["itsdangerous", "jinja2", "python-multipart", "pyyaml", "requests"]
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.105.0"
+version = "0.105.1"
 description = "A library for creating GraphQL APIs"
 category = "main"
 optional = false
@@ -1865,8 +1865,8 @@ starlette = [
     {file = "starlette-0.17.1.tar.gz", hash = "sha256:57eab3cc975a28af62f6faec94d355a410634940f10b30d68d31cb5ec1b44ae8"},
 ]
 strawberry-graphql = [
-    {file = "strawberry-graphql-0.105.0.tar.gz", hash = "sha256:17f964071c73a8a98e197ba95537b4c3fc5e78642f51a8327e906ef21d49ce4f"},
-    {file = "strawberry_graphql-0.105.0-py3-none-any.whl", hash = "sha256:72ee6d9a1ebd5f9839b2d20f9939b512eafe46270ac3cb7fd4b7db68b6fa055f"},
+    {file = "strawberry-graphql-0.105.1.tar.gz", hash = "sha256:28da969bbb7f9ad1ed23c9019eeaf82fd4bfb509c2beb8c45c01648d3ce0aa54"},
+    {file = "strawberry_graphql-0.105.1-py3-none-any.whl", hash = "sha256:ebff71746cdb143463584bb96d2213ad02868f1655e598ee777b06e25e1c7c2f"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
