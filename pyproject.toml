@@ -30,7 +30,7 @@ SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
 overrides = "^6.1.0"
-SQLAlchemy-Utils = "^0.37.9"
+SQLAlchemy-Utils = ">=0.37.9,<0.39.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
