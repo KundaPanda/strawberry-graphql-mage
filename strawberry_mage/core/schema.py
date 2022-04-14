@@ -86,7 +86,7 @@ class SchemaManager(ISchemaManager[TEntity]):
             # Query
             self._add_operation(query_object, GraphQLOperation.QUERY_ONE, model)
             self._add_operation(query_object, GraphQLOperation.QUERY_MANY, model)
-        return query_object
+        return strawberry.type(query_object)
 
     @property
     def mutation(self) -> type:
@@ -104,7 +104,7 @@ class SchemaManager(ISchemaManager[TEntity]):
             # Delete
             self._add_operation(mutation_object, GraphQLOperation.DELETE_ONE, model)
             self._add_operation(mutation_object, GraphQLOperation.DELETE_MANY, model)
-        return mutation_object
+        return strawberry.type(mutation_object)
 
     @overrides
     def get_schema(self, query: Optional[type] = None, mutation: Optional[type] = None) -> Schema:
@@ -115,9 +115,6 @@ class SchemaManager(ISchemaManager[TEntity]):
             query = self.query
         if not mutation:
             mutation = self.mutation
-
-        query = strawberry.type(query)
-        mutation = strawberry.type(mutation)
 
         schema = Schema(
             query=query,
