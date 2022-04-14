@@ -1,26 +1,25 @@
 """Utilities for creating sqlalchemy models."""
 
-from typing import List, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union
 
 from inflection import underscore
 from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.type_api import TypeEngine
 
 from strawberry_mage.backends.sqlalchemy.types import SqlAlchemyModel
 
 
 def make_fk(
-    remote: Union[str, Type[SqlAlchemyModel]],
-    foreign_key_type: Type[ColumnClause] = Integer,
-    remote_pk="id",
-    nullable=True,
-    back_populates=None,
-    backref=None,
-    foreign_kwargs=None,
-    rel_kwargs=None,
-    use_alter=False,
+        remote: Union[str, Type[SqlAlchemyModel]],
+        foreign_key_type: Type[TypeEngine] = Integer,
+        remote_pk="id",
+        nullable=True,
+        back_populates=None,
+        backref=None,
+        foreign_kwargs=None,
+        rel_kwargs=None,
+        use_alter=False,
 ) -> Tuple[Column, relationship]:
     """
     Create a foreign key for remote model on one column.
@@ -54,17 +53,17 @@ def make_fk(
 
 
 def make_composite_fk(
-    remote: Union[str, Type[SqlAlchemyModel]],
-    remote_keys: Tuple[str, ...],
-    model_name: str,
-    rel_name: str,
-    remote_key_types: Tuple[Type[TypeEngine], ...] = None,
-    nullable=True,
-    back_populates=None,
-    backref=None,
-    foreign_kwargs=None,
-    rel_kwargs=None,
-    use_alter=False,
+        remote: Union[str, Type[SqlAlchemyModel]],
+        remote_keys: Tuple[str, ...],
+        model_name: str,
+        rel_name: str,
+        remote_key_types: Optional[Tuple[Type[TypeEngine], ...]] = None,
+        nullable=True,
+        back_populates=None,
+        backref=None,
+        foreign_kwargs=None,
+        rel_kwargs=None,
+        use_alter=False,
 ) -> Tuple[List[Tuple[str, Column]], relationship, ForeignKeyConstraint]:
     """
     Create a composite foreign key for remote model.

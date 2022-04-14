@@ -4,7 +4,7 @@ from enum import Enum
 from functools import partial
 from inspect import isclass, iscoroutinefunction
 from math import ceil
-from typing import Any, Callable, Dict, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Tuple, Type, Union, cast
 
 from sqlalchemy import Table, and_, delete, inspect, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,20 +27,21 @@ from strawberry_mage.core.strawberry_types import (
 from strawberry_mage.core.type_creator import strip_defer_typename
 from strawberry_mage.core.types import IEntityModel, IsDataclass
 
-SelectablesType = Dict[str, Union[Join, Type[SQLAlchemyModel]]]
+SelectablesType = Dict[str, Union[Join, Type[SQLAlchemyModel], AliasedClass]]
 
 
 def _build_pk_query(
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    selectable: Union[Table, Type[SQLAlchemyModel]],
-    data: Any,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        selectable: Union[Table, Type[SQLAlchemyModel], AliasedClass],
+        data: Any,
 ):
     primary_key = model.get_primary_key()
     attribute_getter = data.get if isinstance(data, dict) else partial(getattr, data)
     column_getter = (
         partial(getattr, selectable)
-        if (isclass(selectable) and issubclass(selectable, IEntityModel)) or isinstance(selectable, AliasedClass)
-        else partial(getattr, selectable.c)
+        if (isclass(selectable) and (issubclass(selectable, IEntityModel) or issubclass(selectable, SQLAlchemyModel)))
+           or isinstance(selectable, AliasedClass)
+        else partial(getattr, cast(Table, selectable).c)
     )
     conditions = [column_getter(key) == attribute_getter(key) for key in primary_key]
     return and_(*conditions)
@@ -72,10 +73,10 @@ def _create_pk_class(data: Dict[str, Any]):
 
 
 async def _set_instance_attrs(
-    model: Type[Union[SQLAlchemyModel, IEntityModel]],
-    instance: object,
-    input_object: IsDataclass,
-    session: AsyncSession,
+        model: Type[Union[SQLAlchemyModel, IEntityModel]],
+        instance: object,
+        input_object: IsDataclass,
+        session: AsyncSession,
 ):
     for prop in input_object.__dataclass_fields__:
         value = getattr(input_object, prop)
@@ -102,11 +103,11 @@ async def _set_instance_attrs(
 
 
 def _create_join(
-    selectables: SelectablesType,
-    related_model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    property_: InstrumentedAttribute,
-    nested_path: str,
-    select_from: Type[SQLAlchemyModel],
+        selectables: SelectablesType,
+        related_model: Union[Type[IEntityModel], Type[SQLAlchemyModel], AliasedClass],
+        property_: InstrumentedAttribute,
+        nested_path: str,
+        select_from: Union[Join, Type[SQLAlchemyModel], AliasedClass],
 ) -> ColumnClause:
     expression = property_.expression
     if isinstance(expression, BooleanClauseList):
@@ -139,14 +140,14 @@ def _create_join(
 
 
 async def _apply_nested(
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    path: str,
-    input_: Any,
-    op: Callable,
-    attribute: str,
-    selectables: SelectablesType,
-    eager_options: Any = None,
-    **kwargs,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        path: str,
+        input_: Any,
+        op: Callable,
+        attribute: str,
+        selectables: SelectablesType,
+        eager_options: Any = None,
+        **kwargs,
 ):
     """
     Recursively call an operation whilst updating the selectables.
@@ -185,10 +186,10 @@ async def _apply_nested(
 
 
 async def create_(
-    session: AsyncSession,
-    model: Type[Union[SQLAlchemyModel, IEntityModel]],
-    data: List[Any],
-    selection: Dict[str, Dict],
+        session: AsyncSession,
+        model: Type[Union[SQLAlchemyModel, IEntityModel]],
+        data: List[Any],
+        selection: Dict[str, Dict],
 ):
     """
     Resolve the create-many operation.
@@ -219,17 +220,17 @@ async def create_(
     eager_options = await create_selection_joins(model, "", selection, selectables)
     ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
-    expression = selectables["__selection__"].filter(pk_filter).order_by(*ordering)
+    expression = cast(Type[SQLAlchemyModel], selectables["__selection__"]).filter(pk_filter).order_by(*ordering)
     if eager_options != (None,):
         expression = expression.options(*eager_options)
     return (await session.execute(expression)).unique().scalars().all()
 
 
 async def update_(
-    session: AsyncSession,
-    model: Type[Union[SQLAlchemyModel, IEntityModel]],
-    data: List[Any],
-    selection: Dict[str, Dict],
+        session: AsyncSession,
+        model: Type[Union[SQLAlchemyModel, IEntityModel]],
+        data: List[Any],
+        selection: Dict[str, Dict],
 ):
     """
     Resolve the update-many operation.
@@ -245,12 +246,13 @@ async def update_(
         (
             await session.execute(
                 select(model)
-                .options(*[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
-                .where(pk_filter)
+                    .options(
+                    *[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
+                    .where(pk_filter)
             )
         )
-        .scalars()
-        .all()
+            .scalars()
+            .all()
     )
     entities = {_get_model_pk_values(model, en): en for en in instances}
     if len(entities) != len(data):
@@ -269,16 +271,16 @@ async def update_(
     eager_options = await create_selection_joins(model, "", selection, selectables)
     ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
-    expression = selectables["__selection__"].filter(pk_filter).order_by(*ordering)
+    expression = cast(Type[SQLAlchemyModel], selectables["__selection__"]).filter(pk_filter).order_by(*ordering)
     if eager_options != (None,):
         expression = expression.options(*eager_options)
     return (await session.execute(expression)).unique().scalars().all()
 
 
 async def delete_(
-    session: AsyncSession,
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    data: List[Any],
+        session: AsyncSession,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        data: List[Any],
 ):
     """
     Resolve the delete-many operation.
@@ -296,10 +298,10 @@ async def delete_(
 
 
 async def retrieve_(
-    session: AsyncSession,
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    data: PrimaryKeyField,
-    selection: Dict[str, Dict],
+        session: AsyncSession,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        data: PrimaryKeyField,
+        selection: Dict[str, Dict],
 ):
     """
     Resolve the query-one operation.
@@ -317,7 +319,7 @@ async def retrieve_(
 
     eager_options = await create_selection_joins(model, "", selection, selectables)
 
-    expression = selectables["__selection__"].filter(pk_filter)
+    expression = cast(Type[SQLAlchemyModel], selectables["__selection__"]).filter(pk_filter)
     if eager_options != (None,):
         expression = expression.options(*eager_options)
     return (await session.execute(expression)).unique().scalar()
@@ -352,11 +354,11 @@ def cleanup_ordering(ordering: List[Dict]):
 
 
 async def create_selection_joins(
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    path: str,
-    selection: Dict[Union[str, Type], Dict],
-    selectables: SelectablesType,
-    eager_options: Any = None,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        path: str,
+        selection: Dict[Union[str, Type], Dict],
+        selectables: SelectablesType,
+        eager_options: Any = None,
 ) -> Tuple:
     """
     Create sqlalchemy joins for loading attributes based on graphql field selections.
@@ -400,11 +402,11 @@ async def create_selection_joins(
 
 
 async def create_ordering(
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    path: str,
-    ordering: List[Dict],
-    selectables: SelectablesType,
-    *_,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        path: str,
+        ordering: List[Dict],
+        selectables: SelectablesType,
+        *_,
 ) -> List[ColumnElement]:
     """
     Create sqlalchemy expressions for ordering.
@@ -485,11 +487,11 @@ def get_attr(selectables, path, attribute):
 
 
 async def create_object_filters(
-    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-    path: str,
-    filters: List[Dict],
-    selectables: SelectablesType,
-    *_,
+        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+        path: str,
+        filters: List[Dict],
+        selectables: SelectablesType,
+        *_,
 ) -> List[ColOps]:
     """
     Create object filters for a model based on filters input.
@@ -540,10 +542,10 @@ async def create_object_filters(
 
 
 async def list_(
-    session: AsyncSession,
-    model: Type[Union[SQLAlchemyModel, IEntityModel]],
-    data: QueryMany,
-    selection: Dict[str, Dict],
+        session: AsyncSession,
+        model: Type[Union[SQLAlchemyModel, IEntityModel]],
+        data: QueryMany,
+        selection: Dict[str, Dict],
 ):
     """
     Resolve the query-many operation.
@@ -560,7 +562,7 @@ async def list_(
 
     eager_options = await create_selection_joins(model, "", selection, selectables)
 
-    expression = selectables["__selection__"]
+    expression = cast(Type[SQLAlchemyModel], selectables["__selection__"])
     original_expression = expression
 
     if eager_options != (None,):
@@ -581,7 +583,7 @@ async def list_(
             ordering = await create_ordering(model, "", add_default_ordering(model, []), selectables)
 
         # Expression needs to be created again, selectables may have been modified in filters / ordering builder
-        expression = selectables["__selection__"]
+        expression = cast(Type[SQLAlchemyModel], selectables["__selection__"])
 
         if eager_options != (None,):
             expression = expression.options(*eager_options)

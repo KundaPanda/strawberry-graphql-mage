@@ -78,19 +78,21 @@ class SchemaManager(ISchemaManager[TEntity]):
                 types.append(entity.base_entity)
         return types
 
-    @overrides
-    def get_schema(self) -> Schema:
-        for model in self._models.values():
-            model.post_setup()
-        self._backend.post_setup()
+    @property
+    def query(self) -> type:
         query_object = type("Query", (object,), {})
-        mutation_object = type("Mutation", (object,), {})
 
         for model in self._models.values():
             # Query
             self._add_operation(query_object, GraphQLOperation.QUERY_ONE, model)
             self._add_operation(query_object, GraphQLOperation.QUERY_MANY, model)
+        return query_object
 
+    @property
+    def mutation(self) -> type:
+        mutation_object = type("Mutation", (object,), {})
+
+        for model in self._models.values():
             # Create
             self._add_operation(mutation_object, GraphQLOperation.CREATE_ONE, model)
             self._add_operation(mutation_object, GraphQLOperation.CREATE_MANY, model)
@@ -102,9 +104,20 @@ class SchemaManager(ISchemaManager[TEntity]):
             # Delete
             self._add_operation(mutation_object, GraphQLOperation.DELETE_ONE, model)
             self._add_operation(mutation_object, GraphQLOperation.DELETE_MANY, model)
+        return mutation_object
 
-        query = strawberry.type(query_object)
-        mutation = strawberry.type(mutation_object)
+    @overrides
+    def get_schema(self, query: Optional[type] = None, mutation: Optional[type] = None) -> Schema:
+        for model in self._models.values():
+            model.post_setup()
+        self._backend.post_setup()
+        if not query:
+            query = self.query
+        if not mutation:
+            mutation = self.mutation
+
+        query = strawberry.type(query)
+        mutation = strawberry.type(mutation)
 
         schema = Schema(
             query=query,
@@ -114,9 +127,9 @@ class SchemaManager(ISchemaManager[TEntity]):
 
         def resolve_interface_type(obj, *_, **__):
             if (
-                base_type := schema.schema_converter.type_map.get(
-                    GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
-                )
+                    base_type := schema.schema_converter.type_map.get(
+                        GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
+                    )
             ) is not None:
                 return self._backend.get_polymorphic_type(base_type).name
             return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__]).name

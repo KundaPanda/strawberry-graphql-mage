@@ -5,8 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from overrides import overrides
 from sqlalchemy import Integer, String, inspect
-from sqlalchemy.engine import Engine
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import (
     ColumnProperty,
     Mapper,
@@ -35,7 +34,7 @@ class SQLAlchemyBackend(DataBackendBase):
 
     _TYPE_MAP = {Integer: int, String: str}
 
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: AsyncEngine):
         """
         Create a new backend with a given database engine.
 
@@ -64,15 +63,15 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @overrides
     def get_attributes(
-        self,
-        model: Type[Union[IEntityModel, SQLAlchemyModel]],
-        operation: Optional[GraphQLOperation] = None,
+            self,
+            model: Type[Union[IEntityModel, SQLAlchemyModel]],
+            operation: Optional[GraphQLOperation] = None,
     ) -> List[str]:
         inspection = inspect(model)
         all_ = list(a for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs))
         pk_cols = set(inspection.mapper.primary_key)
         fk_cols = (
-            set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
+                set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
         )
         all_ = [a.key for a in all_ if not (isinstance(a, ColumnProperty) and any(c in fk_cols for c in a.columns))]
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
@@ -88,7 +87,7 @@ class SQLAlchemyBackend(DataBackendBase):
             return all_
         return []
 
-    @lru_cache
+    @lru_cache(maxsize=2000)
     def _get_attribute_type(self, attr: Union[ColumnProperty, RelationshipProperty]) -> Type:
         if isinstance(attr, ColumnProperty):
             python_type = (
@@ -155,14 +154,14 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @overrides
     async def resolve(
-        self,
-        model: Type[Union[IEntityModel, SQLAlchemyModel]],
-        operation: GraphQLOperation,
-        info: Info,
-        data: Any,
-        session_factory: Optional[sessionmaker] = None,
-        *args,
-        **kwargs
+            self,
+            model: Type[Union[IEntityModel, SQLAlchemyModel]],
+            operation: GraphQLOperation,
+            info: Info,
+            data: Any,
+            session_factory: Optional[sessionmaker] = None,
+            *args,
+            **kwargs
     ) -> Any:
         async with (session_factory if session_factory else self._session)() as session:
             for field in info.selected_fields:  # type: ignore

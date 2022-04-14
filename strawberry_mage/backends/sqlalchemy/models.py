@@ -54,9 +54,15 @@ def create_base_entity() -> Type[SQLAlchemyModel]:
     new_base = declarative_base()
 
     class ModelMeta(type(_SQLAlchemyModel), type(new_base)):
+        """
+        Metaclass for SQLAlchemy base model
+        """
         pass
 
-    class SQLAlchemyModel(new_base, _SQLAlchemyModel, metaclass=ModelMeta):
+    class SQLAlchemyModel(_SQLAlchemyModel, new_base, metaclass=ModelMeta):
+        """
+        Base sqlalchemy model class
+        """
         __abstract__ = True
 
     return cast(Type[_SQLAlchemyModel], SQLAlchemyModel)
