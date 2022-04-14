@@ -12,11 +12,11 @@ from strawberry_mage.core.models import EntityModel
 _Base = declarative_base()
 
 
-class _BaseMeta(type(EntityModel), type(_Base)):
+class _BaseMeta(type(_Base), type(EntityModel)):
     pass
 
 
-class SQLAlchemyModel(EntityModel, _Base, metaclass=_BaseMeta):
+class SQLAlchemyModel(_Base, EntityModel, metaclass=_BaseMeta):
     """
     DO NOT USE DIRECTLY.
 
@@ -53,13 +53,7 @@ def create_base_entity() -> Type[SQLAlchemyModel]:
     """
     new_base = declarative_base()
 
-    class ModelMeta(type(_SQLAlchemyModel), type(new_base)):
-        """
-        Metaclass for SQLAlchemy base model
-        """
-        pass
-
-    class SQLAlchemyModel(_SQLAlchemyModel, new_base, metaclass=ModelMeta):
+    class SQLAlchemyModel(new_base, _SQLAlchemyModel, metaclass=_BaseMeta):
         """
         Base sqlalchemy model class
         """
