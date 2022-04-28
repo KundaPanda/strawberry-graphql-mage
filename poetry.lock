@@ -93,7 +93,7 @@ python-versions = ">=3.6.0"
 
 [[package]]
 name = "cachecontrol"
-version = "0.12.10"
+version = "0.12.11"
 description = "httplib2 caching for requests"
 category = "dev"
 optional = false
@@ -994,7 +994,7 @@ full = ["itsdangerous", "jinja2", "python-multipart", "pyyaml", "requests"]
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.105.1"
+version = "0.109.1"
 description = "A library for creating GraphQL APIs"
 category = "main"
 optional = false
@@ -1228,8 +1228,8 @@ attrs = [
     {file = "backports.cached_property-1.0.1-py3-none-any.whl", hash = "sha256:687b5fe14be40aadcf547cae91337a1fdb84026046a39370274e54d3fe4fb4f9"},
 ]
 cachecontrol = [
-    {file = "CacheControl-0.12.10-py2.py3-none-any.whl", hash = "sha256:b0d43d8f71948ef5ebdee5fe236b86c6ffc7799370453dccb0e894c20dfa487c"},
-    {file = "CacheControl-0.12.10.tar.gz", hash = "sha256:d8aca75b82eec92d84b5d6eb8c8f66ea16f09d2adb09dbca27fe2d5fc8d3732d"},
+    {file = "CacheControl-0.12.11-py2.py3-none-any.whl", hash = "sha256:2c75d6a8938cb1933c75c50184549ad42728a27e9f6b92fd677c3151aa72555b"},
+    {file = "CacheControl-0.12.11.tar.gz", hash = "sha256:a5b9fcc986b184db101aa280b42ecdcdfc524892596f606858e0b7a8b4d9e144"},
 ]
 cachy = [
     {file = "cachy-0.3.0-py2.py3-none-any.whl", hash = "sha256:338ca09c8860e76b275aff52374330efedc4d5a5e45dc1c5b539c1ead0786fe7"},
@@ -1865,8 +1865,8 @@ starlette = [
     {file = "starlette-0.17.1.tar.gz", hash = "sha256:57eab3cc975a28af62f6faec94d355a410634940f10b30d68d31cb5ec1b44ae8"},
 ]
 strawberry-graphql = [
-    {file = "strawberry-graphql-0.105.1.tar.gz", hash = "sha256:28da969bbb7f9ad1ed23c9019eeaf82fd4bfb509c2beb8c45c01648d3ce0aa54"},
-    {file = "strawberry_graphql-0.105.1-py3-none-any.whl", hash = "sha256:ebff71746cdb143463584bb96d2213ad02868f1655e598ee777b06e25e1c7c2f"},
+    {file = "strawberry-graphql-0.109.1.tar.gz", hash = "sha256:b78a5ef5658ad238b33c133d661bb73f91b664d74b5ebe16b767819e960013d7"},
+    {file = "strawberry_graphql-0.109.1-py3-none-any.whl", hash = "sha256:e9fadf5c5f3c01ebcba4ea35b5bc610bb8cb878e8a17406127953dd55eb474a0"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
