@@ -30,7 +30,7 @@ SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
 overrides = "^6.1.0"
-SQLAlchemy-Utils = "^0.37.9"
+SQLAlchemy-Utils = "^0.38.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
@@ -45,7 +45,7 @@ pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 pylint = "^2.11.1"
 toml = "^0.10.2"
 uvicorn = { extras = ["standard"], version = "^0.17.0" }
-starlette = "<0.18.0"
+starlette = "^0.20.3"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

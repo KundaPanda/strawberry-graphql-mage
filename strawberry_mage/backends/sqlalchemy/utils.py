@@ -3,15 +3,15 @@
 from typing import List, Optional, Tuple, Type, Union
 
 from inflection import underscore
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer
+from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.type_api import TypeEngine
+from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 
-from strawberry_mage.backends.sqlalchemy.types import SqlAlchemyModel
 
 
 def make_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
+        remote: Union[str, Type[SQLAlchemyModel]],
         foreign_key_type: Type[TypeEngine] = Integer,
         remote_pk="id",
         nullable=True,
@@ -53,7 +53,7 @@ def make_fk(
 
 
 def make_composite_fk(
-        remote: Union[str, Type[SqlAlchemyModel]],
+        remote: Union[str, Type[SQLAlchemyModel]],
         remote_keys: Tuple[str, ...],
         model_name: str,
         rel_name: str,
@@ -114,3 +114,30 @@ def make_composite_fk(
         use_alter=use_alter,
     )
     return foreign_keys, rel, constraint
+
+
+def make_m2m(base_class: Type[SQLAlchemyModel], first: str, second: str,
+             first_pk='id', second_pk='id', first_type: Type[TypeEngine] = Integer,
+             second_type: Type[TypeEngine] = Integer) -> Table:
+    """
+    Create an M2M table for two models
+
+    :param base_class: The base class for sqlalchemy models
+    :param first: Name of the first model
+    :param second: Name of the second model
+    :param first_pk: Column name in the first model to use in m2m relation
+    :param second_pk: Column name in the second model to use in m2m relation
+    :param first_type: Type of the first column, defaults to Integer
+    :param second_type: Type of the second column, defaults to Integer
+    :return: A table for the m2m relation
+    """
+    first_name = underscore(first)
+    second_name = underscore(second)
+    return Table(f'{first_name}_{second_name}_m2m', base_class.metadata,
+                 Column(f'{first_name}_{first_pk}',
+                        first_type,
+                        ForeignKey(f'{first_name}.{first_pk}'), primary_key=True),
+                 Column(f'{second_name + "2" if second_name == first_name else second_name}_{second_pk}',
+                        second_type,
+                        ForeignKey(f'{second_name}.{second_pk}'), primary_key=True),
+                 )
