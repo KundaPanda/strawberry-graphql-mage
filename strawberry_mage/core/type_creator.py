@@ -7,8 +7,8 @@ from inspect import isclass
 from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union, cast
 
 import strawberry
+from strawberry import UNSET
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.arguments import UNSET
 from strawberry.field import StrawberryField
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.type import StrawberryType
@@ -544,7 +544,7 @@ def get_ordering_type(type_: Any):
         if isinstance(order_type, StrawberryAnnotation):
             order_type.annotation = Optional[order_type.annotation]  # type: ignore
             return order_type
-        return Optional[order_type]
+        return Optional[order_type]  # type: ignore
     return defer_annotation(type_, GeneratedType.ORDERING)
 
 
@@ -566,5 +566,5 @@ def get_filter_type(type_: Any):
         if isinstance(filter_type, StrawberryAnnotation):
             filter_type.annotation = Optional[filter_type.annotation]  # type: ignore
             return filter_type
-        return Optional[filter_type]
+        return Optional[filter_type]  # type: ignore
     return defer_annotation(type_, GeneratedType.FILTER)

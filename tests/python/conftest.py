@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 
 from tests.python.example_app.schema import (
     Archer,
@@ -13,7 +14,7 @@ from tests.python.example_app.schema import (
 )
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def dataset():
     weapons = [
         Weapon(damage=10, name="mace"),

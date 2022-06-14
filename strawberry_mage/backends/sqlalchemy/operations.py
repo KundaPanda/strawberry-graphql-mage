@@ -15,7 +15,7 @@ from sqlalchemy.sql import ColumnElement, Join
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnClause
 from sqlalchemy.sql.expression import desc, func
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
-from strawberry.arguments import is_unset
+from strawberry import UNSET
 
 from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 from strawberry_mage.core.strawberry_types import (
@@ -31,16 +31,16 @@ SelectablesType = Dict[str, Union[Join, Type[SQLAlchemyModel], AliasedClass]]
 
 
 def _build_pk_query(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        selectable: Union[Table, Type[SQLAlchemyModel], AliasedClass],
-        data: Any,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    selectable: Union[Table, Type[SQLAlchemyModel], AliasedClass],
+    data: Any,
 ):
     primary_key = model.get_primary_key()
     attribute_getter = data.get if isinstance(data, dict) else partial(getattr, data)
     column_getter = (
         partial(getattr, selectable)
         if (isclass(selectable) and (issubclass(selectable, IEntityModel) or issubclass(selectable, SQLAlchemyModel)))
-           or isinstance(selectable, AliasedClass)
+        or isinstance(selectable, AliasedClass)
         else partial(getattr, cast(Table, selectable).c)
     )
     conditions = [column_getter(key) == attribute_getter(key) for key in primary_key]
@@ -73,14 +73,14 @@ def _create_pk_class(data: Dict[str, Any]):
 
 
 async def _set_instance_attrs(
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        instance: object,
-        input_object: IsDataclass,
-        session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    instance: object,
+    input_object: IsDataclass,
+    session: AsyncSession,
 ):
     for prop in input_object.__dataclass_fields__:
         value = getattr(input_object, prop)
-        if is_unset(value) or prop == "primary_key_":
+        if value is UNSET or prop == "primary_key_":
             continue
         prop_type = strip_defer_typename(model.get_attribute_type(prop))
         if isinstance(prop_type, str):
@@ -103,11 +103,11 @@ async def _set_instance_attrs(
 
 
 def _create_join(
-        selectables: SelectablesType,
-        related_model: Union[Type[IEntityModel], Type[SQLAlchemyModel], AliasedClass],
-        property_: InstrumentedAttribute,
-        nested_path: str,
-        select_from: Union[Join, Type[SQLAlchemyModel], AliasedClass],
+    selectables: SelectablesType,
+    related_model: Union[Type[IEntityModel], Type[SQLAlchemyModel], AliasedClass],
+    property_: InstrumentedAttribute,
+    nested_path: str,
+    select_from: Union[Join, Type[SQLAlchemyModel], AliasedClass],
 ) -> ColumnClause:
     expression = property_.expression
     if isinstance(expression, BooleanClauseList):
@@ -140,14 +140,14 @@ def _create_join(
 
 
 async def _apply_nested(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        input_: Any,
-        op: Callable,
-        attribute: str,
-        selectables: SelectablesType,
-        eager_options: Any = None,
-        **kwargs,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    input_: Any,
+    op: Callable,
+    attribute: str,
+    selectables: SelectablesType,
+    eager_options: Any = None,
+    **kwargs,
 ):
     """
     Recursively call an operation whilst updating the selectables.
@@ -186,10 +186,10 @@ async def _apply_nested(
 
 
 async def create_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: List[Any],
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: List[Any],
+    selection: Dict[str, Dict],
 ):
     """
     Resolve the create-many operation.
@@ -227,10 +227,10 @@ async def create_(
 
 
 async def update_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: List[Any],
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: List[Any],
+    selection: Dict[str, Dict],
 ):
     """
     Resolve the update-many operation.
@@ -246,13 +246,12 @@ async def update_(
         (
             await session.execute(
                 select(model)
-                    .options(
-                    *[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
-                    .where(pk_filter)
+                .options(*[selectinload(a.key) for a in inspect(model).attrs if isinstance(a, RelationshipProperty)])
+                .where(pk_filter)
             )
         )
-            .scalars()
-            .all()
+        .scalars()
+        .all()
     )
     entities = {_get_model_pk_values(model, en): en for en in instances}
     if len(entities) != len(data):
@@ -278,9 +277,9 @@ async def update_(
 
 
 async def delete_(
-        session: AsyncSession,
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        data: List[Any],
+    session: AsyncSession,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    data: List[Any],
 ):
     """
     Resolve the delete-many operation.
@@ -298,10 +297,10 @@ async def delete_(
 
 
 async def retrieve_(
-        session: AsyncSession,
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        data: PrimaryKeyField,
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    data: PrimaryKeyField,
+    selection: Dict[str, Dict],
 ):
     """
     Resolve the query-one operation.
@@ -348,17 +347,17 @@ def cleanup_ordering(ordering: List[Dict]):
         for field, value in ordering_entry.items():
             if isinstance(value, list):
                 result_ordering.append({field: cleanup_ordering(value)})
-            elif not is_unset(value):
+            elif value is not UNSET:
                 result_ordering.append({field: value})
     return result_ordering
 
 
 async def create_selection_joins(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        selection: Dict[Union[str, Type], Dict],
-        selectables: SelectablesType,
-        eager_options: Any = None,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    selection: Dict[Union[str, Type], Dict],
+    selectables: SelectablesType,
+    eager_options: Any = None,
 ) -> Tuple:
     """
     Create sqlalchemy joins for loading attributes based on graphql field selections.
@@ -386,7 +385,7 @@ async def create_selection_joins(
                     eager_options,
                 )
             )
-        else:
+        elif isinstance(attr, str):
             eager_options_created.extend(
                 await _apply_nested(
                     model,
@@ -402,11 +401,11 @@ async def create_selection_joins(
 
 
 async def create_ordering(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        ordering: List[Dict],
-        selectables: SelectablesType,
-        *_,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    ordering: List[Dict],
+    selectables: SelectablesType,
+    *_,
 ) -> List[ColumnElement]:
     """
     Create sqlalchemy expressions for ordering.
@@ -421,7 +420,7 @@ async def create_ordering(
     result_ordering = []
     for entry in ordering:
         for attribute, value in entry.items():
-            if is_unset(value):
+            if value is UNSET:
                 continue
             if isinstance(value, OrderingDirection):
                 select_from = selectables[path]
@@ -487,11 +486,11 @@ def get_attr(selectables, path, attribute):
 
 
 async def create_object_filters(
-        model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
-        path: str,
-        filters: List[Dict],
-        selectables: SelectablesType,
-        *_,
+    model: Union[Type[IEntityModel], Type[SQLAlchemyModel]],
+    path: str,
+    filters: List[Dict],
+    selectables: SelectablesType,
+    *_,
 ) -> List[ColOps]:
     """
     Create object filters for a model based on filters input.
@@ -507,7 +506,7 @@ async def create_object_filters(
     result_filters = []
     for filter_ in filters:
         for attribute, value in filter_.items():
-            if is_unset(value):
+            if value is UNSET:
                 continue
             if attribute == "AND_":
                 nested_filters = await create_object_filters(model, path, value, selectables)
@@ -533,7 +532,7 @@ async def create_object_filters(
                 else:
                     negate = value.pop("NOT_", False)
                     for operation, filter_value in value.items():
-                        if is_unset(filter_value):
+                        if filter_value is UNSET:
                             continue
                         else:
                             attr = get_attr(selectables, path, attribute)
@@ -542,10 +541,10 @@ async def create_object_filters(
 
 
 async def list_(
-        session: AsyncSession,
-        model: Type[Union[SQLAlchemyModel, IEntityModel]],
-        data: QueryMany,
-        selection: Dict[str, Dict],
+    session: AsyncSession,
+    model: Type[Union[SQLAlchemyModel, IEntityModel]],
+    data: QueryMany,
+    selection: Dict[str, Dict],
 ):
     """
     Resolve the query-many operation.
@@ -569,12 +568,12 @@ async def list_(
         expression = expression.options(*eager_options)
 
     filters, ordering = None, None
-    if not is_unset(data):
-        if not is_unset(data.filters) and data.filters:
+    if data is not UNSET:
+        if data.filters is not UNSET and data.filters:
             raw_filter = [dataclasses.asdict(f) for f in data.filters]
             filters = await create_object_filters(model, "", raw_filter, selectables)
 
-        if not is_unset(data.ordering) and data.ordering:
+        if data.ordering is not UNSET and data.ordering:
             raw_ordering = [dataclasses.asdict(o) for o in data.ordering]
             ordering = add_default_ordering(model, raw_ordering)
             ordering = cleanup_ordering(ordering)
@@ -594,18 +593,18 @@ async def list_(
         expression = expression.order_by(*ordering)
 
         original_expression = expression
-        if not is_unset(data.page_size) and data.page_size:
+        if data.page_size is not UNSET and data.page_size:
             expression = expression.limit(data.page_size)
-            if not is_unset(data.page_number) and data.page_number:
+            if data.page_number is not UNSET and data.page_number:
                 expression = expression.offset((data.page_number - 1) * data.page_size)
 
     results_task = session.execute(expression)
-    total_results_task = session.execute(select(func.count()).select_from(original_expression))
+    total_results_task = session.execute(select(func.count()).select_from(original_expression.subquery()))
     results = (await results_task).unique().scalars().all()
     total_results = (await total_results_task).scalar()
     return model.get_strawberry_type().query_many_output(
         results=results,
-        page=data.page_number if (not is_unset(data) and data.page_number) else 1,
-        total_pages=ceil(total_results / data.page_size) if not is_unset(data) else 1,
+        page=data.page_number if (data is not UNSET and data.page_number) else 1,
+        total_pages=ceil(total_results / data.page_size) if data is not UNSET else 1,
         total_records=total_results,
     )

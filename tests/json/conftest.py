@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 
 from tests.json.example_app.schema import (
     Mage,
@@ -9,7 +10,7 @@ from tests.json.example_app.schema import (
 )
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def dataset():
     weapons = [
         {"__type__": "weapon", "id": 1, "damage": 10, "name": "mace"},

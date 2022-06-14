@@ -79,12 +79,12 @@ class JSONBackend(PythonBackend):
         return mappings
 
     def add_dataset(
-            self,
-            dataset: Iterable[dict],
-            model: Optional[Type[PythonEntityModel]] = None,
-            model_mapper: Optional[Callable[[dict], Type[PythonEntityModel]]] = None,
-            *args,
-            **kwargs
+        self,
+        dataset: Iterable[dict],
+        model: Optional[Type[PythonEntityModel]] = None,
+        model_mapper: Optional[Callable[[dict], Type[PythonEntityModel]]] = None,
+        *args,
+        **kwargs
     ):
         """
         Add a dataset to be used for every resolve request.
@@ -106,13 +106,13 @@ class JSONBackend(PythonBackend):
 
     @overrides
     async def resolve(
-            self,
-            model: Type[PythonEntityModel],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            *args,
-            dataset: Optional[Iterable] = None,
-            **kwargs
+        self,
+        model: Type[PythonEntityModel],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        *args,
+        dataset: Optional[Iterable] = None,
+        **kwargs
     ) -> Any:
         return await super().resolve(model, operation, info, data, *args, dataset=dataset, **kwargs)
