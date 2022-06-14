@@ -2,7 +2,7 @@ from pathlib import Path
 from textwrap import dedent
 
 import nox
-from nox import Session, session
+from nox_poetry import Session, session
 
 package = "strawberry_graphql_mage"
 python_versions = ["3.10", "3.9", "3.8"]
@@ -78,6 +78,23 @@ def _export_requirements(session_: Session):
     )
 
 
+def install(session_, package_, version):
+    if version == "latest":
+        Session.install(session_, package, "-U")
+    else:
+        Session.install(session_, f"{package_}=={version}")
+
+
+# noinspection PyUnresolvedReferences,PyProtectedMember
+def export_requirements_without_extras(session_: Session) -> Path:
+    """Ugly workaround to install only certain dev dependencies without extras"""
+    extras = session_.poetry.poetry.config._config.get("extras", {})  # type: ignore
+    session_.poetry.poetry.config._config["extras"] = {}  # type: ignore
+    requirements = session_.poetry.export_requirements()
+    session_.poetry.poetry.config._config["extras"] = extras  # type: ignore
+    return requirements
+
+
 def _cleanup_requirements():
     requirements.unlink()
 
@@ -90,33 +107,34 @@ def poetry_install(session_: Session):
 def pre_commit(session_: Session) -> None:
     """Lint using pre-commit."""
     args = session_.posargs or ["run", "--all-files", "--show-diff-on-failure"]
-    _export_requirements(session_)
-    poetry_install(session_)
-    session_.install("pre-commit")
+    session_.install(
+        "darglint",
+        "autopep8",
+        "pep8-naming",
+        "pre-commit",
+        "pre-commit-hooks",
+    )
     session_.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session_)
-    _cleanup_requirements()
 
 
 @session(python="3.10")
 def safety(session_: Session) -> None:
     """Scan dependencies for insecure packages."""
-    _export_requirements(session_)
-    poetry_install(session_)
-    session_.run("safety", "check", "--full-report", f"--file={requirements}", "--ignore=42194")
-    _cleanup_requirements()
+    requirements = session_.poetry.export_requirements()
+    session_.install("safety")
+    session_.run("safety", "check", "--full-report", "--ignore=42194", f"--file={requirements}")
 
 
 @session(python="3.10")
 def pyright(session_: Session) -> None:
     """Type-check using mypy."""
-    _export_requirements(session_)
-    poetry_install(session_)
+    requirements = export_requirements_without_extras(session_)
+    session_.install("-r", str(requirements))
     session_.run("pyright", external=True)
     if not session_.posargs:
         session_.run("pyright", "noxfile.py", external=True)
-    _cleanup_requirements()
 
 
 @session(python="3.10")
@@ -128,12 +146,15 @@ def markdownlint(session_: Session) -> None:
 @session(name="tests", python=python_versions)
 def tests(session_: Session) -> None:
     """Run the test suite."""
-    _export_requirements(session_)
-    poetry_install(session_)
+    session_.install(".")
+    requirements = export_requirements_without_extras(session_)
+    session_.install("-r", str(requirements))
+
     try:
         session_.run("coverage", "run", "--parallel", "-m", "pytest", *session_.posargs)
     finally:
-        _cleanup_requirements()
+        if session_.interactive:
+            session_.notify("coverage")
 
 
 @session(python="3.10")

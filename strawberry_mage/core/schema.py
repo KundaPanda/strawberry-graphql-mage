@@ -80,6 +80,11 @@ class SchemaManager(ISchemaManager[TEntity]):
 
     @property
     def query(self) -> type:
+        """
+        Return the strawberry query type.
+
+        :return: Query
+        """
         query_object = type("Query", (object,), {})
 
         for model in self._models.values():
@@ -90,6 +95,11 @@ class SchemaManager(ISchemaManager[TEntity]):
 
     @property
     def mutation(self) -> type:
+        """
+        Return the strawberry mutation type.
+
+        :return: Mutation
+        """
         mutation_object = type("Mutation", (object,), {})
 
         for model in self._models.values():
@@ -124,9 +134,9 @@ class SchemaManager(ISchemaManager[TEntity]):
 
         def resolve_interface_type(obj, *_, **__):
             if (
-                    base_type := schema.schema_converter.type_map.get(
-                        GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
-                    )
+                base_type := schema.schema_converter.type_map.get(
+                    GeneratedType.POLYMORPHIC_BASE.get_typename(obj.__class__.__name__)
+                )
             ) is not None:
                 return self._backend.get_polymorphic_type(base_type).name
             return self._backend.get_polymorphic_type(schema.schema_converter.type_map[obj.__class__.__name__]).name

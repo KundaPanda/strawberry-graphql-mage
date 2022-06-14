@@ -4,7 +4,8 @@ from functools import cached_property
 from typing import List, Optional, Type
 
 import strawberry
-from strawberry.arguments import StrawberryArgument, UNSET
+from strawberry import UNSET
+from strawberry.arguments import StrawberryArgument
 from strawberry.types import Info
 from strawberry.types.fields.resolver import StrawberryResolver
 
@@ -51,7 +52,7 @@ def resolver_query_one(model: Type[IEntityModel]):
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.QUERY_ONE.get_typename(model.__name__)  # type: ignore
 
-    async def query_one(info: Info, data: data_type = UNSET) -> return_type:
+    async def query_one(info: Info, data: data_type = UNSET) -> return_type:  # type: ignore
         return await model.resolve(GraphQLOperation.QUERY_ONE, info, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(query_one))
@@ -67,7 +68,7 @@ def resolver_query_many(model: Type[IEntityModel]):
     return_type = model.get_strawberry_type().query_many_output  # type: ignore
     data_type = GeneratedType.QUERY_MANY_INPUT.get_typename(model.__name__)  # type: ignore
 
-    async def query_many(info: Info, data: Optional[data_type] = UNSET) -> return_type:
+    async def query_many(info: Info, data: Optional[data_type] = UNSET) -> return_type:  # type: ignore
         return await model.resolve(GraphQLOperation.QUERY_MANY, info, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(query_many))
@@ -83,7 +84,7 @@ def resolver_create_one(model: Type[IEntityModel]):
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.CREATE_ONE.get_typename(model.__name__)  # type: ignore
 
-    async def create_one(info: Info, data: data_type) -> return_type:
+    async def create_one(info: Info, data: data_type) -> return_type:  # type: ignore
         return await model.resolve(GraphQLOperation.CREATE_ONE, info, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(create_one))
@@ -115,7 +116,7 @@ def resolver_update_one(model: Type[IEntityModel]):
     return_type = Optional[model.get_strawberry_type().entity]  # type: ignore
     data_type = GeneratedType.UPDATE_ONE.get_typename(model.__name__)  # type: ignore
 
-    async def update_one(info: Info, data: data_type) -> return_type:
+    async def update_one(info: Info, data: data_type) -> return_type:  # type: ignore
         return await model.resolve(GraphQLOperation.UPDATE_ONE, info, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(update_one))
@@ -146,7 +147,7 @@ def resolver_delete_one(model: Type[IEntityModel]):
     """
     data_type = GeneratedType.PRIMARY_KEY_FIELD.get_typename(model.__name__)  # type: ignore
 
-    async def delete_one(info: Info, data: data_type) -> DeleteResult:
+    async def delete_one(info: Info, data: data_type) -> DeleteResult:  # type: ignore
         return await model.resolve(GraphQLOperation.DELETE_ONE, info, data)
 
     return strawberry.field(ModuleBoundStrawberryResolver(delete_one))

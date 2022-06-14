@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -17,7 +18,7 @@ from tests.sqlalchemy.example_app.schema import (
 )
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def session() -> AsyncSession:
     async with engine.begin() as s:
         await s.run_sync(Base.metadata.create_all)
@@ -25,7 +26,7 @@ async def session() -> AsyncSession:
         yield s
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def prepare_database(session):
     async with session.begin():
         weapons = [

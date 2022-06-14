@@ -63,15 +63,15 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @overrides
     def get_attributes(
-            self,
-            model: Type[Union[IEntityModel, SQLAlchemyModel]],
-            operation: Optional[GraphQLOperation] = None,
+        self,
+        model: Type[Union[IEntityModel, SQLAlchemyModel]],
+        operation: Optional[GraphQLOperation] = None,
     ) -> List[str]:
         inspection = inspect(model)
         all_ = list(a for a in (inspection.mapper.attrs if isinstance(inspection, AliasedInsp) else inspection.attrs))
         pk_cols = set(inspection.mapper.primary_key)
         fk_cols = (
-                set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
+            set(itertools.chain(*[c.local_columns for c in all_ if isinstance(c, RelationshipProperty)])) - pk_cols
         )
         all_ = [a.key for a in all_ if not (isinstance(a, ColumnProperty) and any(c in fk_cols for c in a.columns))]
         if operation in {GraphQLOperation.QUERY_ONE, GraphQLOperation.QUERY_MANY, None}:
@@ -99,12 +99,12 @@ class SQLAlchemyBackend(DataBackendBase):
             python_type = attr.entity.class_.__name__
 
         if self._is_nullable(attr):
-            python_type = Optional[python_type]
+            python_type = Optional[python_type]  # type: ignore
         if isinstance(attr, RelationshipProperty) and attr.direction in {
             ONETOMANY,
             MANYTOMANY,
         }:
-            python_type = Optional[List[python_type]]
+            python_type = Optional[List[python_type]]  # type: ignore
         return python_type
 
     @lru_cache
@@ -154,14 +154,14 @@ class SQLAlchemyBackend(DataBackendBase):
 
     @overrides
     async def resolve(
-            self,
-            model: Type[Union[IEntityModel, SQLAlchemyModel]],
-            operation: GraphQLOperation,
-            info: Info,
-            data: Any,
-            session_factory: Optional[sessionmaker] = None,
-            *args,
-            **kwargs
+        self,
+        model: Type[Union[IEntityModel, SQLAlchemyModel]],
+        operation: GraphQLOperation,
+        info: Info,
+        data: Any,
+        session_factory: Optional[sessionmaker] = None,
+        *args,
+        **kwargs
     ) -> Any:
         async with (session_factory if session_factory else self._session)() as session:
             for field in info.selected_fields:  # type: ignore

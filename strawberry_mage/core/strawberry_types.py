@@ -9,8 +9,7 @@ from typing import List, Optional, Type
 from uuid import UUID
 
 import strawberry
-from strawberry import ID
-from strawberry.arguments import UNSET
+from strawberry import ID, UNSET
 from strawberry.field import StrawberryField
 
 ROOT_NS = "strawberry_mage.core.types_generated"

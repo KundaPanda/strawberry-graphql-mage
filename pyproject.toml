@@ -46,12 +46,17 @@ pylint = "^2.11.1"
 toml = "^0.10.2"
 uvicorn = { extras = ["standard"], version = "^0.17.0" }
 starlette = "^0.20.3"
+nox-poetry = "^1.0.0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = [
     "tests",
+]
+asyncio_mode = 'strict'
+filterwarnings = [
+    "always"
 ]
 
 [tool.poetry.urls]

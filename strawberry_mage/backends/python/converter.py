@@ -49,7 +49,7 @@ class SQLAlchemyModelConverter:
     }
 
     def _get_sqla_type(
-            self, entity: Type[IEntityModel], attr: str
+        self, entity: Type[IEntityModel], attr: str
     ) -> Tuple[Union[Type[enum.Enum], str, Type[TypeEngine]], bool, bool]:
         python_type = entity.get_attribute_type(attr)
         optional = is_optional(python_type)
