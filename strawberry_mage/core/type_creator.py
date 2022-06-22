@@ -194,12 +194,11 @@ def create_enum_type(attr: Type[enum.Enum]):
             ),
         )
     )
-    values = [e.name for e in attr]
     enum_ordering_type = strawberry.input(
         type(
             GeneratedType.ORDERING.get_typename(attr.__name__),
             (),
-            _create_fields({k: OrderingDirection for k in values}),
+            _create_fields({e.name: Optional[int] for e in attr}),
         )
     )
 
@@ -526,6 +525,24 @@ def create_query_many_output(model: Type[IEntityModel]) -> Type[QueryManyResult]
     return cast(Type[QueryManyResult], query_many)
 
 
+def get_enum_ordering_type(type_: Type[enum.Enum]):
+    """
+    Create enum type for ordering.
+
+    :param type_: enum type
+    :return: ordering type for this enum
+    """
+
+    t = strawberry.type(
+        type(
+            GeneratedType.ORDERING.get_typename(type_.__name__),
+            (),
+            _create_fields({e.name: Optional[int] for e in type_}),
+        ),
+    )
+    return t
+
+
 def get_ordering_type(type_: Any):
     """
     Convert type to ordering type.
@@ -545,6 +562,8 @@ def get_ordering_type(type_: Any):
             order_type.annotation = Optional[order_type.annotation]  # type: ignore
             return order_type
         return Optional[order_type]  # type: ignore
+    if isclass(type_) and issubclass(type_, enum.Enum):
+        return get_enum_ordering_type(type_)
     return defer_annotation(type_, GeneratedType.ORDERING)
 
 
