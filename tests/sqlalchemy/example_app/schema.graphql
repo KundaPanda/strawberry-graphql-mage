@@ -1,529 +1,529 @@
 # This file was generated based on ".graphqlconfig". Do not edit manually.
 
 schema {
-  query: Query
-  mutation: Mutation
+    query: Query
+    mutation: Mutation
 }
 
 interface Entity {
-  entityClass: String!
-  id: Int!
-  submitsTo: King
-  titles: [Title!]!
-  weapons: [Weapon]!
+    entityClass: String!
+    id: Int!
+    submitsTo: King
+    titles: [Title!]
+    weapons: [Weapon]
 }
 
 type Archer implements Entity {
-  drawStrength: Float!
-  entityClass: String!
-  id: Int!
-  submitsTo: King
-  titles: [Title!]!
-  weapons: [Weapon]!
+    drawStrength: Float!
+    entityClass: String!
+    id: Int!
+    submitsTo: King
+    titles: [Title!]
+    weapons: [Weapon]
 }
 
 type ArcherQueryMany {
-  page: Int!
-  results: [Archer!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [Archer!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 type DeleteResult {
-  affectedRows: Int!
+    affectedRows: Int!
 }
 
 type EntityQueryMany {
-  page: Int!
-  results: [Entity!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [Entity!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 type Entity_ implements Entity {
-  entityClass: String!
-  id: Int!
-  submitsTo: King
-  titles: [Title!]!
-  weapons: [Weapon]!
+    entityClass: String!
+    id: Int!
+    submitsTo: King
+    titles: [Title!]
+    weapons: [Weapon]
 }
 
 type King implements Entity {
-  entityClass: String!
-  id: Int!
-  name: String
-  subjects: [Entity]!
-  submitsTo: King
-  titles: [Title!]!
-  weapons: [Weapon]!
+    entityClass: String!
+    id: Int!
+    name: String
+    subjects: [Entity]
+    submitsTo: King
+    titles: [Title!]
+    weapons: [Weapon]
 }
 
 type KingQueryMany {
-  page: Int!
-  results: [King!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [King!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 type Mage implements Entity {
-  entityClass: String!
-  id: Int!
-  powerSource: MageTypeEnum!
-  submitsTo: King
-  test: MageTypeEnum!
-  titles: [Title!]!
-  weapons: [Weapon]!
+    entityClass: String!
+    id: Int!
+    powerSource: MageTypeEnum!
+    submitsTo: King
+    test: MageTypeEnum!
+    titles: [Title!]
+    weapons: [Weapon]
 }
 
 type MageQueryMany {
-  page: Int!
-  results: [Mage!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [Mage!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 type Mutation {
-  createArcher(data: ArcherCreateOne!): Archer
-  createArchers(data: [ArcherCreateOne!]!): [Archer]!
-  createEntities(data: [EntityCreateOne!]!): [Entity]!
-  createEntity(data: EntityCreateOne!): Entity
-  createKing(data: KingCreateOne!): King
-  createKings(data: [KingCreateOne!]!): [King]!
-  createMage(data: MageCreateOne!): Mage
-  createMages(data: [MageCreateOne!]!): [Mage]!
-  createTitle(data: TitleCreateOne!): Title
-  createTitles(data: [TitleCreateOne!]!): [Title]!
-  createWeapon(data: WeaponCreateOne!): Weapon
-  createWeapons(data: [WeaponCreateOne!]!): [Weapon]!
-  deleteArcher(data: ArcherPrimaryKeyField!): DeleteResult!
-  deleteArchers(data: [ArcherPrimaryKeyField!]!): DeleteResult!
-  deleteEntities(data: [EntityPrimaryKeyField!]!): DeleteResult!
-  deleteEntity(data: EntityPrimaryKeyField!): DeleteResult!
-  deleteKing(data: KingPrimaryKeyField!): DeleteResult!
-  deleteKings(data: [KingPrimaryKeyField!]!): DeleteResult!
-  deleteMage(data: MagePrimaryKeyField!): DeleteResult!
-  deleteMages(data: [MagePrimaryKeyField!]!): DeleteResult!
-  deleteTitle(data: TitlePrimaryKeyField!): DeleteResult!
-  deleteTitles(data: [TitlePrimaryKeyField!]!): DeleteResult!
-  deleteWeapon(data: WeaponPrimaryKeyField!): DeleteResult!
-  deleteWeapons(data: [WeaponPrimaryKeyField!]!): DeleteResult!
-  updateArcher(data: ArcherUpdateOne!): Archer
-  updateArchers(data: [ArcherUpdateOne!]!): [Archer]!
-  updateEntities(data: [EntityUpdateOne!]!): [Entity]!
-  updateEntity(data: EntityUpdateOne!): Entity
-  updateKing(data: KingUpdateOne!): King
-  updateKings(data: [KingUpdateOne!]!): [King]!
-  updateMage(data: MageUpdateOne!): Mage
-  updateMages(data: [MageUpdateOne!]!): [Mage]!
-  updateTitle(data: TitleUpdateOne!): Title
-  updateTitles(data: [TitleUpdateOne!]!): [Title]!
-  updateWeapon(data: WeaponUpdateOne!): Weapon
-  updateWeapons(data: [WeaponUpdateOne!]!): [Weapon]!
+    createArcher(data: ArcherCreateOne!): Archer
+    createArchers(data: [ArcherCreateOne!]!): [Archer]!
+    createEntities(data: [EntityCreateOne!]!): [Entity]!
+    createEntity(data: EntityCreateOne!): Entity
+    createKing(data: KingCreateOne!): King
+    createKings(data: [KingCreateOne!]!): [King]!
+    createMage(data: MageCreateOne!): Mage
+    createMages(data: [MageCreateOne!]!): [Mage]!
+    createTitle(data: TitleCreateOne!): Title
+    createTitles(data: [TitleCreateOne!]!): [Title]!
+    createWeapon(data: WeaponCreateOne!): Weapon
+    createWeapons(data: [WeaponCreateOne!]!): [Weapon]!
+    deleteArcher(data: ArcherPrimaryKeyField!): DeleteResult!
+    deleteArchers(data: [ArcherPrimaryKeyField!]!): DeleteResult!
+    deleteEntities(data: [EntityPrimaryKeyField!]!): DeleteResult!
+    deleteEntity(data: EntityPrimaryKeyField!): DeleteResult!
+    deleteKing(data: KingPrimaryKeyField!): DeleteResult!
+    deleteKings(data: [KingPrimaryKeyField!]!): DeleteResult!
+    deleteMage(data: MagePrimaryKeyField!): DeleteResult!
+    deleteMages(data: [MagePrimaryKeyField!]!): DeleteResult!
+    deleteTitle(data: TitlePrimaryKeyField!): DeleteResult!
+    deleteTitles(data: [TitlePrimaryKeyField!]!): DeleteResult!
+    deleteWeapon(data: WeaponPrimaryKeyField!): DeleteResult!
+    deleteWeapons(data: [WeaponPrimaryKeyField!]!): DeleteResult!
+    updateArcher(data: ArcherUpdateOne!): Archer
+    updateArchers(data: [ArcherUpdateOne!]!): [Archer]!
+    updateEntities(data: [EntityUpdateOne!]!): [Entity]!
+    updateEntity(data: EntityUpdateOne!): Entity
+    updateKing(data: KingUpdateOne!): King
+    updateKings(data: [KingUpdateOne!]!): [King]!
+    updateMage(data: MageUpdateOne!): Mage
+    updateMages(data: [MageUpdateOne!]!): [Mage]!
+    updateTitle(data: TitleUpdateOne!): Title
+    updateTitles(data: [TitleUpdateOne!]!): [Title]!
+    updateWeapon(data: WeaponUpdateOne!): Weapon
+    updateWeapons(data: [WeaponUpdateOne!]!): [Weapon]!
 }
 
 type Query {
-  archer(data: ArcherQueryOne!): Archer
-  archers(data: ArcherQueryManyInput): ArcherQueryMany!
-  entities(data: EntityQueryManyInput): EntityQueryMany!
-  entity(data: EntityQueryOne!): Entity
-  king(data: KingQueryOne!): King
-  kings(data: KingQueryManyInput): KingQueryMany!
-  mage(data: MageQueryOne!): Mage
-  mages(data: MageQueryManyInput): MageQueryMany!
-  title(data: TitleQueryOne!): Title
-  titles(data: TitleQueryManyInput): TitleQueryMany!
-  weapon(data: WeaponQueryOne!): Weapon
-  weapons(data: WeaponQueryManyInput): WeaponQueryMany!
+    archer(data: ArcherQueryOne!): Archer
+    archers(data: ArcherQueryManyInput): ArcherQueryMany!
+    entities(data: EntityQueryManyInput): EntityQueryMany!
+    entity(data: EntityQueryOne!): Entity
+    king(data: KingQueryOne!): King
+    kings(data: KingQueryManyInput): KingQueryMany!
+    mage(data: MageQueryOne!): Mage
+    mages(data: MageQueryManyInput): MageQueryMany!
+    title(data: TitleQueryOne!): Title
+    titles(data: TitleQueryManyInput): TitleQueryMany!
+    weapon(data: WeaponQueryOne!): Weapon
+    weapons(data: WeaponQueryManyInput): WeaponQueryMany!
 }
 
 type Title {
-  entities: [Entity!]!
-  name: String!
+    entities: [Entity!]
+    name: String!
 }
 
 type TitleQueryMany {
-  page: Int!
-  results: [Title!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [Title!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 type Weapon {
-  damage: Int!
-  id: Int!
-  name: String
-  owner: Entity
+    damage: Int!
+    id: Int!
+    name: String
+    owner: Entity
 }
 
 type WeaponQueryMany {
-  page: Int!
-  results: [Weapon!]!
-  totalPages: Int!
-  totalRecords: Int!
+    page: Int!
+    results: [Weapon!]!
+    totalPages: Int!
+    totalRecords: Int!
 }
 
 enum MageTypeEnum {
-  AIR
-  EARTH
-  FIRE
-  WATER
+    AIR
+    EARTH
+    FIRE
+    WATER
 }
 
 enum OrderingDirection {
-  ASC
-  DESC
+    ASC
+    DESC
 }
 
 input ArcherCreateOne {
-  drawStrength: Float!
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]!
-  weapons: [WeaponPrimaryKeyField]!
+    drawStrength: Float!
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input ArcherFilter {
-  AND_: [ArcherFilter]
-  ANY_: Boolean = false
-  OR_: [ArcherFilter]
-  drawStrength: FloatFilter
-  entityClass: StringFilter
-  id: IntegerFilter
-  submitsTo: KingFilter
-  titles: TitleFilter
-  weapons: WeaponFilter
+    AND_: [ArcherFilter]
+    ANY_: Boolean = false
+    OR_: [ArcherFilter]
+    drawStrength: FloatFilter
+    entityClass: StringFilter
+    id: IntegerFilter
+    submitsTo: KingFilter
+    titles: TitleFilter
+    weapons: WeaponFilter
 }
 
 input ArcherOrdering {
-  drawStrength: OrderingDirection
-  entityClass: OrderingDirection
-  id: OrderingDirection
-  submitsTo: KingOrdering
-  titles: TitleOrdering
-  weapons: WeaponOrdering
+    drawStrength: OrderingDirection
+    entityClass: OrderingDirection
+    id: OrderingDirection
+    submitsTo: KingOrdering
+    titles: TitleOrdering
+    weapons: WeaponOrdering
 }
 
 input ArcherPrimaryKey {
-  id: Int!
+    id: Int!
 }
 
 input ArcherPrimaryKeyField {
-  primaryKey_: ArcherPrimaryKey!
+    primaryKey_: ArcherPrimaryKey!
 }
 
 input ArcherQueryManyInput {
-  filters: [ArcherFilter]
-  ordering: [ArcherOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [ArcherFilter]
+    ordering: [ArcherOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input ArcherQueryOne {
-  primaryKey_: ArcherPrimaryKey!
+    primaryKey_: ArcherPrimaryKey!
 }
 
 input ArcherUpdateOne {
-  drawStrength: Float
-  primaryKey_: ArcherPrimaryKey!
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]
-  weapons: [WeaponPrimaryKeyField]
+    drawStrength: Float
+    primaryKey_: ArcherPrimaryKey!
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input EntityCreateOne {
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]!
-  weapons: [WeaponPrimaryKeyField]!
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input EntityFilter {
-  AND_: [EntityFilter]
-  ANY_: Boolean = false
-  OR_: [EntityFilter]
-  entityClass: StringFilter
-  id: IntegerFilter
-  submitsTo: KingFilter
-  titles: TitleFilter
-  weapons: WeaponFilter
+    AND_: [EntityFilter]
+    ANY_: Boolean = false
+    OR_: [EntityFilter]
+    entityClass: StringFilter
+    id: IntegerFilter
+    submitsTo: KingFilter
+    titles: TitleFilter
+    weapons: WeaponFilter
 }
 
 input EntityOrdering {
-  entityClass: OrderingDirection
-  id: OrderingDirection
-  submitsTo: KingOrdering
-  titles: TitleOrdering
-  weapons: WeaponOrdering
+    entityClass: OrderingDirection
+    id: OrderingDirection
+    submitsTo: KingOrdering
+    titles: TitleOrdering
+    weapons: WeaponOrdering
 }
 
 input EntityPrimaryKey {
-  id: Int!
+    id: Int!
 }
 
 input EntityPrimaryKeyField {
-  primaryKey_: EntityPrimaryKey!
+    primaryKey_: EntityPrimaryKey!
 }
 
 input EntityQueryManyInput {
-  filters: [EntityFilter]
-  ordering: [EntityOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [EntityFilter]
+    ordering: [EntityOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input EntityQueryOne {
-  primaryKey_: EntityPrimaryKey!
+    primaryKey_: EntityPrimaryKey!
 }
 
 input EntityUpdateOne {
-  primaryKey_: EntityPrimaryKey!
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]
-  weapons: [WeaponPrimaryKeyField]
+    primaryKey_: EntityPrimaryKey!
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input FloatFilter {
-  NOT_: Boolean = false
-  exact: Float
-  gt: Float
-  gte: Float
-  in_: [Float!]
-  lt: Float
-  lte: Float
+    NOT_: Boolean = false
+    exact: Float
+    gt: Float
+    gte: Float
+    in_: [Float!]
+    lt: Float
+    lte: Float
 }
 
 input IntegerFilter {
-  NOT_: Boolean = false
-  exact: Int
-  gt: Int
-  gte: Int
-  in_: [Int!]
-  lt: Int
-  lte: Int
+    NOT_: Boolean = false
+    exact: Int
+    gt: Int
+    gte: Int
+    in_: [Int!]
+    lt: Int
+    lte: Int
 }
 
 input KingCreateOne {
-  name: String
-  subjects: [EntityPrimaryKeyField]!
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]!
-  weapons: [WeaponPrimaryKeyField]!
+    name: String
+    subjects: [EntityPrimaryKeyField]
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input KingFilter {
-  AND_: [KingFilter]
-  ANY_: Boolean = false
-  OR_: [KingFilter]
-  entityClass: StringFilter
-  name: StringFilter
-  subjects: EntityFilter
-  submitsTo: KingFilter
-  titles: TitleFilter
-  weapons: WeaponFilter
+    AND_: [KingFilter]
+    ANY_: Boolean = false
+    OR_: [KingFilter]
+    entityClass: StringFilter
+    name: StringFilter
+    subjects: EntityFilter
+    submitsTo: KingFilter
+    titles: TitleFilter
+    weapons: WeaponFilter
 }
 
 input KingOrdering {
-  entityClass: OrderingDirection
-  name: OrderingDirection
-  subjects: EntityOrdering
-  submitsTo: KingOrdering
-  titles: TitleOrdering
-  weapons: WeaponOrdering
+    entityClass: OrderingDirection
+    name: OrderingDirection
+    subjects: EntityOrdering
+    submitsTo: KingOrdering
+    titles: TitleOrdering
+    weapons: WeaponOrdering
 }
 
 input KingPrimaryKey {
-  id: Int!
+    id: Int!
 }
 
 input KingPrimaryKeyField {
-  primaryKey_: KingPrimaryKey!
+    primaryKey_: KingPrimaryKey!
 }
 
 input KingQueryManyInput {
-  filters: [KingFilter]
-  ordering: [KingOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [KingFilter]
+    ordering: [KingOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input KingQueryOne {
-  primaryKey_: KingPrimaryKey!
+    primaryKey_: KingPrimaryKey!
 }
 
 input KingUpdateOne {
-  name: String
-  primaryKey_: KingPrimaryKey!
-  subjects: [EntityPrimaryKeyField]
-  submitsTo: KingPrimaryKeyField
-  titles: [TitlePrimaryKeyField!]
-  weapons: [WeaponPrimaryKeyField]
+    name: String
+    primaryKey_: KingPrimaryKey!
+    subjects: [EntityPrimaryKeyField]
+    submitsTo: KingPrimaryKeyField
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input MageCreateOne {
-  powerSource: MageTypeEnum!
-  submitsTo: KingPrimaryKeyField
-  test: MageTypeEnum
-  titles: [TitlePrimaryKeyField!]!
-  weapons: [WeaponPrimaryKeyField]!
+    powerSource: MageTypeEnum!
+    submitsTo: KingPrimaryKeyField
+    test: MageTypeEnum
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input MageFilter {
-  AND_: [MageFilter]
-  ANY_: Boolean = false
-  OR_: [MageFilter]
-  entityClass: StringFilter
-  id: IntegerFilter
-  powerSource: MageTypeEnumFilter
-  submitsTo: KingFilter
-  test: MageTypeEnumFilter
-  titles: TitleFilter
-  weapons: WeaponFilter
+    AND_: [MageFilter]
+    ANY_: Boolean = false
+    OR_: [MageFilter]
+    entityClass: StringFilter
+    id: IntegerFilter
+    powerSource: MageTypeEnumFilter
+    submitsTo: KingFilter
+    test: MageTypeEnumFilter
+    titles: TitleFilter
+    weapons: WeaponFilter
 }
 
 input MageOrdering {
-  entityClass: OrderingDirection
-  id: OrderingDirection
-  powerSource: MageTypeEnumOrdering
-  submitsTo: KingOrdering
-  test: MageTypeEnumOrdering
-  titles: TitleOrdering
-  weapons: WeaponOrdering
+    entityClass: OrderingDirection
+    id: OrderingDirection
+    powerSource: MageTypeEnumOrdering
+    submitsTo: KingOrdering
+    test: MageTypeEnumOrdering
+    titles: TitleOrdering
+    weapons: WeaponOrdering
 }
 
 input MagePrimaryKey {
-  id: Int!
+    id: Int!
 }
 
 input MagePrimaryKeyField {
-  primaryKey_: MagePrimaryKey!
+    primaryKey_: MagePrimaryKey!
 }
 
 input MageQueryManyInput {
-  filters: [MageFilter]
-  ordering: [MageOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [MageFilter]
+    ordering: [MageOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input MageQueryOne {
-  primaryKey_: MagePrimaryKey!
+    primaryKey_: MagePrimaryKey!
 }
 
 input MageTypeEnumFilter {
-  exact: MageTypeEnum!
+    exact: MageTypeEnum!
 }
 
 input MageTypeEnumOrdering {
-  AIR: OrderingDirection!
-  EARTH: OrderingDirection!
-  FIRE: OrderingDirection!
-  WATER: OrderingDirection!
+    AIR: Int
+    EARTH: Int
+    FIRE: Int
+    WATER: Int
 }
 
 input MageUpdateOne {
-  powerSource: MageTypeEnum
-  primaryKey_: MagePrimaryKey!
-  submitsTo: KingPrimaryKeyField
-  test: MageTypeEnum
-  titles: [TitlePrimaryKeyField!]
-  weapons: [WeaponPrimaryKeyField]
+    powerSource: MageTypeEnum
+    primaryKey_: MagePrimaryKey!
+    submitsTo: KingPrimaryKeyField
+    test: MageTypeEnum
+    titles: [TitlePrimaryKeyField!]
+    weapons: [WeaponPrimaryKeyField]
 }
 
 input StringFilter {
-  NOT_: Boolean = false
-  contains: String
-  exact: String
-  icontains: String
-  iexact: String
-  ilike: String
-  in_: [String!]
-  like: String
+    NOT_: Boolean = false
+    contains: String
+    exact: String
+    icontains: String
+    iexact: String
+    ilike: String
+    in_: [String!]
+    like: String
 }
 
 input TitleCreateOne {
-  entities: [EntityPrimaryKeyField!]!
+    entities: [EntityPrimaryKeyField!]
 }
 
 input TitleFilter {
-  AND_: [TitleFilter]
-  ANY_: Boolean = false
-  OR_: [TitleFilter]
-  entities: EntityFilter
-  name: StringFilter
+    AND_: [TitleFilter]
+    ANY_: Boolean = false
+    OR_: [TitleFilter]
+    entities: EntityFilter
+    name: StringFilter
 }
 
 input TitleOrdering {
-  entities: EntityOrdering
-  name: OrderingDirection
+    entities: EntityOrdering
+    name: OrderingDirection
 }
 
 input TitlePrimaryKey {
-  name: String!
+    name: String!
 }
 
 input TitlePrimaryKeyField {
-  primaryKey_: TitlePrimaryKey!
+    primaryKey_: TitlePrimaryKey!
 }
 
 input TitleQueryManyInput {
-  filters: [TitleFilter]
-  ordering: [TitleOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [TitleFilter]
+    ordering: [TitleOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input TitleQueryOne {
-  primaryKey_: TitlePrimaryKey!
+    primaryKey_: TitlePrimaryKey!
 }
 
 input TitleUpdateOne {
-  entities: [EntityPrimaryKeyField!]
-  primaryKey_: TitlePrimaryKey!
+    entities: [EntityPrimaryKeyField!]
+    primaryKey_: TitlePrimaryKey!
 }
 
 input WeaponCreateOne {
-  damage: Int!
-  name: String
-  owner: EntityPrimaryKeyField
+    damage: Int!
+    name: String
+    owner: EntityPrimaryKeyField
 }
 
 input WeaponFilter {
-  AND_: [WeaponFilter]
-  ANY_: Boolean = false
-  OR_: [WeaponFilter]
-  damage: IntegerFilter
-  id: IntegerFilter
-  name: StringFilter
-  owner: EntityFilter
+    AND_: [WeaponFilter]
+    ANY_: Boolean = false
+    OR_: [WeaponFilter]
+    damage: IntegerFilter
+    id: IntegerFilter
+    name: StringFilter
+    owner: EntityFilter
 }
 
 input WeaponOrdering {
-  damage: OrderingDirection
-  id: OrderingDirection
-  name: OrderingDirection
-  owner: EntityOrdering
+    damage: OrderingDirection
+    id: OrderingDirection
+    name: OrderingDirection
+    owner: EntityOrdering
 }
 
 input WeaponPrimaryKey {
-  id: Int!
+    id: Int!
 }
 
 input WeaponPrimaryKeyField {
-  primaryKey_: WeaponPrimaryKey!
+    primaryKey_: WeaponPrimaryKey!
 }
 
 input WeaponQueryManyInput {
-  filters: [WeaponFilter]
-  ordering: [WeaponOrdering]
-  pageNumber: Int = 1
-  pageSize: Int = 30
+    filters: [WeaponFilter]
+    ordering: [WeaponOrdering]
+    pageNumber: Int = 1
+    pageSize: Int = 30
 }
 
 input WeaponQueryOne {
-  primaryKey_: WeaponPrimaryKey!
+    primaryKey_: WeaponPrimaryKey!
 }
 
 input WeaponUpdateOne {
-  damage: Int
-  name: String
-  owner: EntityPrimaryKeyField
-  primaryKey_: WeaponPrimaryKey!
+    damage: Int
+    name: String
+    owner: EntityPrimaryKeyField
+    primaryKey_: WeaponPrimaryKey!
 }
