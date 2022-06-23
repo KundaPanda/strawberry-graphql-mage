@@ -8,6 +8,16 @@ from tests.sqlalchemy.example_app.schema import King, Weapon, Entity, Archer
 
 
 @pytest.mark.asyncio
+async def test_simple_retrieve(schema: Schema, operations, prepare_database):
+    entity = [e for e in prepare_database if isinstance(e, Entity)][0]
+    result = await schema.execute(operations, operation_name="simpleRetrieve", variable_values={"id": entity.id})
+
+    assert result.errors is None
+
+    assert result.data["entity"]["id"] == entity.id
+
+
+@pytest.mark.asyncio
 async def test_simple_query(schema: Schema, operations):
     result = await schema.execute(operations, operation_name="simpleQuery")
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from strawberry_mage.backends.sqlalchemy.backend import SQLAlchemyBackend
 from strawberry_mage.backends.sqlalchemy.models import create_base_entity
-from strawberry_mage.backends.sqlalchemy.utils import make_fk
+from strawberry_mage.backends.sqlalchemy.utils import make_composite_fk, make_fk
 from strawberry_mage.core.schema import SchemaManager
 
 Base = create_base_entity()
@@ -31,7 +31,23 @@ class Weapon(Base):
     name = Column(String(30), nullable=True)
 
 
-class Entity(Base):
+class House(Base):
+    name = Column(String(30), primary_key=True)
+    region = Column(String(30), primary_key=True)
+
+
+HouseRelationMixin = make_composite_fk(
+    "House",
+    ("name", "region"),
+    "Entity",
+    "house",
+    remote_key_types=(String, String),
+    backref="occupants",
+    use_alter=True,
+)
+
+
+class Entity(Base, HouseRelationMixin):
     id = Column(Integer, primary_key=True)
     weapons = relationship(Weapon, back_populates="owner")
     entity_class = Column(String, nullable=False)
@@ -73,8 +89,14 @@ class King(Entity):
     }
 
 
-engine = create_async_engine("sqlite+aiosqlite:///", echo=True)
-schema = SchemaManager(Weapon, Entity, Mage, Archer, King, Title, backend=SQLAlchemyBackend(engine)).get_schema()
+class CompositeKeyEntity(Base):
+    id = Column(Integer, primary_key=True)
+    second_id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
+engine = create_async_engine("sqlite+aiosqlite:///", echo=False, future=True)
+schema = SchemaManager(House, Weapon, Entity, Mage, Archer, King, Title, backend=SQLAlchemyBackend(engine)).get_schema()
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

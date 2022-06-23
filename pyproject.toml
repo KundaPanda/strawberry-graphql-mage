@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "strawberry-graphql-mage"
-version = "0.0.1-alpha.7"
+version = "0.0.1-alpha.8"
 description = "An automated, modular, backend-agnostic GraphQL API generator"
 license = "MIT"
 authors = ["Vojtěch Dohnal <vojdoh@gmail.com>"]
@@ -47,6 +47,8 @@ toml = "^0.10.2"
 uvicorn = { extras = ["standard"], version = "^0.17.0" }
 starlette = "^0.20.3"
 nox-poetry = "^1.0.0"
+pyright = "^1.1.255"
+gevent = "^21.12.0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -64,8 +66,12 @@ filterwarnings = [
 
 
 [tool.coverage.run]
-include = [
-    "strawberry_mage/*"
+concurrency = [
+    "gevent",
+    "thread"
+]
+source = [
+    "strawberry_mage"
 ]
 parallel = true
 

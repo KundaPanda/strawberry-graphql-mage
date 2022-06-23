@@ -532,7 +532,6 @@ def get_enum_ordering_type(type_: Type[enum.Enum]):
     :param type_: enum type
     :return: ordering type for this enum
     """
-
     t = strawberry.type(
         type(
             GeneratedType.ORDERING.get_typename(type_.__name__),

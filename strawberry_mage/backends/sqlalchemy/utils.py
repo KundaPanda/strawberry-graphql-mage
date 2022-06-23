@@ -1,11 +1,11 @@
 """Utilities for creating sqlalchemy models."""
-
-from typing import List, Optional, Tuple, Type, Union
+from typing import Optional, Tuple, Type, Union
 
 from inflection import underscore
 from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.type_api import TypeEngine
+
 from strawberry_mage.backends.sqlalchemy.models import SQLAlchemyModel
 
 
@@ -63,7 +63,7 @@ def make_composite_fk(
     foreign_kwargs=None,
     rel_kwargs=None,
     use_alter=False,
-) -> Tuple[List[Tuple[str, Column]], relationship, ForeignKeyConstraint]:
+) -> Type:
     """
     Create a composite foreign key for remote model.
 
@@ -78,7 +78,7 @@ def make_composite_fk(
     :param foreign_kwargs: kwargs passed to ForeignKey
     :param rel_kwargs: kwargs passed to relationship
     :param use_alter: use_alter from sqlalchemy
-    :return: tuple [created foreign keys, relationship, foreign key constraint]
+    :return: class to be used as a mixin for the model
     """
     if remote_key_types is None:
         remote_key_types = tuple(Integer for _ in range(len(remote_keys)))
@@ -112,7 +112,17 @@ def make_composite_fk(
         [f"{remote_table}.{f[0]}" for f in foreign_keys],
         use_alter=use_alter,
     )
-    return foreign_keys, rel, constraint
+
+    def init_mixin_base(cls, *args):
+        if hasattr(cls, rel_name):
+            return
+        cls.__table_args__ = getattr(cls, "__table_args__", tuple()) + (constraint,)
+        for k, col in foreign_keys:
+            setattr(cls, col.name, col)
+        setattr(cls, rel_name, rel)
+
+    mixin = type(f"{model_name}_{rel_name}_mixin", (), {"__init_subclass__": init_mixin_base})
+    return mixin
 
 
 def make_m2m(

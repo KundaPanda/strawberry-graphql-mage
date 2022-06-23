@@ -1,3 +1,10 @@
+query simpleRetrieve($id: Int!) {
+  entity(data: { primaryKey_: { id: $id } }) {
+    id
+    entityClass
+  }
+}
+
 query simpleQuery {
   archers {
     results {

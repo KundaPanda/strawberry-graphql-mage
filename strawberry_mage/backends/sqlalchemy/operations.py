@@ -13,7 +13,7 @@ from sqlalchemy.orm.base import MANYTOMANY
 from sqlalchemy.orm.util import AliasedClass, with_polymorphic
 from sqlalchemy.sql import ColumnElement, Join
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnClause
-from sqlalchemy.sql.expression import case, desc, func
+from sqlalchemy.sql.expression import case, desc, func, nulls_last
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry import UNSET
 
@@ -429,7 +429,7 @@ async def create_ordering(
                     if (isinstance(select_from, AliasedClass) or isinstance(select_from, SQLAlchemyModel))
                     else getattr(select_from.c, attribute)
                 )
-                result_ordering.append(desc(col) if value == OrderingDirection.DESC else col)
+                result_ordering.append(nulls_last(desc(col) if value == OrderingDirection.DESC else col))
             elif isinstance(value, dict) and not any(isinstance(v, OrderingDirection) for v in value.values()):
                 # Enum ordering by values
                 select_from = selectables[path]
@@ -439,7 +439,7 @@ async def create_ordering(
                     else getattr(select_from.c, attribute)
                 )
                 result_ordering.append(
-                    case(value=col, whens={k: (v if v is not UNSET else 0) for k, v in value.items()})
+                    nulls_last(case(value=col, whens={k: (v if v is not UNSET else 0) for k, v in value.items()}))
                 )
             else:
                 result_ordering.extend(
