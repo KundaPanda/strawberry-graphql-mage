@@ -1,4 +1,5 @@
 .github/
+**/schema.graphql
 
 
 ### Python template
