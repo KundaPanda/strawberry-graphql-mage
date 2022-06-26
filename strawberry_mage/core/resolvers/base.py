@@ -112,6 +112,5 @@ def resolver_nested_select(entity_type: str, field_name: str):
     return StrawberryField(
         base_resolver=resolver,
         python_name=field_name,
-        graphql_name=field_name,
         type_annotation=resolver.type_annotation,
     )
