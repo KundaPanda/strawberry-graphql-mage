@@ -1,45 +1,18 @@
 """Strawberry resolvers for crud fields."""
 
-from functools import cached_property
 from typing import List, Optional, Type
 
 import strawberry
 from strawberry import UNSET
-from strawberry.arguments import StrawberryArgument
 from strawberry.types import Info
-from strawberry.types.fields.resolver import StrawberryResolver
 
+from strawberry_mage.core.resolvers.base import ModuleBoundStrawberryResolver
 from strawberry_mage.core.strawberry_types import DeleteResult
-from strawberry_mage.core.type_creator import GeneratedType
+from strawberry_mage.core.resolvers.base import GeneratedType
 from strawberry_mage.core.types import (
     GraphQLOperation,
     IEntityModel,
-    ModuleBoundStrawberryAnnotation,
 )
-
-
-class ModuleBoundStrawberryResolver(StrawberryResolver):
-    """A StrawberryResolver with lazy evaluation of arguments."""
-
-    @cached_property
-    def arguments(self) -> List[StrawberryArgument]:
-        """
-        Get the arguments for a resolver.
-
-        :return: list of StrawberryArguments
-        """
-        args: List[StrawberryArgument] = super().arguments  # type: ignore
-        return [
-            StrawberryArgument(
-                a.python_name,
-                a.graphql_name,
-                ModuleBoundStrawberryAnnotation.from_annotation(a.type_annotation),
-                a.is_subscription,
-                a.description,
-                a.default,
-            )
-            for a in args
-        ]
 
 
 def resolver_query_one(model: Type[IEntityModel]):

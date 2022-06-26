@@ -14,6 +14,7 @@ from sqlalchemy.orm.util import AliasedClass, with_polymorphic
 from sqlalchemy.sql import ColumnElement, Join
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnClause
 from sqlalchemy.sql.expression import case, desc, func, nulls_last
+from sqlalchemy.sql.functions import count
 from sqlalchemy.sql.operators import ColumnOperators as ColOps
 from strawberry import UNSET
 
@@ -567,13 +568,17 @@ async def list_(
     :return: QueryManyResult
     """
     polymorphic_model = with_polymorphic(model, "*", aliased=True)
-    model_query = select(polymorphic_model)
+    model_query = select(polymorphic_model, count().over().label("total_results_count"))  # type: ignore
+    if data is not UNSET and data.page_size is not UNSET and data.page_size:
+        model_query = model_query.limit(data.page_size)
+        if data.page_number is not UNSET and data.page_number:
+            model_query = model_query.offset((data.page_number - 1) * data.page_size)
+    # TODO: implement limit+offset for nested selects
     selectables: SelectablesType = {"": polymorphic_model, "__selection__": model_query}
 
     eager_options = await create_selection_joins(model, "", selection, selectables)
 
     expression = cast(Type[SQLAlchemyModel], selectables["__selection__"])
-    original_expression = expression
 
     if eager_options != (None,):
         expression = expression.options(*eager_options)
@@ -603,19 +608,13 @@ async def list_(
 
         expression = expression.order_by(*ordering)
 
-        original_expression = expression
-        if data.page_size is not UNSET and data.page_size:
-            expression = expression.limit(data.page_size)
-            if data.page_number is not UNSET and data.page_number:
-                expression = expression.offset((data.page_number - 1) * data.page_size)
-
     results_task = session.execute(expression)
-    total_results_task = session.execute(select(func.count()).select_from(original_expression.subquery()))
-    results = (await results_task).unique().scalars().all()
-    total_results = (await total_results_task).scalar()
+    results = (await results_task).unique().all()
+    total_results: int = results[0][1] if len(results) > 0 else 0  # TODO: this returns total rowcount, not object count
     return model.get_strawberry_type().query_many_output(
-        results=results,
+        results=[r[0] for r in results],
         page=data.page_number if (data is not UNSET and data.page_number) else 1,
-        total_pages=ceil(total_results / data.page_size) if data is not UNSET else 1,
-        total_records=total_results,
+        total_pages=ceil(total_results / data.page_size) if (data is not UNSET and data.page_size) else 1,
+        total_results_count=total_results,
+        results_count=len(results),
     )

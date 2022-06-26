@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 from overrides import overrides
 from strawberry.types import Info
 
-from strawberry_mage.core.resolver import (
+from strawberry_mage.core.resolvers.resolvers import (
     resolver_create_many,
     resolver_create_one,
     resolver_delete_many,

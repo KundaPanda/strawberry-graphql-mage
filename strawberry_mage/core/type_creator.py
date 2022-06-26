@@ -4,7 +4,7 @@ import dataclasses
 import enum
 import sys
 from inspect import isclass
-from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, ForwardRef, List, Optional, Tuple, Type, Union, cast, get_args, get_origin
 
 import strawberry
 from strawberry import UNSET
@@ -14,6 +14,7 @@ from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.type import StrawberryType
 from strawberry.utils.typing import is_list, is_optional
 
+from strawberry_mage.core.resolvers.base import GeneratedType, resolver_nested_select
 from strawberry_mage.core.strawberry_types import (
     EntityType,
     ObjectFilter,
@@ -42,50 +43,10 @@ else:
 SCALARS = list(DEFAULT_SCALAR_REGISTRY.keys())
 
 
-class GeneratedType(enum.Enum):
-    """Type of a generated entity."""
-
-    ENTITY = ""
-    PRIMARY_KEY_INPUT = "PrimaryKey"
-    PRIMARY_KEY_FIELD = "PrimaryKeyField"
-    QUERY_ONE = "QueryOne"
-    QUERY_MANY = "QueryMany"
-    QUERY_MANY_INPUT = "QueryManyInput"
-    CREATE_ONE = "CreateOne"
-    CREATE_MANY = "CreateMany"
-    UPDATE_ONE = "UpdateOne"
-    UPDATE_MANY = "UpdateMany"
-    DELETE_ONE = "DeleteOne"
-    DELETE_MANY = "DeleteMany"
-    INPUTS = "Inputs"
-    FILTER = "Filter"
-    ORDERING = "Ordering"
-    POLYMORPHIC_BASE = "_"
-
-    def get_typename(self: "GeneratedType", name: str):
-        """
-        Convert a name to a GeneratedType name based on the enum value.
-
-        :param name: name to convert
-        :return: converted name
-        """
-        return name + self.value
-
-    @staticmethod
-    def get_original(name: str):
-        """
-        Attempt to get the original entity name from a GeneratedType name.
-
-        :param name: a name
-        :return: the original one or name if not matched
-        """
-        for type_ in GeneratedType:
-            if type_ != GeneratedType.ENTITY and name.endswith(type_.value):
-                return name.rstrip(type_.value)
-        return name
-
-
 def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = GeneratedType.ENTITY) -> Dict[str, Any]:
+    for f in fields.values():
+        if isinstance(f, StrawberryField):
+            f.type_annotation = defer_annotation(f.type_annotation, target_type)
     strawberry_fields = {
         f: StrawberryField(
             f,
@@ -93,6 +54,8 @@ def _create_fields(fields: Dict[str, Any], target_type: GeneratedType = Generate
             default_factory=lambda: UNSET,
             default=UNSET,
         )
+        if not isinstance(a, StrawberryField)
+        else a
         for f, a in fields.items()
     }
     return {
@@ -224,10 +187,19 @@ def create_entity_type(model: Type[IEntityModel]) -> Tuple[Type[EntityType], Typ
     attrs = model.get_attribute_types()
 
     for name in attrs.keys():
-        attr = strip_typename(attrs[name])
+        attr: Union[Type, str] = strip_typename(attrs[name])
         if isclass(attr) and isinstance(attr, type(enum.Enum)):
             enum_type, _, _ = create_enum_type(cast(Type[enum.Enum], attr))
             attrs[name] = enum_type
+        elif (
+            isinstance(attr, str)
+            and (
+                get_origin(attrs[name]) is Union
+                and any(get_origin(arg) is list or get_origin(arg) is List for arg in get_args(attrs[name]))
+            )
+            or (get_origin(attrs[name] is List))
+        ):
+            attrs[name] = resolver_nested_select(cast(str, attr), name)
 
     children = model.get_children_class_names()
     parent_name = model.get_parent_class_name()

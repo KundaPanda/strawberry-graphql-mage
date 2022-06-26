@@ -10,7 +10,8 @@ from strawberry.schema.types import ConcreteType
 from strawberry.types import Info
 from strawberry.types.nodes import InlineFragment
 
-from strawberry_mage.core.type_creator import GeneratedType, defer_annotation
+from strawberry_mage.core.resolvers.base import GeneratedType
+from strawberry_mage.core.type_creator import defer_annotation
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel
 from strawberry_mage.core.utils import get_subclasses
 

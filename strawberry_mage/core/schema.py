@@ -11,7 +11,7 @@ from overrides import overrides
 from strawberry import Schema
 from strawberry.schema.types import ConcreteType
 
-from strawberry_mage.core.type_creator import GeneratedType
+from strawberry_mage.core.resolvers.base import GeneratedType
 from strawberry_mage.core.types import GraphQLOperation, IDataBackend, IEntityModel, ISchemaManager
 
 TEntity = TypeVar("TEntity", bound=IEntityModel)

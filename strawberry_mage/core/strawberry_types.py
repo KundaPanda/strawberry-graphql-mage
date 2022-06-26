@@ -33,7 +33,8 @@ class QueryManyResult:
 
     page: int
     total_pages: int
-    total_records: int
+    total_results_count: int
+    results_count: int
     results: List[EntityType]
 
 
