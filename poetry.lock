@@ -1018,7 +1018,7 @@ url = ["furl (>=0.4.1)"]
 
 [[package]]
 name = "starlette"
-version = "0.20.3"
+version = "0.20.4"
 description = "The little ASGI library that shines."
 category = "dev"
 optional = false
@@ -1255,7 +1255,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "766dac7268d5e8696fcecdf7afe0c84dbf83c36ead775f6ddc0314b16b1bcab7"
+content-hash = "cfe7d0425574920ce75d8777319e2902d22c2336a223e8ebce5e9b238e420646"
 
 [metadata.files]
 aiosqlite = [
@@ -1982,8 +1982,8 @@ sqlalchemy-utils = [
     {file = "SQLAlchemy_Utils-0.38.2-py3-none-any.whl", hash = "sha256:622235b1598f97300e4d08820ab024f5219c9a6309937a8b908093f487b4ba54"},
 ]
 starlette = [
-    {file = "starlette-0.20.3-py3-none-any.whl", hash = "sha256:4d39be143dffde65782865ce40f86e5a8986400c5be0217b3cda3e732bfd7233"},
-    {file = "starlette-0.20.3.tar.gz", hash = "sha256:38ef09c1c9a8ea7b7927d2c42d515efbbdbb6ea60dbe88b29abb320824fe16c1"},
+    {file = "starlette-0.20.4-py3-none-any.whl", hash = "sha256:c0414d5a56297d37f3db96a84034d61ce29889b9eaccf65eb98a0b39441fcaa3"},
+    {file = "starlette-0.20.4.tar.gz", hash = "sha256:42fcf3122f998fefce3e2c5ad7e5edbf0f02cf685d646a83a08d404726af5084"},
 ]
 strawberry-graphql = [
     {file = "strawberry-graphql-0.114.5.tar.gz", hash = "sha256:b6e007281cf29a66eeba66a512744853d8aa53b4ca2525befb6f350bb7b24df6"},
