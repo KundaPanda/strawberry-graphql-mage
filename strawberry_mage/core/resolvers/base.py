@@ -106,7 +106,7 @@ def resolver_nested_select(entity_type: str, field_name: str):
     async def nested_select(
         self, info: Info, page_size: Optional[int] = 30, offset: Optional[int] = 0
     ) -> return_type:  # type: ignore
-        return getattr(self, info.field_name)
+        return getattr(self, info.python_name)
 
     resolver = ModuleBoundStrawberryResolver(nested_select)
     return StrawberryField(
