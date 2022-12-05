@@ -45,7 +45,7 @@ pydocstyle = {extras = ["toml"], version = "^6.1.1"}
 pylint = "^2.11.1"
 toml = "^0.10.2"
 uvicorn = { extras = ["standard"], version = "^0.18.1" }
-starlette = "^0.20.3"
+starlette = "^0.23.0"
 nox-poetry = "^1.0.0"
 pyright = "^1.1.255"
 gevent = "^21.12.0"
