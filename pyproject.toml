@@ -26,7 +26,7 @@ packages = [
 python = "^3.8"
 strawberry-graphql = ">0.80.0,<1.0.0"
 inflection = "^0.5.1"
-SQLAlchemy = { extras = ["asyncio"], version = "^1.4.25" }
+SQLAlchemy = { extras = ["asyncio"], version = ">=1.4.25,<3.0.0" }
 aiosqlite = "^0.17.0"
 frozendict = "^2.0.6"
 overrides = "^6.1.0"
